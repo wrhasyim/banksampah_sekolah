@@ -12,9 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('pengguna', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
-        });
+    $table->id(); // Primary Key
+    $table->string('nama_lengkap', 100);
+    $table->string('username', 50)->unique(); // username harus unik
+    $table->string('password'); // Nanti akan kita hash
+    $table->enum('role', ['admin', 'siswa']); // Hanya boleh diisi 'admin' atau 'siswa'
+    $table->timestamps();
+});
     }
 
     /**
