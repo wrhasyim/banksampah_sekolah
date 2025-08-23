@@ -22,17 +22,13 @@ class SiswaExport implements FromCollection, WithHeadings
     */
     public function headings(): array
     {
-        // Header yang dibutuhkan untuk impor siswa
+        // Header yang disesuaikan
         return [
-            'nama',
-            'nisn',
+            'nama_lengkap',
+            'username',
+            'password',
             'nis',
-            'email',
-            'tanggal_lahir',
-            'jenis_kelamin',
-            'alamat',
-            'nomor_telepon',
-            'kelas', // Nama kelas
+            'kelas',
         ];
     }
 }

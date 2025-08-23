@@ -9,6 +9,7 @@ use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 
 class SiswaImport implements ToCollection, WithHeadingRow
 {
@@ -16,33 +17,39 @@ class SiswaImport implements ToCollection, WithHeadingRow
     {
         foreach ($rows as $row) 
         {
-            if (empty($row['nama']) || empty($row['nisn']) || empty($row['nis']) || empty($row['kelas'])) {
+            // Pastikan kolom yang diperlukan ada
+            if (empty($row['nama_lengkap']) || empty($row['username']) || empty($row['password']) || empty($row['nis']) || empty($row['kelas'])) {
                 continue;
             }
 
-            // Temukan atau buat kelas baru
+            // Temukan atau buat kelas baru berdasarkan nama kelas
             $kelas = Kelas::firstOrCreate(['nama_kelas' => $row['kelas']]);
 
-            // Buat akun Pengguna (User)
-            $pengguna = Pengguna::create([
-                'nama' => $row['nama'],
-                'email' => $row['email'] ?? $row['nisn'] . '@sekolah.sch.id',
-                'password' => Hash::make($row['nisn']), // NISN sebagai password default
-                'role' => 'siswa',
-            ]);
+            // Gunakan NIS sebagai nama pengguna jika tidak ada
+            $username = $row['username'] ?? $row['nis'];
 
-            // Buat data Siswa
-            Siswa::create([
-                'pengguna_id' => $pengguna->id,
-                'nama_siswa' => $row['nama'],
-                'nisn' => $row['nisn'],
-                'nis' => $row['nis'],
-                'alamat' => $row['alamat'] ?? '-',
-                'jenis_kelamin' => $row['jenis_kelamin'] ?? '-',
-                'tanggal_lahir' => \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($row['tanggal_lahir']),
-                'nomor_telepon' => $row['nomor_telepon'] ?? '-',
-                'kelas_id' => $kelas->id,
-            ]);
+            // Mulai transaksi database
+            DB::transaction(function () use ($row, $kelas, $username) {
+                // Buat akun Pengguna (User)
+                $pengguna = Pengguna::firstOrCreate(
+                    ['username' => $username],
+                    [
+                        'nama_lengkap' => $row['nama_lengkap'],
+                        'password' => Hash::make($row['password']),
+                        'role' => 'siswa',
+                    ]
+                );
+
+                // Buat data Siswa
+                Siswa::firstOrCreate(
+                    ['id_pengguna' => $pengguna->id],
+                    [
+                        'id_kelas' => $kelas->id,
+                        'nis' => $row['nis'],
+                        'saldo' => 0,
+                    ]
+                );
+            });
         }
     }
 }
