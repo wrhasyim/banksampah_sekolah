@@ -8,26 +8,17 @@ use Illuminate\Support\Collection;
 
 class SetoranExport implements FromCollection, WithHeadings
 {
-    /**
-    * @return \Illuminate\Support\Collection
-    */
     public function collection()
     {
-        // Mengembalikan koleksi kosong untuk template
         return new Collection();
     }
 
-    /**
-    * @return array
-    */
     public function headings(): array
     {
-        // Header yang dibutuhkan untuk impor setoran
         return [
-            'nisn', // NISN siswa
+            'nama',
             'jenis_sampah',
-            'jumlah_kg',
-            'tanggal',
+            'jumlah',
         ];
     }
 }

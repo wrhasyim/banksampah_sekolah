@@ -10,14 +10,21 @@ class Setoran extends Model
     use HasFactory;
 
     protected $table = 'setoran';
-    protected $fillable = ['id_siswa', 'id_jenis_sampah', 'jumlah_satuan', 'total_harga', 'id_admin'];
+    protected $fillable = [
+        'id_siswa',
+        'id_jenis_sampah',
+        'id_admin',
+        'jumlah_satuan', // Pastikan ini ada dan bukan 'jumlah_kg'
+        'tanggal_setoran',
+        'total_harga',
+    ];
 
     public function siswa()
     {
         return $this->belongsTo(Siswa::class, 'id_siswa');
     }
 
-    public function jenisSampah()
+    public function jenis_sampah()
     {
         return $this->belongsTo(JenisSampah::class, 'id_jenis_sampah');
     }

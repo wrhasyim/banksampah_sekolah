@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use App\Imports\SetoranImport;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\SetoranExport;
+use App\Models\Pengguna; // Pastikan ini ada
 
 class SetoranController extends Controller
 {
@@ -18,7 +19,10 @@ class SetoranController extends Controller
     {
         // Ambil data setoran, urutkan dari yang terbaru
         // Eager load relasi untuk efisiensi query
-        $setoran = Setoran::with(['siswa.pengguna', 'jenisSampah', 'admin'])->latest()->get();
+        $setoran = Setoran::with(['siswa.pengguna', 'jenis_sampah', 'admin'])
+                           ->latest()
+                           ->get();
+
         return view('pages.setoran.index', compact('setoran'));
     }
 

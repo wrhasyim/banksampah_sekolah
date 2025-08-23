@@ -16,9 +16,12 @@
                     <a href="{{ route('setoran.create') }}" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150 mb-4">
                         + Catat Setoran Baru
                     </a>
-                    <a href="{{ route('setoran.import.form') }}" class="inline-flex items-center px-4 py-2 bg-blue-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 active:bg-blue-900 focus:outline-none focus:border-blue-900 focus:ring ring-blue-300 disabled:opacity-25 transition ease-in-out duration-150">
-    {{ __('Import Setoran') }}
-</a>
+                    
+                    {{-- Tambahkan tombol import di sini --}}
+                    <a href="{{ route('setoran.import.form') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-500 active:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition ease-in-out duration-150 mb-4 ml-2">
+                        Import Setoran
+                    </a>
+
                     <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
                         <table class="w-full text-sm text-left rtl:text-right text-gray-500">
                             <thead class="text-xs text-gray-700 uppercase bg-gray-50">
@@ -36,7 +39,7 @@
                                 <tr class="bg-white border-b hover:bg-gray-50">
                                     <td class="px-6 py-4">{{ $item->created_at->format('d-m-Y H:i') }}</td>
                                     <td class="px-6 py-4 font-medium text-gray-900">{{ $item->siswa->pengguna->nama_lengkap }}</td>
-                                    <td class="px-6 py-4">{{ $item->jenisSampah->nama_sampah }}</td>
+                                    <td class="px-6 py-4">{{ $item->jenis_sampah->nama_sampah }}</td>
                                     <td class="px-6 py-4">{{ $item->jumlah_satuan }}</td>
                                     <td class="px-6 py-4">Rp {{ number_format($item->total_harga, 0, ',', '.') }}</td>
                                     <td class="px-6 py-4">{{ $item->admin->nama_lengkap }}</td>
