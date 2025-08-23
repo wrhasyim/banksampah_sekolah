@@ -25,19 +25,16 @@ class SetoranImport implements ToCollection, WithHeadingRow
                 continue;
             }
 
-            // Temukan kelas berdasarkan nama
             $kelas = Kelas::where('nama_kelas', $row['kelas'])->first();
             if (!$kelas) {
                 continue;
             }
 
-            // Temukan siswa berdasarkan nama dan kelas
             $siswa = Siswa::where('id_kelas', $kelas->id)
                             ->whereHas('pengguna', function ($query) use ($row) {
                                 $query->where('nama_lengkap', $row['nama']);
                             })->first();
             
-            // Temukan jenis sampah
             $jenisSampah = JenisSampah::where('nama_sampah', 'like', '%' . $row['jenis_sampah'] . '%')->first();
 
             if ($siswa && $jenisSampah) {

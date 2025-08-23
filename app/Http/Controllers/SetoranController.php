@@ -16,9 +16,6 @@ use App\Exports\SetoranExport;
 
 class SetoranController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         $setoran = Setoran::with(['siswa.pengguna', 'jenis_sampah', 'admin'])
@@ -28,9 +25,6 @@ class SetoranController extends Controller
         return view('pages.setoran.index', compact('setoran'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         $kelas = Kelas::all();
@@ -38,9 +32,6 @@ class SetoranController extends Controller
         return view('pages.setoran.create', compact('kelas', 'jenisSampah'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         $request->validate([
@@ -51,10 +42,6 @@ class SetoranController extends Controller
 
         $siswa = Siswa::with('pengguna')->findOrFail($request->id_siswa);
         $jenisSampah = JenisSampah::findOrFail($request->id_jenis_sampah);
-
-        if ($siswa->saldo < 0) {
-            return back()->with('error', 'Saldo siswa tidak mencukupi untuk penarikan.');
-        }
 
         DB::transaction(function () use ($request, $siswa, $jenisSampah) {
             $total_harga = $request->jumlah_satuan * $jenisSampah->harga_per_satuan;
@@ -74,39 +61,6 @@ class SetoranController extends Controller
         return redirect()->route('setoran.index')->with('status', 'Setoran baru berhasil dicatat!');
     }
 
-    /**
-     * Show the form for importing setoran data from an Excel file.
-     */
-    public function showImportForm()
-    {
-        return view('pages.setoran.import');
-    }
-
-    /**
-     * Import setoran data from an Excel file.
-     */
-    public function import(Request $request)
-    {
-        $request->validate([
-            'file' => 'required|mimes:xlsx,xls',
-        ]);
-
-        Excel::import(new SetoranImport, $request->file('file'));
-
-        return redirect()->route('setoran.index')->with('status', 'Data setoran berhasil diimpor!');
-    }
-
-    /**
-     * Download an empty Excel template for importing setoran data.
-     */
-    public function exportSample()
-    {
-        return Excel::download(new SetoranExport, 'setoran-template.xlsx');
-    }
-
-    /**
-     * Get students by class ID via API.
-     */
     public function getSiswaByKelas($id_kelas)
     {
         $siswa = Siswa::with('pengguna')
@@ -119,5 +73,26 @@ class SetoranController extends Controller
                           ];
                       });
         return response()->json($siswa);
+    }
+    
+    public function showImportForm()
+    {
+        return view('pages.setoran.import');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls',
+        ]);
+
+        Excel::import(new SetoranImport, $request->file('file'));
+
+        return redirect()->route('setoran.index')->with('status', 'Data setoran berhasil diimpor!');
+    }
+
+    public function exportSample()
+    {
+        return Excel::download(new SetoranExport, 'setoran-template.xlsx');
     }
 }
