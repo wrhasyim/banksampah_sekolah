@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Imports\SetoranImport;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\SetoranExport;
 
 class SetoranController extends Controller
 {
@@ -20,6 +21,12 @@ class SetoranController extends Controller
         $setoran = Setoran::with(['siswa.pengguna', 'jenisSampah', 'admin'])->latest()->get();
         return view('pages.setoran.index', compact('setoran'));
     }
+
+    public function exportSample()
+    {
+        return Excel::download(new SetoranExport, 'setoran-template.xlsx');
+    }
+
 public function showImportForm()
     {
         $siswas = Siswa::all();

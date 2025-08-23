@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use App\Imports\SiswaImport;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\SiswaExport;
 
 class SiswaController extends Controller
 {
@@ -27,7 +28,10 @@ class SiswaController extends Controller
         $kelas = Kelas::all();
         return view('pages.siswa.create', compact('kelas'));
     }
-
+public function exportSample()
+    {
+        return Excel::download(new SiswaExport, 'siswa-template.xlsx');
+    }
 public function showImportForm()
     {
         return view('pages.siswa.import');

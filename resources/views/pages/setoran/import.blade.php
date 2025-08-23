@@ -9,6 +9,12 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 bg-white border-b border-gray-200">
+                    <p class="text-sm text-gray-600 mb-4">
+    Unggah file Excel (.xlsx atau .xls) yang berisi data setoran. Pastikan kolom-kolomnya sesuai dengan urutan: 
+    **nisn, jenis_sampah, jumlah, tanggal**.
+    <br>Anda bisa mengunduh contoh template di sini: 
+    <a href="{{ route('setoran.export.sample') }}" class="text-blue-600 hover:underline">Download Template</a>
+</p>
                     <form action="{{ route('setoran.import') }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         <div class="mb-4">

@@ -43,6 +43,17 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     // Rute kustom untuk impor Setoran
     Route::get('/setoran/import', [SetoranController::class, 'showImportForm'])->name('setoran.import.form');
     Route::post('/setoran/import', [SetoranController::class, 'import'])->name('setoran.import');
+
+    // Tambahkan rute untuk export
+    Route::get('/siswa/export/sample', [SiswaController::class, 'exportSample'])->name('siswa.export.sample');
+    Route::get('/siswa/import', [SiswaController::class, 'showImportForm'])->name('siswa.import.form');
+    Route::post('/siswa/import', [SiswaController::class, 'import'])->name('siswa.import');
+
+   
+    // Tambahkan rute untuk export
+    Route::get('/setoran/export/sample', [SetoranController::class, 'exportSample'])->name('setoran.export.sample');
+    Route::get('/setoran/import', [SetoranController::class, 'showImportForm'])->name('setoran.import.form');
+    Route::post('/setoran/import', [SetoranController::class, 'import'])->name('setoran.import');
 });
 
 require __DIR__.'/auth.php';
