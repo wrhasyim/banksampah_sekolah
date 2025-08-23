@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\Validators\ValidationException;
 use App\Imports\SetoranImport;
 use App\Exports\SetoranExport;
 
@@ -86,7 +87,13 @@ class SetoranController extends Controller
             'file' => 'required|mimes:xlsx,xls',
         ]);
 
-        Excel::import(new SetoranImport, $request->file('file'));
+        try {
+            Excel::import(new SetoranImport, $request->file('file'));
+        } catch (ValidationException $e) {
+            $failures = $e->failures();
+
+            return back()->with('import_errors', $failures)->withInput();
+        }
 
         return redirect()->route('setoran.index')->with('status', 'Data setoran berhasil diimpor!');
     }

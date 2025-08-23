@@ -10,10 +10,12 @@ use App\Models\Pengguna;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\WithValidation;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
-class SetoranImport implements ToCollection, WithHeadingRow
+class SetoranImport implements ToCollection, WithHeadingRow, WithValidation
 {
     public function collection(Collection $rows)
     {
@@ -21,15 +23,7 @@ class SetoranImport implements ToCollection, WithHeadingRow
 
         foreach ($rows as $row) 
         {
-            if (empty($row['nama']) || empty($row['kelas']) || empty($row['jenis_sampah']) || empty($row['jumlah'])) {
-                continue;
-            }
-
             $kelas = Kelas::where('nama_kelas', $row['kelas'])->first();
-            if (!$kelas) {
-                continue;
-            }
-
             $siswa = Siswa::where('id_kelas', $kelas->id)
                             ->whereHas('pengguna', function ($query) use ($row) {
                                 $query->where('nama_lengkap', $row['nama']);
@@ -54,5 +48,15 @@ class SetoranImport implements ToCollection, WithHeadingRow
                 });
             }
         }
+    }
+
+    public function rules(): array
+    {
+        return [
+            'nama' => 'required|string|max:255',
+            'kelas' => 'required|string|exists:kelas,nama_kelas',
+            'jenis_sampah' => 'required|string|exists:jenis_sampah,nama_sampah',
+            'jumlah' => 'required|numeric|min:1',
+        ];
     }
 }

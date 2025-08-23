@@ -14,6 +14,19 @@
                         <br>
                         <a href="{{ route('setoran.export.sample') }}" class="text-blue-600 hover:underline">Unduh contoh template</a>
                     </p>
+
+                    @if (session('import_errors'))
+                        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+                            <strong class="font-bold">Gagal mengimpor data!</strong>
+                            <span class="block sm:inline">Ada beberapa kesalahan validasi.</span>
+                            <ul class="mt-3 list-disc list-inside">
+                                @foreach (session('import_errors') as $failure)
+                                    <li>Baris {{ $failure->row() }}: {{ implode(', ', $failure->errors()) }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
                     <form action="{{ route('setoran.import') }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         <div class="mb-4">

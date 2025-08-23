@@ -9,6 +9,7 @@ use App\Http\Controllers\SetoranController;
 use App\Http\Controllers\PenarikanController;
 use App\Http\Controllers\JenisSampahController;
 use App\Http\Controllers\KelasController;
+use App\Http\Controllers\ReportController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -52,6 +53,15 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
    Route::get('/api/siswa-by-kelas/{id_kelas}', [SetoranController::class, 'getSiswaByKelas']);
 
     Route::resource('setoran', SetoranController::class)->except(['show']);
+
+// Rute untuk Laporan
+    Route::match(['get', 'post'], '/laporan/setoran', [ReportController::class, 'index'])->name('laporan.setoran.index');
+    Route::post('/laporan/setoran/export', [ReportController::class, 'exportSetoran'])->name('laporan.setoran.export');
+
+// Rute Kustom untuk Impor dan Ekspor Siswa
+    Route::get('/siswa/import', [SiswaController::class, 'showImportForm'])->name('siswa.import.form');
+    Route::post('/siswa/import', [SiswaController::class, 'import'])->name('siswa.import');
+    Route::get('/siswa/export/sample', [SiswaController::class, 'exportSample'])->name('siswa.export.sample');
 
     // Tambahkan rute untuk export
     Route::get('/setoran/export/sample', [SetoranController::class, 'exportSample'])->name('setoran.export.sample');

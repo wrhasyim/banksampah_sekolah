@@ -8,48 +8,45 @@ use App\Models\Pengguna;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\WithValidation;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
-class SiswaImport implements ToCollection, WithHeadingRow
+class SiswaImport implements ToCollection, WithHeadingRow, WithValidation
 {
     public function collection(Collection $rows)
     {
         foreach ($rows as $row) 
         {
-            // Pastikan kolom yang diperlukan ada
-            if (empty($row['nama_lengkap']) || empty($row['username']) || empty($row['password']) || empty($row['nis']) || empty($row['kelas'])) {
-                continue;
-            }
+            $kelas = Kelas::where('nama_kelas', $row['kelas'])->first();
 
-            // Temukan atau buat kelas baru berdasarkan nama kelas
-            $kelas = Kelas::firstOrCreate(['nama_kelas' => $row['kelas']]);
+            DB::transaction(function () use ($row, $kelas) {
+                $pengguna = Pengguna::create([
+                    'nama_lengkap' => $row['nama_lengkap'],
+                    'username' => $row['username'],
+                    'password' => Hash::make($row['password']),
+                    'role' => 'siswa',
+                ]);
 
-            // Gunakan NIS sebagai nama pengguna jika tidak ada
-            $username = $row['username'] ?? $row['nis'];
-
-            // Mulai transaksi database
-            DB::transaction(function () use ($row, $kelas, $username) {
-                // Buat akun Pengguna (User)
-                $pengguna = Pengguna::firstOrCreate(
-                    ['username' => $username],
-                    [
-                        'nama_lengkap' => $row['nama_lengkap'],
-                        'password' => Hash::make($row['password']),
-                        'role' => 'siswa',
-                    ]
-                );
-
-                // Buat data Siswa
-                Siswa::firstOrCreate(
-                    ['id_pengguna' => $pengguna->id],
-                    [
-                        'id_kelas' => $kelas->id,
-                        'nis' => $row['nis'],
-                        'saldo' => 0,
-                    ]
-                );
+                Siswa::create([
+                    'id_pengguna' => $pengguna->id,
+                    'id_kelas' => $kelas->id,
+                    'nis' => $row['nis'],
+                    'saldo' => 0,
+                ]);
             });
         }
+    }
+
+    public function rules(): array
+    {
+        return [
+            'nama_lengkap' => 'required|string|max:255',
+            'username' => 'required|string|unique:pengguna,username|max:255',
+            'password' => 'required|string|min:8',
+            'nis' => 'required|string|unique:siswa,nis|max:255',
+            'kelas' => 'required|string|exists:kelas,nama_kelas',
+        ];
     }
 }

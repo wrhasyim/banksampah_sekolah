@@ -16,9 +16,9 @@
                     <a href="{{ route('siswa.create') }}" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150 mb-4">
                         Tambah Siswa
                     </a>
-                    <a href="{{ route('siswa.import.form') }}" class="inline-flex items-center px-4 py-2 bg-blue-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 active:bg-blue-900 focus:outline-none focus:border-blue-900 focus:ring ring-blue-300 disabled:opacity-25 transition ease-in-out duration-150">
-    {{ __('Import Siswa') }}
-</a>
+                    <a href="{{ route('siswa.import.form') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-500 active:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition ease-in-out duration-150 mb-4 ml-2">
+                        Import Siswa
+                    </a>
                     <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
                         <table class="w-full text-sm text-left rtl:text-right text-gray-500">
                             <thead class="text-xs text-gray-700 uppercase bg-gray-50">
@@ -28,7 +28,8 @@
                                     <th scope="col" class="px-6 py-3">Username</th>
                                     <th scope="col" class="px-6 py-3">NIS</th>
                                     <th scope="col" class="px-6 py-3">Kelas</th>
-                                    <th scope="col" class="px-6 py-3">Saldo</th> <th scope="col" class="px-6 py-3">Aksi</th>
+                                    <th scope="col" col class="px-6 py-3">Saldo</th>
+                                    <th scope="col" class="px-6 py-3">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -39,7 +40,7 @@
                                     <td class="px-6 py-4">{{ $item->pengguna->username }}</td>
                                     <td class="px-6 py-4">{{ $item->nis ?? '-' }}</td>
                                     <td class="px-6 py-4">{{ $item->kelas->nama_kelas }}</td>
-                                    <td class="px-6 py-4 font-bold">Rp {{ number_format($item->saldo, 0, ',', '.') }}</td> <td class="px-6 py-4 flex items-center">
+                                    <td class="px-6 py-4 font-bold">Rp {{ number_format($item->saldo, 0, ',', '.') }}</td>
                                     <td class="px-6 py-4 flex items-center">
                                         <a href="{{ route('siswa.edit', $item->id) }}" class="font-medium text-blue-600 hover:underline">Edit</a>
                                         <form action="{{ route('siswa.destroy', $item->id) }}" method="POST" class="inline">
@@ -53,7 +54,7 @@
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="6" class="px-6 py-4 text-center text-gray-500">Data siswa masih kosong.</td>
+                                    <td colspan="7" class="px-6 py-4 text-center text-gray-500">Data siswa masih kosong.</td>
                                 </tr>
                                 @endforelse
                             </tbody>
