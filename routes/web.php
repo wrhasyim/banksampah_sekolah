@@ -2,18 +2,23 @@
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\BukuTabunganController; // <-- PASTIKAN BARIS INI ADA
 
 Route::get('/', function () {
     return view('welcome');
 });
 
-use App\Http\Controllers\DashboardController;
+
 // ...
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])->name('dashboard');
 
 // ... baris lain
-
+// RUTE BARU UNTUK BUKU TABUNGAN SISWA
+Route::get('/buku-tabungan', [BukuTabunganController::class, 'index'])
+    ->middleware(['auth', 'verified'])->name('buku-tabungan.index');
+    
 require __DIR__.'/auth.php';
 
 // -- TAMBAHKAN KODE DI BAWAH INI --

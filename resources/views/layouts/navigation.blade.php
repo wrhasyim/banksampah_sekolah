@@ -15,12 +15,19 @@
                      <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
         {{ __('Dashboard') }}
     </x-nav-link>
-    <x-nav-link :href="route('jenis-sampah.index')" :active="request()->routeIs('jenis-sampah.*')">
-        {{ __('Kelola Jenis Sampah') }}
-    </x-nav-link>
-    <x-nav-link :href="route('kelas.index')" :active="request()->routeIs('kelas.*')">
-        {{ __('Kelola Kelas') }}
-    </x-nav-link>
+    @if(Auth::user()->role === 'siswa')
+<x-nav-link :href="route('buku-tabungan.index')" :active="request()->routeIs('buku-tabungan.index')">
+    {{ __('Buku Tabungan') }}
+</x-nav-link>
+@endif
+    @if(Auth::user()->role === 'admin')
+<x-nav-link :href="route('jenis-sampah.index')" :active="request()->routeIs('jenis-sampah.*')">
+    {{ __('Kelola Jenis Sampah') }}
+</x-nav-link>
+<x-nav-link :href="route('kelas.index')" :active="request()->routeIs('kelas.*')">
+    {{ __('Kelola Kelas') }}
+</x-nav-link>
+
     <x-nav-link :href="route('siswa.index')" :active="request()->routeIs('siswa.*')">
     {{ __('Kelola Siswa') }}
 </x-nav-link>
@@ -30,7 +37,7 @@
 <x-nav-link :href="route('penarikan.index')" :active="request()->routeIs('penarikan.*')">
     {{ __('Penarikan Saldo') }}
 </x-nav-link>
-
+@endif
                 </div>
             </div>
 
