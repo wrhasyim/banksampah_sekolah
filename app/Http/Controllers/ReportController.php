@@ -15,6 +15,7 @@ class ReportController extends Controller
         $kelas = Kelas::all();
         $setoran = collect();
 
+        // Logika untuk menampilkan laporan jika ada permintaan POST
         if ($request->isMethod('post')) {
             $query = Setoran::with(['siswa.pengguna', 'jenis_sampah', 'admin']);
 
@@ -52,6 +53,7 @@ class ReportController extends Controller
             });
         }
 
+        // Mengekspor data yang sudah difilter
         return Excel::download(new SetoranReportExport($query->get()), 'laporan-setoran.xlsx');
     }
 }
