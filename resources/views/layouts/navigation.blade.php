@@ -12,9 +12,25 @@
 
                 <!-- Navigation Links -->
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                        {{ __('Dashboard') }}
-                    </x-nav-link>
+                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
+        {{ __('Dashboard') }}
+    </x-nav-link>
+    <x-nav-link :href="route('jenis-sampah.index')" :active="request()->routeIs('jenis-sampah.*')">
+        {{ __('Kelola Jenis Sampah') }}
+    </x-nav-link>
+    <x-nav-link :href="route('kelas.index')" :active="request()->routeIs('kelas.*')">
+        {{ __('Kelola Kelas') }}
+    </x-nav-link>
+    <x-nav-link :href="route('siswa.index')" :active="request()->routeIs('siswa.*')">
+    {{ __('Kelola Siswa') }}
+</x-nav-link>
+<x-nav-link :href="route('setoran.index')" :active="request()->routeIs('setoran.*')">
+    {{ __('Setoran Sampah') }}
+</x-nav-link>
+<x-nav-link :href="route('penarikan.index')" :active="request()->routeIs('penarikan.*')">
+    {{ __('Penarikan Saldo') }}
+</x-nav-link>
+
                 </div>
             </div>
 
