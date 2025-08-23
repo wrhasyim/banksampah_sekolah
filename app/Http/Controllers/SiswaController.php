@@ -9,6 +9,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use App\Imports\SiswaImport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class SiswaController extends Controller
 {
@@ -24,6 +26,22 @@ class SiswaController extends Controller
         // Ambil semua data kelas untuk ditampilkan di dropdown
         $kelas = Kelas::all();
         return view('pages.siswa.create', compact('kelas'));
+    }
+
+public function showImportForm()
+    {
+        return view('pages.siswa.import');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls',
+        ]);
+
+        Excel::import(new SiswaImport, $request->file('file'));
+
+        return redirect()->route('siswa.index')->with('success', 'Data siswa berhasil diimpor!');
     }
 
     public function store(Request $request)

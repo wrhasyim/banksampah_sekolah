@@ -8,6 +8,8 @@ use App\Models\Siswa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Imports\SetoranImport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class SetoranController extends Controller
 {
@@ -18,7 +20,24 @@ class SetoranController extends Controller
         $setoran = Setoran::with(['siswa.pengguna', 'jenisSampah', 'admin'])->latest()->get();
         return view('pages.setoran.index', compact('setoran'));
     }
+public function showImportForm()
+    {
+        $siswas = Siswa::all();
+        $jenisSampahs = JenisSampah::all();
+        return view('pages.setoran.import', compact('siswas', 'jenisSampahs'));
+    }
 
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls',
+        ]);
+
+        Excel::import(new SetoranImport, $request->file('file'));
+
+        return redirect()->route('setoran.index')->with('success', 'Data setoran sampah berhasil diimpor!');
+    }
+    
     public function create()
     {
         // Ambil data siswa dan jenis sampah untuk form dropdown

@@ -3,46 +3,46 @@
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\BukuTabunganController; // <-- PASTIKAN BARIS INI ADA
+use App\Http\Controllers\BukuTabunganController;
+use App\Http\Controllers\SiswaController;
+use App\Http\Controllers\SetoranController;
+use App\Http\Controllers\PenarikanController;
+use App\Http\Controllers\JenisSampahController;
+use App\Http\Controllers\KelasController;
 
 Route::get('/', function () {
     return view('welcome');
 });
 
-
-// ...
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])->name('dashboard');
 
-// ... baris lain
-// RUTE BARU UNTUK BUKU TABUNGAN SISWA
 Route::get('/buku-tabungan', [BukuTabunganController::class, 'index'])
     ->middleware(['auth', 'verified'])->name('buku-tabungan.index');
-    
+
 require __DIR__.'/auth.php';
 
-// -- TAMBAHKAN KODE DI BAWAH INI --
 Route::middleware(['auth', 'role:admin'])->group(function () {
-   
-    Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [\App\Http\Controllers\ProfileController::class, 'destroy'])->name('profile.destroy');
+    
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // --- GRUP RUTE UNTUK JENIS SAMPAH ---
-    Route::get('/jenis-sampah', [\App\Http\Controllers\JenisSampahController::class, 'index'])->name('jenis-sampah.index');
-    Route::get('/jenis-sampah/create', [\App\Http\Controllers\JenisSampahController::class, 'create'])->name('jenis-sampah.create');
-    Route::post('/jenis-sampah', [\App\Http\Controllers\JenisSampahController::class, 'store'])->name('jenis-sampah.store');
-    Route::get('/jenis-sampah/{jenisSampah}/edit', [\App\Http\Controllers\JenisSampahController::class, 'edit'])->name('jenis-sampah.edit');
-    Route::put('/jenis-sampah/{jenisSampah}', [\App\Http\Controllers\JenisSampahController::class, 'update'])->name('jenis-sampah.update');
-    Route::delete('/jenis-sampah/{jenisSampah}', [\App\Http\Controllers\JenisSampahController::class, 'destroy'])->name('jenis-sampah.destroy'); // <-- RUTE BARU
+    // Menggunakan Route::resource dengan pengecualian
+    Route::resource('jenis-sampah', JenisSampahController::class);
+    Route::resource('kelas', KelasController::class);
+    // Kita kecualikan 'show' karena kita tidak memilikinya
+    Route::resource('siswa', SiswaController::class)->except(['show']);
+    Route::resource('setoran', SetoranController::class)->except(['show']);
+    Route::resource('penarikan', PenarikanController::class)->only(['index', 'create', 'store']);
 
-// Menggunakan Route::resource untuk cara yang lebih efisien
-    Route::resource('jenis-sampah', \App\Http\Controllers\JenisSampahController::class);
-    Route::resource('kelas', \App\Http\Controllers\KelasController::class); // <-- TAMBAHKAN INI
-    Route::resource('siswa', \App\Http\Controllers\SiswaController::class); // <-- TAMBAHKAN INI
-    Route::resource('setoran', \App\Http\Controllers\SetoranController::class); // <-- TAMBAHKAN INI
-    Route::resource('penarikan', \App\Http\Controllers\PenarikanController::class)->only(['index', 'create', 'store']); // <-- TAMBAHKAN INI
+    // Rute kustom untuk impor Siswa
+    Route::get('/siswa/import', [SiswaController::class, 'showImportForm'])->name('siswa.import.form');
+    Route::post('/siswa/import', [SiswaController::class, 'import'])->name('siswa.import');
 
+    // Rute kustom untuk impor Setoran
+    Route::get('/setoran/import', [SetoranController::class, 'showImportForm'])->name('setoran.import.form');
+    Route::post('/setoran/import', [SetoranController::class, 'import'])->name('setoran.import');
 });
 
 require __DIR__.'/auth.php';
