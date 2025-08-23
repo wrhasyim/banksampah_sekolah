@@ -14,7 +14,7 @@ class Setoran extends Model
         'id_siswa',
         'id_jenis_sampah',
         'id_admin',
-        'jumlah_satuan', // Pastikan ini ada dan bukan 'jumlah_kg'
+        'jumlah_satuan',
         'tanggal_setoran',
         'total_harga',
     ];

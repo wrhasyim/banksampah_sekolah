@@ -49,7 +49,10 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/siswa/import', [SiswaController::class, 'showImportForm'])->name('siswa.import.form');
     Route::post('/siswa/import', [SiswaController::class, 'import'])->name('siswa.import');
 
-   
+   Route::get('/api/siswa-by-kelas/{id_kelas}', [SetoranController::class, 'getSiswaByKelas']);
+
+    Route::resource('setoran', SetoranController::class)->except(['show']);
+
     // Tambahkan rute untuk export
     Route::get('/setoran/export/sample', [SetoranController::class, 'exportSample'])->name('setoran.export.sample');
     Route::get('/setoran/import', [SetoranController::class, 'showImportForm'])->name('setoran.import.form');

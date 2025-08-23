@@ -16,22 +16,31 @@
                     <form action="{{ route('setoran.store') }}" method="POST">
                         @csrf
                         <div class="mt-4">
+                            <x-input-label for="id_kelas" value="Pilih Kelas" />
+                            <select name="id_kelas" id="id_kelas" class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" required>
+                                <option value="">-- Pilih Kelas --</option>
+                                @foreach ($kelas as $item)
+                                    <option value="{{ $item->id }}">{{ $item->nama_kelas }}</option>
+                                @endforeach
+                            </select>
+                            <x-input-error :messages="$errors->get('id_kelas')" class="mt-2" />
+                        </div>
+
+                        <div class="mt-4">
                             <x-input-label for="id_siswa" value="Pilih Siswa" />
                             <select name="id_siswa" id="id_siswa" class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" required>
                                 <option value="">-- Pilih Siswa --</option>
-                                @foreach ($siswa as $item)
-                                    <option value="{{ $item->id }}">{{ $item->pengguna->nama_lengkap }} (Kelas: {{ $item->kelas->nama_kelas }})</option>
-                                @endforeach
                             </select>
                             <x-input-error :messages="$errors->get('id_siswa')" class="mt-2" />
                         </div>
+                        
                         <div class="mt-4">
                             <x-input-label for="id_jenis_sampah" value="Jenis Sampah" />
                             <select name="id_jenis_sampah" id="id_jenis_sampah" class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" required>
                                 <option value="">-- Pilih Jenis Sampah --</option>
                                 @foreach ($jenisSampah as $item)
                                     <option value="{{ $item->id }}">
-                                        {{ $item->nama_sampah }} (Rp {{ number_format($item->harga_per_satuan, 0, ',', '.') }})
+                                        {{ $item->nama_sampah }}
                                     </option>
                                 @endforeach
                             </select>
@@ -53,3 +62,35 @@
         </div>
     </div>
 </x-app-layout>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const kelasDropdown = document.getElementById('id_kelas');
+    const siswaDropdown = document.getElementById('id_siswa');
+
+    kelasDropdown.addEventListener('change', function() {
+        const kelasId = this.value;
+        siswaDropdown.innerHTML = '<option value="">-- Memuat Siswa... --</option>';
+
+        if (kelasId) {
+            fetch(`/api/siswa-by-kelas/${kelasId}`)
+                .then(response => response.json())
+                .then(data => {
+                    siswaDropdown.innerHTML = '<option value="">-- Pilih Siswa --</option>';
+                    data.forEach(siswa => {
+                        const option = document.createElement('option');
+                        option.value = siswa.id;
+                        option.textContent = siswa.nama;
+                        siswaDropdown.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    siswaDropdown.innerHTML = '<option value="">Gagal memuat siswa</option>';
+                });
+        } else {
+            siswaDropdown.innerHTML = '<option value="">-- Pilih Siswa --</option>';
+        }
+    });
+});
+</script>

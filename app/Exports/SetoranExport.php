@@ -17,6 +17,7 @@ class SetoranExport implements FromCollection, WithHeadings
     {
         return [
             'nama',
+            'kelas',
             'jenis_sampah',
             'jumlah',
         ];

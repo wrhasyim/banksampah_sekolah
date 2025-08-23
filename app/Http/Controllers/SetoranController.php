@@ -2,23 +2,25 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\JenisSampah;
 use App\Models\Setoran;
 use App\Models\Siswa;
+use App\Models\JenisSampah;
+use App\Models\Kelas;
+use App\Models\Pengguna;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use App\Imports\SetoranImport;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\SetoranImport;
 use App\Exports\SetoranExport;
-use App\Models\Pengguna; // Pastikan ini ada
 
 class SetoranController extends Controller
 {
+    /**
+     * Display a listing of the resource.
+     */
     public function index()
     {
-        // Ambil data setoran, urutkan dari yang terbaru
-        // Eager load relasi untuk efisiensi query
         $setoran = Setoran::with(['siswa.pengguna', 'jenis_sampah', 'admin'])
                            ->latest()
                            ->get();
@@ -26,18 +28,63 @@ class SetoranController extends Controller
         return view('pages.setoran.index', compact('setoran'));
     }
 
-    public function exportSample()
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
     {
-        return Excel::download(new SetoranExport, 'setoran-template.xlsx');
+        $kelas = Kelas::all();
+        $jenisSampah = JenisSampah::all();
+        return view('pages.setoran.create', compact('kelas', 'jenisSampah'));
     }
 
-public function showImportForm()
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
     {
-        $siswas = Siswa::all();
-        $jenisSampahs = JenisSampah::all();
-        return view('pages.setoran.import', compact('siswas', 'jenisSampahs'));
+        $request->validate([
+            'id_siswa' => 'required|exists:siswa,id',
+            'id_jenis_sampah' => 'required|exists:jenis_sampah,id',
+            'jumlah_satuan' => 'required|integer|min:1',
+        ]);
+
+        $siswa = Siswa::with('pengguna')->findOrFail($request->id_siswa);
+        $jenisSampah = JenisSampah::findOrFail($request->id_jenis_sampah);
+
+        if ($siswa->saldo < 0) {
+            return back()->with('error', 'Saldo siswa tidak mencukupi untuk penarikan.');
+        }
+
+        DB::transaction(function () use ($request, $siswa, $jenisSampah) {
+            $total_harga = $request->jumlah_satuan * $jenisSampah->harga_per_satuan;
+
+            Setoran::create([
+                'id_siswa' => $siswa->id,
+                'id_jenis_sampah' => $jenisSampah->id,
+                'id_admin' => Auth::id(),
+                'jumlah_satuan' => $request->jumlah_satuan,
+                'total_harga' => $total_harga,
+            ]);
+
+            $siswa->saldo += $total_harga;
+            $siswa->save();
+        });
+
+        return redirect()->route('setoran.index')->with('status', 'Setoran baru berhasil dicatat!');
     }
 
+    /**
+     * Show the form for importing setoran data from an Excel file.
+     */
+    public function showImportForm()
+    {
+        return view('pages.setoran.import');
+    }
+
+    /**
+     * Import setoran data from an Excel file.
+     */
     public function import(Request $request)
     {
         $request->validate([
@@ -46,51 +93,31 @@ public function showImportForm()
 
         Excel::import(new SetoranImport, $request->file('file'));
 
-        return redirect()->route('setoran.index')->with('success', 'Data setoran sampah berhasil diimpor!');
-    }
-    
-    public function create()
-    {
-        // Ambil data siswa dan jenis sampah untuk form dropdown
-        $siswa = Siswa::with('pengguna')->get();
-        $jenisSampah = JenisSampah::all();
-        return view('pages.setoran.create', compact('siswa', 'jenisSampah'));
+        return redirect()->route('setoran.index')->with('status', 'Data setoran berhasil diimpor!');
     }
 
-    public function store(Request $request)
+    /**
+     * Download an empty Excel template for importing setoran data.
+     */
+    public function exportSample()
     {
-        $request->validate([
-            'id_siswa' => 'required|exists:siswa,id',
-            'id_jenis_sampah' => 'required|exists:jenis_sampah,id',
-            'jumlah_satuan' => 'required|numeric|min:1',
-        ]);
+        return Excel::download(new SetoranExport, 'setoran-template.xlsx');
+    }
 
-        try {
-            // Gunakan transaksi untuk memastikan integritas data
-            DB::transaction(function () use ($request) {
-                $siswa = Siswa::findOrFail($request->id_siswa);
-                $jenisSampah = JenisSampah::findOrFail($request->id_jenis_sampah);
-
-                // Hitung total harga
-                $totalHarga = $jenisSampah->harga_per_satuan * $request->jumlah_satuan;
-
-                // 1. Buat record setoran baru
-                Setoran::create([
-                    'id_siswa' => $request->id_siswa,
-                    'id_jenis_sampah' => $request->id_jenis_sampah,
-                    'id_admin' => Auth::id(), // Ambil id admin yang sedang login
-                    'jumlah_satuan' => $request->jumlah_satuan,
-                    'total_harga' => $totalHarga,
-                ]);
-
-                // 2. Tambahkan saldo siswa
-                $siswa->saldo += $totalHarga;
-                $siswa->save();
-            });
-        } catch (\Exception $e) {
-            return redirect()->route('setoran.create')->with('error', 'Terjadi kesalahan saat menyimpan transaksi.');
-        }
-
-        return redirect()->route('setoran.index')->with('status', 'Transaksi setoran berhasil disimpan!');
+    /**
+     * Get students by class ID via API.
+     */
+    public function getSiswaByKelas($id_kelas)
+    {
+        $siswa = Siswa::with('pengguna')
+                      ->where('id_kelas', $id_kelas)
+                      ->get()
+                      ->map(function ($item) {
+                          return [
+                              'id' => $item->id,
+                              'nama' => $item->pengguna->nama_lengkap,
+                          ];
+                      });
+        return response()->json($siswa);
     }
 }
