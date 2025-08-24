@@ -7,13 +7,15 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 class SetoranSampleExport implements WithHeadings
 {
     /**
-    * @return \Illuminate\Support\Collection
+    * @return array
     */
     public function headings(): array
     {
+        // Header baru sesuai permintaan
         return [
-            'nis_siswa',
-            'kode_sampah',
+            'nama_siswa',
+            'nama_kelas',
+            'nama_sampah',
             'jumlah_satuan',
         ];
     }

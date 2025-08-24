@@ -80,7 +80,12 @@ class SetoranController extends Controller
     
     public function showImportForm()
     {
-        return view('pages.setoran.import');
+        // Ambil 1 data jenis sampah dan 1 data siswa untuk ditampilkan sebagai referensi
+        $jenisSampah = \App\Models\JenisSampah::take(1)->get(); // <-- UBAH DI SINI
+        $siswa = \App\Models\Siswa::with(['pengguna', 'kelas'])->take(1)->get(); // <-- UBAH DI SINI
+
+        // Kirim kedua variabel ke view
+        return view('pages.setoran.import', compact('jenisSampah', 'siswa'));
     }
 
     public function import(Request $request)
@@ -90,14 +95,22 @@ class SetoranController extends Controller
         ]);
 
         try {
-            Excel::import(new SetoranImport, $request->file('file'));
+            \Maatwebsite\Excel\Facades\Excel::import(new \App\Imports\SetoranImport, $request->file('file'));
+        
+        // Tangkap error validasi dari dalam file Excel
         } catch (ValidationException $e) {
             $failures = $e->failures();
-
-            return back()->with('import_errors', $failures)->withInput();
+            $errorMessages = [];
+            foreach ($failures as $failure) {
+                // Kumpulkan semua pesan error untuk setiap baris yang gagal
+                $errorMessages[] = 'Baris ' . $failure->row() . ': ' . implode(', ', $failure->errors());
+            }
+            // Kirim kembali pesan error yang jelas ke halaman impor
+            return redirect()->route('setoran.import.form')->withErrors($errorMessages);
         }
 
-        return redirect()->route('setoran.index')->with('status', 'Data setoran berhasil diimpor!');
+        // Jika berhasil, kirim pesan sukses
+        return redirect()->route('setoran.import.form')->with('success', 'Data setoran berhasil diimpor!');
     }
 
 }
