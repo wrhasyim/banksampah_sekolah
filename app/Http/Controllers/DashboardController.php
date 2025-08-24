@@ -3,61 +3,55 @@
 namespace App\Http\Controllers;
 
 use App\Models\Kelas;
+use App\Models\Penjualan; // <-- Pastikan ini mengarah ke Models
 use App\Models\Setoran;
 use App\Models\Siswa;
-use Illuminate\Http\Request; // Tambahkan ini
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
-    // Tambahkan Request $request ke dalam parameter metode index
     public function index(Request $request)
     {
         $user = Auth::user();
 
         if ($user->role === 'admin') {
-            // --- LOGIKA BARU UNTUK FILTER DINAMIS ---
-            $jangkaWaktu = $request->input('jangka_waktu', '7'); // Default 7 hari
-            $tipeGrafik = $request->input('tipe_grafik', 'nominal'); // Default nominal (Rp)
+            // Data Ringkasan
+            $totalSiswa = Siswa::count();
+            $totalSaldo = Siswa::sum('saldo');
+            $totalSetoranHariIni = Setoran::whereDate('created_at', today())->sum('total_harga');
+            $totalPenjualan = Penjualan::sum('total_harga');
 
-            // Tentukan kolom yang akan di-SUM berdasarkan tipe grafik
-            $kolomAgregat = $tipeGrafik === 'jumlah' ? 'jumlah_satuan' : 'total_harga';
+            // --- QUERY PENJUALAN TERAKHIR DIPERBARUI DI SINI ---
+            $penjualanTerakhir = Penjualan::with('admin')
+                ->withSum('detailPenjualan', 'jumlah_satuan') // Menjumlahkan total pcs
+                ->withSum('detailPenjualan', 'jumlah_kg')     // Menjumlahkan total kg
+                ->latest()
+                ->take(5)
+                ->get();
             
-            // Tentukan rentang tanggal
+            // ... (Sisa logika untuk Grafik dan Peringkat tidak berubah) ...
+            $jangkaWaktu = $request->input('jangka_waktu', '7');
+            $tipeGrafik = $request->input('tipe_grafik', 'nominal');
+            $kolomAgregat = $tipeGrafik === 'jumlah' ? 'jumlah_satuan' : 'total_harga';
             $tanggalMulai = now();
             if ($jangkaWaktu === '30') {
                 $tanggalMulai = now()->subDays(29);
             } elseif ($jangkaWaktu === 'bulan_ini') {
                 $tanggalMulai = now()->startOfMonth();
-            } else { // Default 7 hari
+            } else {
                 $tanggalMulai = now()->subDays(6);
             }
-
-            // Data untuk Grafik Dinamis
             $setoranTerakhir = Setoran::select(DB::raw('DATE(created_at) as tanggal'), DB::raw("SUM($kolomAgregat) as total"))
                 ->where('created_at', '>=', $tanggalMulai)
-                ->groupBy('tanggal')
-                ->orderBy('tanggal', 'asc')
-                ->get();
-
-            // Format data untuk Chart.js
+                ->groupBy('tanggal')->orderBy('tanggal', 'asc')->get();
             $labels = $setoranTerakhir->map(fn($item) => \Carbon\Carbon::parse($item->tanggal)->format('d M'));
             $data = $setoranTerakhir->map(fn($item) => $item->total);
-
             $chartData = [
-                'labels' => $labels,
-                'data' => $data,
+                'labels' => $labels, 'data' => $data,
                 'label' => $tipeGrafik === 'jumlah' ? 'Jumlah Sampah (pcs)' : 'Total Setoran (Rp)',
             ];
-            // --- AKHIR LOGIKA BARU ---
-
-            // Data Ringkasan (tetap sama)
-            $totalSiswa = Siswa::count();
-            $totalSaldo = Siswa::sum('saldo');
-            $totalSetoranHariIni = Setoran::whereDate('created_at', today())->sum('total_harga');
-            
-            // Data Peringkat (tetap sama)
             $peringkatSiswa = Siswa::select('id_pengguna', DB::raw('SUM(setoran.jumlah_satuan) as total_satuan'))
                 ->join('setoran', 'siswa.id', '=', 'setoran.id_siswa')
                 ->with('pengguna')->groupBy('id_pengguna')->orderByDesc('total_satuan')->limit(5)->get();
@@ -66,11 +60,27 @@ class DashboardController extends Controller
                 ->groupBy('nama_kelas')->orderByDesc('total_satuan')->limit(5)->get();
             
             return view('dashboard-admin', compact(
-                'totalSiswa', 'totalSaldo', 'totalSetoranHariIni', 'peringkatSiswa', 
-                'peringkatKelas', 'chartData', 'jangkaWaktu', 'tipeGrafik' // Kirim nilai filter ke view
+                'totalSiswa', 'totalSaldo', 'totalSetoranHariIni', 'totalPenjualan', 'penjualanTerakhir',
+                'peringkatSiswa', 'peringkatKelas', 'chartData', 'jangkaWaktu', 'tipeGrafik'
             ));
 
-        } 
-        // ... (sisa kode untuk siswa tetap sama)
+        }  elseif ($user->role === 'siswa') {
+            $siswa = $user->siswa;
+            if (!$siswa) {
+                Auth::logout();
+                return redirect('/login')->with('error', 'Data siswa tidak ditemukan. Silakan hubungi admin.');
+            }
+            
+            $setoran = $siswa->setoran()->with('jenisSampah')->latest()->take(5)->get()->map(fn($i) => ['tipe' => 'setoran', 'data' => $i]);
+            $penarikan = $siswa->penarikan()->latest()->take(5)->get()->map(fn($i) => ['tipe' => 'penarikan', 'data' => $i]);
+
+            $transaksiTerakhir = $setoran->concat($penarikan)
+                                ->sortByDesc(fn($i) => $i['data']->created_at)
+                                ->take(5);
+
+            return view('dashboard-siswa', compact('siswa', 'transaksiTerakhir'));
+        }
+        
+        return view('dashboard');
     }
 }
