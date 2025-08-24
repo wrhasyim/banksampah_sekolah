@@ -24,7 +24,7 @@ class Setoran extends Model
         return $this->belongsTo(Siswa::class, 'id_siswa');
     }
 
-    public function jenis_sampah()
+    public function jenisSampah()
     {
         return $this->belongsTo(JenisSampah::class, 'id_jenis_sampah');
     }

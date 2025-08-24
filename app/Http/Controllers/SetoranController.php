@@ -14,14 +14,13 @@ use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\Validators\ValidationException;
 use App\Imports\SetoranImport;
 use App\Exports\SetoranExport;
+use App\Exports\SetoranSampleExport;
 
 class SetoranController extends Controller
 {
     public function index()
     {
-        $setoran = Setoran::with(['siswa.pengguna', 'jenis_sampah', 'admin'])
-                           ->latest()
-                           ->get();
+        $setoran = Setoran::with(['siswa.pengguna', 'jenisSampah', 'admin'])->latest()->get();
 
         return view('pages.setoran.index', compact('setoran'));
     }
@@ -32,7 +31,10 @@ class SetoranController extends Controller
         $jenisSampah = JenisSampah::all();
         return view('pages.setoran.create', compact('kelas', 'jenisSampah'));
     }
-
+    public function exportSample()
+    {
+        return \Maatwebsite\Excel\Facades\Excel::download(new SetoranSampleExport, 'contoh-impor-setoran.xlsx');
+    }
     public function store(Request $request)
     {
         $request->validate([
@@ -98,8 +100,4 @@ class SetoranController extends Controller
         return redirect()->route('setoran.index')->with('status', 'Data setoran berhasil diimpor!');
     }
 
-    public function exportSample()
-    {
-        return Excel::download(new SetoranExport, 'setoran-template.xlsx');
-    }
 }

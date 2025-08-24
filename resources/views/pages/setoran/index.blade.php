@@ -38,7 +38,7 @@
                                 <tr class="bg-white border-b hover:bg-gray-50">
                                     <td class="px-6 py-4">{{ $item->created_at->format('d-m-Y H:i') }}</td>
                                     <td class="px-6 py-4 font-medium text-gray-900">{{ $item->siswa->pengguna->nama_lengkap }}</td>
-                                    <td class="px-6 py-4">{{ $item->jenis_sampah->nama_sampah }}</td>
+                                    <td class="px-6 py-4">{{ $item->jenisSampah->nama_sampah }}</td>
                                     <td class="px-6 py-4">{{ $item->jumlah_satuan }}</td>
                                     <td class="px-6 py-4">Rp {{ number_format($item->total_harga, 0, ',', '.') }}</td>
                                     <td class="px-6 py-4">{{ $item->admin->nama_lengkap }}</td>
