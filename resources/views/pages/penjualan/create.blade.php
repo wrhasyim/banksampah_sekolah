@@ -56,18 +56,26 @@
                 const itemRow = document.createElement('div');
                 itemRow.classList.add('p-4', 'border', 'rounded-md', 'grid', 'grid-cols-12', 'gap-4', 'items-center');
                 itemRow.innerHTML = `
-                    <div class="col-span-6">
+                    <div class="col-span-12 md:col-span-3">
                         <label class="block text-sm font-medium text-gray-700">Jenis Sampah</label>
                         <select name="items[${itemIndex}][id_jenis_sampah]" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required>
                             <option value="">-- Pilih Sampah --</option>
-                            ${sampahData.map(sampah => `<option value="${sampah.id}">${sampah.nama_sampah} (Stok: ${sampah.stok})</option>`).join('')}
+                            ${sampahData.map(sampah => `<option value="${sampah.id}">${sampah.nama_sampah} (Stok: ${sampah.stok} pcs)</option>`).join('')}
                         </select>
                     </div>
-                    <div class="col-span-4">
+                    <div class="col-span-6 md:col-span-2">
                         <label class="block text-sm font-medium text-gray-700">Jumlah (pcs)</label>
-                        <input type="number" name="items[${itemIndex}][jumlah]" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required min="1">
+                        <input type="number" name="items[${itemIndex}][jumlah_satuan]" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required min="1" placeholder="Utk. Stok">
                     </div>
-                    <div class="col-span-2 flex items-end">
+                    <div class="col-span-6 md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700">Jumlah (Kg)</label>
+                        <input type="number" step="0.01" name="items[${itemIndex}][jumlah_kg]" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" min="0" placeholder="Opsional">
+                    </div>
+                    <div class="col-span-10 md:col-span-3">
+                        <label class="block text-sm font-medium text-gray-700">Harga Jual (Rp)</label>
+                        <input type="number" name="items[${itemIndex}][subtotal_harga]" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required min="0" placeholder="Total harga jual item ini">
+                    </div>
+                    <div class="col-span-2 md:col-span-2 flex items-end justify-end">
                         <button type="button" class="remove-item-btn text-red-600 hover:text-red-900">Hapus</button>
                     </div>
                 `;
@@ -80,7 +88,7 @@
             }
 
             addItemBtn.addEventListener('click', createItemRow);
-            createItemRow(); // Tambahkan satu baris item saat halaman dimuat
+            createItemRow();
         });
     </script>
     @endpush

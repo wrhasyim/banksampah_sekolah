@@ -30,7 +30,9 @@ class PenjualanController extends Controller
             'nama_pengepul' => 'required|string|max:255',
             'items' => 'required|array|min:1',
             'items.*.id_jenis_sampah' => 'required|exists:jenis_sampah,id',
-            'items.*.jumlah' => 'required|numeric|min:1',
+            'items.*.jumlah_satuan' => 'required|numeric|min:1', // Jumlah dalam PCS untuk mengurangi stok
+            'items.*.jumlah_kg' => 'nullable|numeric|min:0',    // Jumlah dalam KG (opsional)
+            'items.*.subtotal_harga' => 'required|numeric|min:0', // Harga Jual Manual
         ]);
 
         try {
@@ -47,25 +49,26 @@ class PenjualanController extends Controller
                 foreach ($request->items as $item) {
                     $jenisSampah = JenisSampah::findOrFail($item['id_jenis_sampah']);
 
-                    // Validasi apakah stok mencukupi
-                    if ($jenisSampah->stok < $item['jumlah']) {
+                    // Validasi apakah stok (dalam pcs) mencukupi
+                    if ($jenisSampah->stok < $item['jumlah_satuan']) {
                         throw ValidationException::withMessages([
-                            'items' => 'Stok untuk ' . $jenisSampah->nama_sampah . ' tidak mencukupi. Sisa stok: ' . $jenisSampah->stok,
+                            'items' => 'Stok untuk ' . $jenisSampah->nama_sampah . ' tidak mencukupi. Sisa stok: ' . $jenisSampah->stok . ' pcs.',
                         ]);
                     }
 
-                    $subtotal = $jenisSampah->harga_per_satuan * $item['jumlah'];
-                    $totalHarga += $subtotal;
+                    // Total harga sekarang diambil dari input form, bukan dihitung
+                    $totalHarga += $item['subtotal_harga'];
 
                     // Buat record detail penjualan
                     $penjualan->detailPenjualan()->create([
                         'id_jenis_sampah' => $item['id_jenis_sampah'],
-                        'jumlah_satuan' => $item['jumlah'],
-                        'subtotal_harga' => $subtotal,
+                        'jumlah_satuan' => $item['jumlah_satuan'],
+                        'jumlah_kg' => $item['jumlah_kg'],
+                        'subtotal_harga' => $item['subtotal_harga'],
                     ]);
 
-                    // Kurangi stok sampah
-                    $jenisSampah->decrement('stok', $item['jumlah']);
+                    // Kurangi stok sampah (dalam pcs)
+                    $jenisSampah->decrement('stok', $item['jumlah_satuan']);
                 }
 
                 // Update total harga di record penjualan utama

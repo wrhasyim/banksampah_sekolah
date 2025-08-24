@@ -1,12 +1,15 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Dashboard Admin') }}
-        </h2>
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ __('Dashboard Admin') }}</h2>
     </x-slot>
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <div class="mb-6 flex space-x-4">
+                <a href="{{ route('setoran.create') }}" class="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition duration-150">Catat Setoran</a>
+                <a href="{{ route('penjualan.create') }}" class="px-6 py-3 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 transition duration-150">Catat Penjualan</a>
+            </div>
+
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6 text-center">
                     <h3 class="text-lg font-medium text-gray-900">Total Siswa</h3>
@@ -22,36 +25,80 @@
                 </div>
             </div>
 
-            <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">🏆 Peringkat Siswa Teraktif</h3>
-                    <ol class="list-decimal list-inside">
-                        @forelse ($peringkatSiswa as $siswa)
-                            <li class="mb-2">
-                                <span class="font-semibold">{{ $siswa->pengguna->nama_lengkap }}</span>
-                                <span class="text-gray-600 text-sm float-right">{{ $siswa->total_satuan }} pcs</span>
-                            </li>
-                        @empty
-                            <p class="text-gray-500">Belum ada data setoran.</p>
-                        @endforelse
-                    </ol>
+            <div class="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-medium text-gray-900">📈 Tren Setoran</h3>
+                        <form action="{{ route('dashboard') }}" method="GET" class="flex space-x-2 items-center text-sm">
+                            <select name="tipe_grafik" onchange="this.form.submit()" class="border-gray-300 rounded-md shadow-sm text-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                <option value="nominal" {{ $tipeGrafik == 'nominal' ? 'selected' : '' }}>Berdasarkan Nominal (Rp)</option>
+                                <option value="jumlah" {{ $tipeGrafik == 'jumlah' ? 'selected' : '' }}>Berdasarkan Jumlah (pcs)</option>
+                            </select>
+                            <select name="jangka_waktu" onchange="this.form.submit()" class="border-gray-300 rounded-md shadow-sm text-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                <option value="7" {{ $jangkaWaktu == '7' ? 'selected' : '' }}>7 Hari Terakhir</option>
+                                <option value="30" {{ $jangkaWaktu == '30' ? 'selected' : '' }}>30 Hari Terakhir</option>
+                                <option value="bulan_ini" {{ $jangkaWaktu == 'bulan_ini' ? 'selected' : '' }}>Bulan Ini</option>
+                            </select>
+                        </form>
+                    </div>
+                    <canvas id="setoranChart"></canvas>
                 </div>
 
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">🏆 Peringkat Kelas Teraktif</h3>
-                    <ol class="list-decimal list-inside">
-                        @forelse ($peringkatKelas as $kelas)
-                            <li class="mb-2">
-                                <span class="font-semibold">{{ $kelas->nama_kelas }}</span>
-                                <span class="text-gray-600 text-sm float-right">{{ $kelas->total_satuan }} pcs</span>
-                            </li>
-                        @empty
-                            <p class="text-gray-500">Belum ada data setoran.</p>
-                        @endforelse
-                    </ol>
+                <div class="space-y-6">
+                    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">🏆 Peringkat Siswa Teraktif</h3>
+                        <ol class="list-decimal list-inside space-y-2">
+                            @forelse ($peringkatSiswa as $siswa)
+                                <li>
+                                    <span class="font-semibold">{{ $siswa->pengguna->nama_lengkap }}</span>
+                                    <span class="text-gray-600 text-sm float-right">{{ $siswa->total_satuan }} pcs</span>
+                                </li>
+                            @empty
+                                <p class="text-gray-500">Belum ada data setoran.</p>
+                            @endforelse
+                        </ol>
+                    </div>
+                    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">🏆 Peringkat Kelas Teraktif</h3>
+                        <ol class="list-decimal list-inside space-y-2">
+                            @forelse ($peringkatKelas as $kelas)
+                                <li>
+                                    <span class="font-semibold">{{ $kelas->nama_kelas }}</span>
+                                    <span class="text-gray-600 text-sm float-right">{{ $kelas->total_satuan }} pcs</span>
+                                </li>
+                            @empty
+                                <p class="text-gray-500">Belum ada data setoran.</p>
+                            @endforelse
+                        </ol>
+                    </div>
                 </div>
             </div>
-
         </div>
     </div>
+
+    @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('setoranChart');
+            if (ctx) {
+                const chartData = @json($chartData);
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: chartData.labels,
+                        datasets: [{
+                            label: chartData.label,
+                            data: chartData.data,
+                            backgroundColor: 'rgba(59, 130, 246, 0.5)',
+                            borderColor: 'rgba(59, 130, 246, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: { scales: { y: { beginAtZero: true } } }
+                });
+            }
+        });
+    </script>
+    @endpush
 </x-app-layout>
