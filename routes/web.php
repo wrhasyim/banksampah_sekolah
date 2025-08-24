@@ -29,7 +29,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     // Resource Routes
     Route::resource('jenis-sampah', JenisSampahController::class);
     Route::resource('kelas', KelasController::class);
-    Route::resource('siswa', SiswaController::class);
+    Route::resource('siswa', \App\Http\Controllers\SiswaController::class)->except(['show']);
     Route::resource('setoran', SetoranController::class)->only(['index', 'create', 'store']);
     Route::resource('penarikan', PenarikanController::class)->only(['index', 'create', 'store']);
 
@@ -41,6 +41,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     // Impor Siswa Routes
     Route::get('/siswa/import', [SiswaController::class, 'showImportForm'])->name('siswa.import.form');
     Route::post('/siswa/import', [SiswaController::class, 'import'])->name('siswa.import');
+    Route::get('/siswa/export-sample', [SiswaController::class, 'exportSample'])->name('siswa.export.sample'); // <-- TAMBAHKAN INI
 
     // Impor Setoran Routes
     Route::get('/setoran/import', [SetoranController::class, 'showImportForm'])->name('setoran.import.form');

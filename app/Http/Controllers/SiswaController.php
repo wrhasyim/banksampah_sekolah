@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\Validators\ValidationException;
+use App\Exports\SiswaSampleExport;
 
 class SiswaController extends Controller
 {
@@ -21,7 +22,10 @@ class SiswaController extends Controller
         $siswa = Siswa::with('pengguna', 'kelas')->get();
         return view('pages.siswa.index', compact('siswa'));
     }
-
+    public function exportSample()
+    {
+        return \Maatwebsite\Excel\Facades\Excel::download(new SiswaSampleExport, 'contoh-impor-siswa.xlsx');
+    }
     public function create()
     {
         $kelas = Kelas::all();
@@ -62,7 +66,10 @@ class SiswaController extends Controller
         $kelas = Kelas::all();
         return view('pages.siswa.edit', compact('siswa', 'kelas'));
     }
-
+    public function show(Siswa $siswa)
+    {
+        return redirect()->route('siswa.index');
+    }
     public function update(Request $request, Siswa $siswa)
     {
         $request->validate([
@@ -126,9 +133,5 @@ class SiswaController extends Controller
         return redirect()->route('siswa.index')->with('status', 'Data siswa berhasil diimpor!');
     }
 
-    // Method baru untuk mengekspor template
-    public function exportSample()
-    {
-        return Excel::download(new SiswaExport, 'siswa-template.xlsx');
-    }
+    
 }
