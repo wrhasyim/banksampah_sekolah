@@ -23,20 +23,21 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-// Rute yang Membutuhkan Login (Siswa & Admin)
+// Rute yang Membutuhkan Login (untuk Siswa & Admin)
 Route::middleware(['auth', 'verified'])->group(function() {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/buku-tabungan', [BukuTabunganController::class, 'index'])->name('buku-tabungan.index');
+
+    // --- RUTE PROFIL DIPINDAHKAN KE SINI ---
+    // Semua pengguna yang login bisa mengakses profil mereka.
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
 
 // Rute Khusus Admin
 Route::middleware(['auth', 'role:admin'])->group(function () {
-    // Profil Admin
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
     // CRUD Routes
     Route::resource('jenis-sampah', JenisSampahController::class);
     Route::resource('kelas', KelasController::class);
@@ -44,12 +45,12 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::resource('setoran', SetoranController::class)->only(['index', 'create', 'store']);
     Route::resource('penarikan', PenarikanController::class)->only(['index', 'create', 'store']);
     Route::resource('penjualan', PenjualanController::class)->only(['index', 'create', 'store', 'show']);
-    // RUTE BARU UNTUK PENARIKAN PER KELAS
+
+    // Rute Tambahan Penarikan
     Route::get('/penarikan/kelas', [PenarikanController::class, 'createKelas'])->name('penarikan.createKelas');
     Route::post('/penarikan/kelas', [PenarikanController::class, 'storeKelas'])->name('penarikan.storeKelas');
 
-
-    // Laporan Routes (sudah digabung di PR sebelumnya)
+    // Laporan Routes
     Route::prefix('laporan')->name('laporan.')->group(function () {
         Route::get('/', [ReportController::class, 'index'])->name('index');
         Route::post('/', [ReportController::class, 'index'])->name('filter');

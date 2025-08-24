@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
+use App\Models\Pengguna; // Ganti User menjadi Pengguna
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -12,7 +12,7 @@ class ProfileTest extends TestCase
 
     public function test_profile_page_is_displayed(): void
     {
-        $user = User::factory()->create();
+        $user = Pengguna::factory()->create(); // Ganti User menjadi Pengguna
 
         $response = $this
             ->actingAs($user)
@@ -23,13 +23,13 @@ class ProfileTest extends TestCase
 
     public function test_profile_information_can_be_updated(): void
     {
-        $user = User::factory()->create();
+        $user = Pengguna::factory()->create(); // Ganti User menjadi Pengguna
 
         $response = $this
             ->actingAs($user)
             ->patch('/profile', [
-                'name' => 'Test User',
-                'email' => 'test@example.com',
+                'nama_lengkap' => 'Test Name', // Ganti name menjadi nama_lengkap
+                'username' => 'testuser', // Ganti email menjadi username
             ]);
 
         $response
@@ -38,32 +38,13 @@ class ProfileTest extends TestCase
 
         $user->refresh();
 
-        $this->assertSame('Test User', $user->name);
-        $this->assertSame('test@example.com', $user->email);
-        $this->assertNull($user->email_verified_at);
-    }
-
-    public function test_email_verification_status_is_unchanged_when_the_email_address_is_unchanged(): void
-    {
-        $user = User::factory()->create();
-
-        $response = $this
-            ->actingAs($user)
-            ->patch('/profile', [
-                'name' => 'Test User',
-                'email' => $user->email,
-            ]);
-
-        $response
-            ->assertSessionHasNoErrors()
-            ->assertRedirect('/profile');
-
-        $this->assertNotNull($user->refresh()->email_verified_at);
+        $this->assertSame('Test Name', $user->nama_lengkap);
+        $this->assertSame('testuser', $user->username);
     }
 
     public function test_user_can_delete_their_account(): void
     {
-        $user = User::factory()->create();
+        $user = Pengguna::factory()->create(); // Ganti User menjadi Pengguna
 
         $response = $this
             ->actingAs($user)
@@ -76,12 +57,12 @@ class ProfileTest extends TestCase
             ->assertRedirect('/');
 
         $this->assertGuest();
-        $this->assertNull($user->fresh());
+        $this->assertDatabaseMissing('pengguna', ['id' => $user->id]);
     }
 
     public function test_correct_password_must_be_provided_to_delete_account(): void
     {
-        $user = User::factory()->create();
+        $user = Pengguna::factory()->create(['role' => 'admin']); // Gunakan admin agar bisa akses
 
         $response = $this
             ->actingAs($user)
@@ -91,9 +72,10 @@ class ProfileTest extends TestCase
             ]);
 
         $response
-            ->assertSessionHasErrorsIn('userDeletion', 'password')
+            ->assertSessionHasErrorsIn('userDeletion', 'password') // <-- Gunakan assertion yang lebih spesifik
             ->assertRedirect('/profile');
 
         $this->assertNotNull($user->fresh());
     }
+
 }
