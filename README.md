@@ -29,7 +29,7 @@ Aplikasi ini memiliki dua peran pengguna utama: **Admin** dan **Siswa**.
 - **Manajemen Profil:** Siswa dapat mengelola informasi profil dan mengganti password mereka.
 
 ## Teknologi yang Digunakan
-- **Backend:** Laravel 11, PHP 8.2
+- **Backend:** Laravel 12, PHP 8.2
 - **Frontend:** Blade, Tailwind CSS, Alpine.js, Chart.js
 - **Database:** MySQL
 - **Paket Tambahan:** Maatwebsite/Excel untuk fungsionalitas impor/ekspor.
