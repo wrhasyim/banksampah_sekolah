@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Waktu pembuatan: 23 Agu 2025 pada 19.10
+-- Waktu pembuatan: 24 Agu 2025 pada 20.11
 -- Versi server: 10.4.32-MariaDB
 -- Versi PHP: 8.2.12
 
@@ -48,6 +48,22 @@ CREATE TABLE `cache_locks` (
 -- --------------------------------------------------------
 
 --
+-- Struktur dari tabel `detail_penjualan`
+--
+
+CREATE TABLE `detail_penjualan` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `id_penjualan` bigint(20) UNSIGNED NOT NULL,
+  `id_jenis_sampah` bigint(20) UNSIGNED NOT NULL,
+  `jumlah_satuan` int(11) NOT NULL,
+  `subtotal_harga` decimal(10,2) NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Struktur dari tabel `jenis_sampah`
 --
 
@@ -55,6 +71,7 @@ CREATE TABLE `jenis_sampah` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `nama_sampah` varchar(50) NOT NULL,
   `harga_per_satuan` decimal(10,2) NOT NULL,
+  `stok` int(11) NOT NULL DEFAULT 0,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -63,8 +80,8 @@ CREATE TABLE `jenis_sampah` (
 -- Dumping data untuk tabel `jenis_sampah`
 --
 
-INSERT INTO `jenis_sampah` (`id`, `nama_sampah`, `harga_per_satuan`, `created_at`, `updated_at`) VALUES
-(2, 'botol', 35.00, '2025-08-23 05:04:09', '2025-08-23 05:04:09');
+INSERT INTO `jenis_sampah` (`id`, `nama_sampah`, `harga_per_satuan`, `stok`, `created_at`, `updated_at`) VALUES
+(2, 'botol', 35.00, 0, '2025-08-23 05:04:09', '2025-08-23 05:04:09');
 
 -- --------------------------------------------------------
 
@@ -113,7 +130,9 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (7, '2025_08_23_092455_create_penarikan_table', 3),
 (8, '2025_08_23_103533_create_personal_access_tokens_table', 4),
 (9, '2025_08_23_114250_add_timestamps_to_kelas_table', 5),
-(10, '2025_08_23_125708_create_cache_table', 6);
+(10, '2025_08_23_125708_create_cache_table', 6),
+(11, '2025_08_24_180920_add_stok_to_jenis_sampah_table', 7),
+(12, '2025_08_24_181005_create_penjualan_tables', 7);
 
 -- --------------------------------------------------------
 
@@ -129,13 +148,6 @@ CREATE TABLE `penarikan` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data untuk tabel `penarikan`
---
-
-INSERT INTO `penarikan` (`id`, `id_siswa`, `jumlah_penarikan`, `id_admin`, `created_at`, `updated_at`) VALUES
-(1, 2, 321.00, 1, '2025-08-23 05:14:28', '2025-08-23 05:14:28');
 
 -- --------------------------------------------------------
 
@@ -158,8 +170,7 @@ CREATE TABLE `pengguna` (
 --
 
 INSERT INTO `pengguna` (`id`, `nama_lengkap`, `username`, `password`, `role`, `created_at`, `updated_at`) VALUES
-(1, 'test', 'test', '$2y$12$qT0cPyJvYG2y3XAeDLPdHOquy6A8J/Sg2IVOPp6BSwEgO9XM4YKXW', 'admin', '2025-08-23 03:36:20', '2025-08-23 03:36:20'),
-(3, 'w', 'w', '$2y$12$GZVANeaHnd1WjFlfvYx96uUf4oor./WE22w3FztHetJffKG8Lpmk6', 'siswa', '2025-08-23 05:03:47', '2025-08-23 05:03:47'),
+(1, 'test', 'test', '$2y$12$qT0cPyJvYG2y3XAeDLPdHOquy6A8J/Sg2IVOPp6BSwEgO9XM4YKXW', 'admin', '2025-08-23 03:36:20', '2025-08-24 09:46:27'),
 (4, 'bambang', 'bambangbung', '$2y$12$i7R5eVQj7EkxxzaclRQTtuoXNKyGGOvVmpq2rld42Sk3Hg7mU2wZy', 'siswa', '2025-08-23 08:30:46', '2025-08-23 08:30:46'),
 (5, 'a', 'a', '$2y$12$F5EjXAwyeUIVUs61VuFpxOxY8vh8hbmQ8DRAGOXZtjXeoA5gWyUZu', 'siswa', '2025-08-23 08:30:46', '2025-08-23 08:30:46'),
 (6, 'j', 'r', '$2y$12$EBzwyYHNv8X/de1KIDH1webYWmJXpA7vSaC.yXsjSznLavPfmfhlO', 'siswa', '2025-08-23 09:02:26', '2025-08-23 09:02:26'),
@@ -168,7 +179,23 @@ INSERT INTO `pengguna` (`id`, `nama_lengkap`, `username`, `password`, `role`, `c
 (9, 'hh', 'vv', '$2y$12$yWjoc4XtmSdHkdN3gO3JtO5nY49nd8blEhiWji9Z.2NQKUYFnc7kW', 'siswa', '2025-08-23 09:03:27', '2025-08-23 09:03:27'),
 (10, 'rt', 'rw', '$2y$12$8togW36JcRWyI6nHoLIh.OPIBH/lOFDzL6ajtMNweqcVfGgE/yNni', 'siswa', '2025-08-23 09:26:46', '2025-08-23 09:26:46'),
 (11, 'rw', 'rt', '$2y$12$YimjU60/5fZuC2HUo7hIr.boFQnmyw6H.CITCsJ5WKDrqlK43y7li', 'siswa', '2025-08-23 09:26:46', '2025-08-23 09:26:46'),
-(12, 'q', 'q', '$2y$12$.VgQWvJsawdkRoMS2xYHjeIZ6I8XBAFyF4.MygofeLI3jH.6BAl.W', 'siswa', '2025-08-23 09:42:51', '2025-08-23 09:42:51');
+(12, 'q', 'q', '$2y$12$.VgQWvJsawdkRoMS2xYHjeIZ6I8XBAFyF4.MygofeLI3jH.6BAl.W', 'siswa', '2025-08-23 09:42:51', '2025-08-23 09:42:51'),
+(13, 'ku', 'ku', '$2y$12$YIFDiQvPcM/fCIQ.zb.f7.BKYmm7AdRbrCZkqa8SKJUhPe1VO8jcC', 'siswa', '2025-08-24 11:05:49', '2025-08-24 11:05:49');
+
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `penjualan`
+--
+
+CREATE TABLE `penjualan` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `id_admin` bigint(20) UNSIGNED NOT NULL,
+  `nama_pengepul` varchar(255) NOT NULL,
+  `total_harga` decimal(10,2) NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -209,7 +236,7 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('ZczeEgsLj2pEi9yvTXL7akJGvV8uaaPZxsReNyXf', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiQk1kYU41aURvYVdXTVpRNmtVTVBiNzFqQ0FqakVFaEJoTG13enRDOSI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6Mzg6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9wZW5hcmlrYW4vY3JlYXRlIjt9czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6MTt9', 1755968941);
+('Mxq6qHvCbo850LLFSu2iLSIEvgRCulN7reuoTSNm', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiMktmcWY5eTRFSzlEOVN5U1RwYzJUSHpIYWdZVzFzZkM5VUVtTHIwVSI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6Mzc6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9sYXBvcmFuL3NldG9yYW4iO31zOjUwOiJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI7aToxO30=', 1756058902);
 
 -- --------------------------------------------------------
 
@@ -233,10 +260,6 @@ CREATE TABLE `setoran` (
 --
 
 INSERT INTO `setoran` (`id`, `id_siswa`, `id_jenis_sampah`, `jumlah_satuan`, `total_harga`, `id_admin`, `created_at`, `updated_at`) VALUES
-(1, 2, 2, 40, 1400.00, 1, '2025-08-23 05:04:21', '2025-08-23 05:04:21'),
-(2, 2, 2, 222, 7770.00, 1, '2025-08-23 05:07:52', '2025-08-23 05:07:52'),
-(3, 2, 2, 21, 735.00, 1, '2025-08-23 05:08:22', '2025-08-23 05:08:22'),
-(4, 2, 2, 123, 4305.00, 1, '2025-08-23 05:08:42', '2025-08-23 05:08:42'),
 (5, 3, 2, 123, 0.00, 1, '2025-08-23 08:45:38', '2025-08-23 08:45:38'),
 (6, 4, 2, 321, 0.00, 1, '2025-08-23 08:45:38', '2025-08-23 08:45:38'),
 (7, 3, 2, 123, 4305.00, 1, '2025-08-23 09:16:55', '2025-08-23 09:16:55'),
@@ -248,7 +271,10 @@ INSERT INTO `setoran` (`id`, `id_siswa`, `id_jenis_sampah`, `jumlah_satuan`, `to
 (13, 9, 2, 321, 11235.00, 1, '2025-08-23 09:31:00', '2025-08-23 09:31:00'),
 (14, 10, 2, 123, 4305.00, 1, '2025-08-23 09:31:00', '2025-08-23 09:31:00'),
 (15, 9, 2, 555, 19425.00, 1, '2025-08-23 09:42:19', '2025-08-23 09:42:19'),
-(16, 10, 2, 888, 31080.00, 1, '2025-08-23 09:42:19', '2025-08-23 09:42:19');
+(16, 10, 2, 888, 31080.00, 1, '2025-08-23 09:42:19', '2025-08-23 09:42:19'),
+(17, 4, 2, 11, 385.00, 1, '2025-08-24 10:31:39', '2025-08-24 10:31:39'),
+(18, 10, 2, 235, 8225.00, 1, '2025-08-24 10:43:56', '2025-08-24 10:43:56'),
+(19, 9, 2, 325, 11375.00, 1, '2025-08-24 10:43:56', '2025-08-24 10:43:56');
 
 -- --------------------------------------------------------
 
@@ -271,16 +297,16 @@ CREATE TABLE `siswa` (
 --
 
 INSERT INTO `siswa` (`id`, `id_pengguna`, `id_kelas`, `nis`, `saldo`, `created_at`, `updated_at`) VALUES
-(2, 3, 2, NULL, 13889.00, '2025-08-23 05:03:47', '2025-08-23 05:14:28'),
 (3, 4, 2, '11358', 4305.00, '2025-08-23 08:30:46', '2025-08-23 09:16:55'),
-(4, 5, 2, '11322', 11235.00, '2025-08-23 08:30:47', '2025-08-23 09:16:55'),
+(4, 5, 2, '11322', 11620.00, '2025-08-23 08:30:47', '2025-08-24 10:31:39'),
 (5, 6, 2, '11245', 155540.00, '2025-08-23 09:02:26', '2025-08-23 09:16:55'),
 (6, 7, 2, '112378', 4305.00, '2025-08-23 09:02:26', '2025-08-23 09:17:36'),
 (7, 8, 2, '987425', 11235.00, '2025-08-23 09:03:26', '2025-08-23 09:17:36'),
 (8, 9, 2, '35987', 43155.00, '2025-08-23 09:03:27', '2025-08-23 09:17:36'),
-(9, 10, 3, '321654', 30660.00, '2025-08-23 09:26:46', '2025-08-23 09:42:19'),
-(10, 11, 3, '321987', 35385.00, '2025-08-23 09:26:46', '2025-08-23 09:42:19'),
-(11, 12, 3, '65489', 0.00, '2025-08-23 09:42:51', '2025-08-23 09:42:51');
+(9, 10, 3, '321654', 42035.00, '2025-08-23 09:26:46', '2025-08-24 10:43:56'),
+(10, 11, 3, '321987', 43610.00, '2025-08-23 09:26:46', '2025-08-24 10:43:56'),
+(11, 12, 3, '65489', 0.00, '2025-08-23 09:42:51', '2025-08-23 09:42:51'),
+(12, 13, 3, '321654897', 0.00, '2025-08-24 11:05:49', '2025-08-24 11:05:49');
 
 --
 -- Indexes for dumped tables
@@ -297,6 +323,14 @@ ALTER TABLE `cache`
 --
 ALTER TABLE `cache_locks`
   ADD PRIMARY KEY (`key`);
+
+--
+-- Indeks untuk tabel `detail_penjualan`
+--
+ALTER TABLE `detail_penjualan`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `detail_penjualan_id_penjualan_foreign` (`id_penjualan`),
+  ADD KEY `detail_penjualan_id_jenis_sampah_foreign` (`id_jenis_sampah`);
 
 --
 -- Indeks untuk tabel `jenis_sampah`
@@ -330,6 +364,13 @@ ALTER TABLE `penarikan`
 ALTER TABLE `pengguna`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `pengguna_username_unique` (`username`);
+
+--
+-- Indeks untuk tabel `penjualan`
+--
+ALTER TABLE `penjualan`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `penjualan_id_admin_foreign` (`id_admin`);
 
 --
 -- Indeks untuk tabel `personal_access_tokens`
@@ -371,6 +412,12 @@ ALTER TABLE `siswa`
 --
 
 --
+-- AUTO_INCREMENT untuk tabel `detail_penjualan`
+--
+ALTER TABLE `detail_penjualan`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT untuk tabel `jenis_sampah`
 --
 ALTER TABLE `jenis_sampah`
@@ -386,7 +433,7 @@ ALTER TABLE `kelas`
 -- AUTO_INCREMENT untuk tabel `migrations`
 --
 ALTER TABLE `migrations`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT untuk tabel `penarikan`
@@ -398,7 +445,13 @@ ALTER TABLE `penarikan`
 -- AUTO_INCREMENT untuk tabel `pengguna`
 --
 ALTER TABLE `pengguna`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+
+--
+-- AUTO_INCREMENT untuk tabel `penjualan`
+--
+ALTER TABLE `penjualan`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT untuk tabel `personal_access_tokens`
@@ -410,17 +463,24 @@ ALTER TABLE `personal_access_tokens`
 -- AUTO_INCREMENT untuk tabel `setoran`
 --
 ALTER TABLE `setoran`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
 
 --
 -- AUTO_INCREMENT untuk tabel `siswa`
 --
 ALTER TABLE `siswa`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- Ketidakleluasaan untuk tabel pelimpahan (Dumped Tables)
 --
+
+--
+-- Ketidakleluasaan untuk tabel `detail_penjualan`
+--
+ALTER TABLE `detail_penjualan`
+  ADD CONSTRAINT `detail_penjualan_id_jenis_sampah_foreign` FOREIGN KEY (`id_jenis_sampah`) REFERENCES `jenis_sampah` (`id`),
+  ADD CONSTRAINT `detail_penjualan_id_penjualan_foreign` FOREIGN KEY (`id_penjualan`) REFERENCES `penjualan` (`id`) ON DELETE CASCADE;
 
 --
 -- Ketidakleluasaan untuk tabel `penarikan`
@@ -428,6 +488,12 @@ ALTER TABLE `siswa`
 ALTER TABLE `penarikan`
   ADD CONSTRAINT `penarikan_id_admin_foreign` FOREIGN KEY (`id_admin`) REFERENCES `pengguna` (`id`),
   ADD CONSTRAINT `penarikan_id_siswa_foreign` FOREIGN KEY (`id_siswa`) REFERENCES `siswa` (`id`) ON DELETE CASCADE;
+
+--
+-- Ketidakleluasaan untuk tabel `penjualan`
+--
+ALTER TABLE `penjualan`
+  ADD CONSTRAINT `penjualan_id_admin_foreign` FOREIGN KEY (`id_admin`) REFERENCES `pengguna` (`id`);
 
 --
 -- Ketidakleluasaan untuk tabel `setoran`

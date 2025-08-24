@@ -52,7 +52,10 @@ class SetoranImport implements ToModel, WithHeadingRow, WithValidation
                 'total_harga' => $totalHarga,
             ]);
 
-            $siswa->increment('saldo', $totalHarga);
+             $siswa->increment('saldo', $totalHarga);
+
+            // TAMBAHKAN STOK SAMPAH
+            $jenisSampah->increment('stok', $row['jumlah_satuan']);
         });
 
         return null;

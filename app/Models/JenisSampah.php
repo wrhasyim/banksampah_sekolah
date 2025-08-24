@@ -10,5 +10,5 @@ class JenisSampah extends Model
     use HasFactory;
     
     protected $table = 'jenis_sampah';
-    protected $fillable = ['nama_sampah', 'harga_per_satuan'];
+     protected $fillable = ['nama_sampah', 'harga_per_satuan', 'stok'];
 }

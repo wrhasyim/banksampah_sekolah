@@ -43,6 +43,13 @@ class SetoranController extends Controller
             'jumlah_satuan' => 'required|integer|min:1',
         ]);
 
+        try {
+            DB::transaction(function () use ($request) {
+                $siswa = Siswa::findOrFail($request->id_siswa);
+                $jenisSampah = JenisSampah::findOrFail($request->id_jenis_sampah);
+
+                $totalHarga = $jenisSampah->harga_per_satuan * $request->jumlah_satuan;
+
         $siswa = Siswa::with('pengguna')->findOrFail($request->id_siswa);
         $jenisSampah = JenisSampah::findOrFail($request->id_jenis_sampah);
 
@@ -59,8 +66,19 @@ class SetoranController extends Controller
 
             $siswa->saldo += $total_harga;
             $siswa->save();
-        });
 
+        });
+        // 2. Tambahkan saldo siswa
+                $siswa->increment('saldo', $totalHarga);
+
+                // 3. TAMBAHKAN STOK SAMPAH
+                $jenisSampah->increment('stok', $request->jumlah_satuan);
+            });
+        } catch (\Exception $e) {
+            return redirect()->route('setoran.create')->with('error', 'Terjadi kesalahan saat menyimpan transaksi.');
+        }
+
+        return redirect()->route('setoran.index')->with('status', 'Transaksi setoran berhasil disimpan!');
         return redirect()->route('setoran.index')->with('status', 'Setoran baru berhasil dicatat!');
     }
 

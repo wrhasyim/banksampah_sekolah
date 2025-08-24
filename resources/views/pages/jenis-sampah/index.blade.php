@@ -27,6 +27,7 @@
                                     <th scope="col" class="px-6 py-3">No</th>
                                     <th scope="col" class="px-6 py-3">Nama Sampah</th>
                                     <th scope="col" class="px-6 py-3">Harga per Satuan</th>
+                                    <th scope="col" class="px-6 py-3">Stok (pcs)</th>
                                     <th scope="col" class="px-6 py-3">Aksi</th>
                                 </tr>
                             </thead>
@@ -36,6 +37,7 @@
                                     <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{{ $loop->iteration }}</th>
                                     <td class="px-6 py-4">{{ $item->nama_sampah }}</td>
                                     <td class="px-6 py-4">Rp {{ number_format($item->harga_per_satuan, 0, ',', '.') }}</td>
+                                    <td class="px-6 py-4 font-bold">{{ $item->stok }}</td> <td class="px-6 py-4 flex items-center">
                                     <td class="px-6 py-4 flex items-center">
                                         <a href="{{ route('jenis-sampah.edit', $item->id) }}" class="font-medium text-blue-600 hover:underline">Edit</a>
                                         <form action="{{ route('jenis-sampah.destroy', $item->id) }}" method="POST" class="inline">
