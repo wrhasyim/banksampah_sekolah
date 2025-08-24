@@ -10,11 +10,18 @@ class Penarikan extends Model
     use HasFactory;
     
     protected $table = 'penarikan';
-    protected $fillable = ['id_siswa', 'jumlah_penarikan', 'id_admin'];
+    // Tambahkan id_kelas
+    protected $fillable = ['id_siswa', 'id_kelas', 'jumlah_penarikan', 'id_admin'];
 
     public function siswa()
     {
         return $this->belongsTo(Siswa::class, 'id_siswa');
+    }
+    
+    // Tambahkan relasi ke kelas
+    public function kelas()
+    {
+        return $this->belongsTo(Kelas::class, 'id_kelas');
     }
 
     public function admin()

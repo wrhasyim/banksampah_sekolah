@@ -2,32 +2,22 @@
 
 namespace App\Exports;
 
-use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithMapping;
 
-class SetoranReportExport implements FromCollection, WithHeadings
+class SetoranReportExport implements FromCollection, WithHeadings, WithMapping
 {
-    protected $data;
+    protected $setoran;
 
-    public function __construct($data)
+    public function __construct($setoran)
     {
-        $this->data = $data;
+        $this->setoran = $setoran;
     }
 
     public function collection()
     {
-        return $this->data->map(function ($item) {
-            return [
-                'Tanggal' => $item->created_at->format('d-m-Y H:i'),
-                'Nama Siswa' => $item->siswa->pengguna->nama_lengkap,
-                'Kelas' => $item->siswa->kelas->nama_kelas,
-                'Jenis Sampah' => $item->jenis_sampah->nama_sampah,
-                'Jumlah' => $item->jumlah_satuan,
-                'Total Harga' => $item->total_harga,
-                'Admin Pencatat' => $item->admin->nama_lengkap,
-            ];
-        });
+        return $this->setoran;
     }
 
     public function headings(): array
@@ -37,9 +27,30 @@ class SetoranReportExport implements FromCollection, WithHeadings
             'Nama Siswa',
             'Kelas',
             'Jenis Sampah',
-            'Jumlah',
-            'Total Harga',
+            'Jumlah (pcs)',
+            'Total Harga (Rp)',
             'Admin Pencatat',
+        ];
+    }
+
+    /**
+     * Memetakan data untuk setiap baris di Excel.
+     *
+     * @param mixed $item
+     * @return array
+     */
+    public function map($item): array
+    {
+        // --- INI BAGIAN YANG DIPERBAIKI ---
+        // Gunakan nullsafe operator (?->) dan null coalescing (??) untuk keamanan
+        return [
+            'tanggal' => $item->created_at->format('d-m-Y H:i'),
+            'nama_siswa' => $item->siswa?->pengguna?->nama_lengkap ?? 'Siswa Dihapus',
+            'kelas' => $item->siswa?->kelas?->nama_kelas ?? 'Kelas Dihapus',
+            'jenis_sampah' => $item->jenisSampah?->nama_sampah ?? 'Jenis Sampah Dihapus',
+            'jumlah_satuan' => $item->jumlah_satuan,
+            'total_harga' => $item->total_harga,
+            'admin' => $item->admin?->nama_lengkap ?? 'Admin Dihapus',
         ];
     }
 }

@@ -1,0 +1,87 @@
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            {{ __('Catat Penjualan Baru') }}
+        </h2>
+    </x-slot>
+    <div class="py-12">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="p-6 text-gray-900">
+                    @if ($errors->any())
+                        <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+                            <ul class="list-disc list-inside">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+                    <form action="{{ route('penjualan.store') }}" method="POST">
+                        @csrf
+                        <div>
+                            <x-input-label for="nama_pengepul" value="Nama Pengepul" />
+                            <x-text-input id="nama_pengepul" class="block mt-1 w-full" type="text" name="nama_pengepul" :value="old('nama_pengepul')" required autofocus />
+                        </div>
+
+                        <div class="mt-6">
+                            <h3 class="text-lg font-medium">Item Sampah yang Dijual</h3>
+                            <div id="items-container" class="mt-4 space-y-4">
+                                </div>
+                            <button type="button" id="add-item-btn" class="mt-4 text-sm text-indigo-600 hover:text-indigo-900">
+                                + Tambah Item Sampah
+                            </button>
+                        </div>
+
+                        <div class="flex items-center justify-end mt-6">
+                            <x-primary-button>
+                                {{ __('Simpan Penjualan') }}
+                            </x-primary-button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.getElementById('items-container');
+            const addItemBtn = document.getElementById('add-item-btn');
+            const sampahData = @json($jenisSampah);
+            let itemIndex = 0;
+
+            function createItemRow() {
+                const itemRow = document.createElement('div');
+                itemRow.classList.add('p-4', 'border', 'rounded-md', 'grid', 'grid-cols-12', 'gap-4', 'items-center');
+                itemRow.innerHTML = `
+                    <div class="col-span-6">
+                        <label class="block text-sm font-medium text-gray-700">Jenis Sampah</label>
+                        <select name="items[${itemIndex}][id_jenis_sampah]" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required>
+                            <option value="">-- Pilih Sampah --</option>
+                            ${sampahData.map(sampah => `<option value="${sampah.id}">${sampah.nama_sampah} (Stok: ${sampah.stok})</option>`).join('')}
+                        </select>
+                    </div>
+                    <div class="col-span-4">
+                        <label class="block text-sm font-medium text-gray-700">Jumlah (pcs)</label>
+                        <input type="number" name="items[${itemIndex}][jumlah]" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required min="1">
+                    </div>
+                    <div class="col-span-2 flex items-end">
+                        <button type="button" class="remove-item-btn text-red-600 hover:text-red-900">Hapus</button>
+                    </div>
+                `;
+                container.appendChild(itemRow);
+                itemIndex++;
+
+                itemRow.querySelector('.remove-item-btn').addEventListener('click', function() {
+                    itemRow.remove();
+                });
+            }
+
+            addItemBtn.addEventListener('click', createItemRow);
+            createItemRow(); // Tambahkan satu baris item saat halaman dimuat
+        });
+    </script>
+    @endpush
+</x-app-layout>

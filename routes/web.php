@@ -10,50 +10,63 @@ use App\Http\Controllers\SetoranController;
 use App\Http\Controllers\PenarikanController;
 use App\Http\Controllers\BukuTabunganController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\PenjualanController;
 
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+*/
+
+// Rute Publik
 Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/dashboard', [DashboardController::class, 'index'])
-    ->middleware(['auth', 'verified'])->name('dashboard');
+// Rute yang Membutuhkan Login (Siswa & Admin)
+Route::middleware(['auth', 'verified'])->group(function() {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/buku-tabungan', [BukuTabunganController::class, 'index'])->name('buku-tabungan.index');
+});
 
-Route::get('/buku-tabungan', [BukuTabunganController::class, 'index'])
-    ->middleware(['auth', 'verified'])->name('buku-tabungan.index');
 
+// Rute Khusus Admin
 Route::middleware(['auth', 'role:admin'])->group(function () {
+    // Profil Admin
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // Resource Routes
+    // CRUD Routes
     Route::resource('jenis-sampah', JenisSampahController::class);
     Route::resource('kelas', KelasController::class);
-    Route::resource('siswa', \App\Http\Controllers\SiswaController::class)->except(['show']);
+    Route::resource('siswa', SiswaController::class)->except(['show']);
     Route::resource('setoran', SetoranController::class)->only(['index', 'create', 'store']);
     Route::resource('penarikan', PenarikanController::class)->only(['index', 'create', 'store']);
+    Route::resource('penjualan', PenjualanController::class)->only(['index', 'create', 'store', 'show']);
+    // RUTE BARU UNTUK PENARIKAN PER KELAS
+    Route::get('/penarikan/kelas', [PenarikanController::class, 'createKelas'])->name('penarikan.createKelas');
+    Route::post('/penarikan/kelas', [PenarikanController::class, 'storeKelas'])->name('penarikan.storeKelas');
 
-    // Laporan Routes
-    Route::get('/laporan/setoran', [ReportController::class, 'index'])->name('laporan.setoran.index');
-    Route::post('/laporan/setoran', [ReportController::class, 'index'])->name('laporan.setoran.filter');
-    Route::post('/laporan/setoran/export', [ReportController::class, 'exportSetoran'])->name('laporan.setoran.export');
 
-    // Impor Siswa Routes
+    // Laporan Routes (sudah digabung di PR sebelumnya)
+    Route::prefix('laporan')->name('laporan.')->group(function () {
+        Route::get('/', [ReportController::class, 'index'])->name('index');
+        Route::post('/', [ReportController::class, 'index'])->name('filter');
+        Route::post('/export', [ReportController::class, 'export'])->name('export');
+    });
+
+    // Rute Tambahan Siswa (Impor, Ekspor, AJAX)
     Route::get('/siswa/import', [SiswaController::class, 'showImportForm'])->name('siswa.import.form');
     Route::post('/siswa/import', [SiswaController::class, 'import'])->name('siswa.import');
-    Route::get('/siswa/export-sample', [SiswaController::class, 'exportSample'])->name('siswa.export.sample'); // <-- TAMBAHKAN INI
-
-    // Impor Setoran Routes
+    Route::get('/siswa/export-sample', [SiswaController::class, 'exportSample'])->name('siswa.export.sample');
+    Route::get('/get-siswa-by-kelas/{id_kelas}', [SiswaController::class, 'getByKelas'])->name('siswa.getByKelas');
+    
+    // Rute Tambahan Setoran (Impor)
     Route::get('/setoran/import', [SetoranController::class, 'showImportForm'])->name('setoran.import.form');
     Route::post('/setoran/import', [SetoranController::class, 'import'])->name('setoran.import');
-    Route::get('/setoran/export-sample', [SetoranController::class, 'exportSample'])->name('setoran.export.sample'); // <-- TAMBAHKAN INI
-    
-    // Rute Resource Siswa
-    Route::resource('siswa', SiswaController::class)->except(['show']);
-
-    // Rute untuk mengambil siswa berdasarkan kelas (AJAX)
-    Route::get('/get-siswa-by-kelas/{id_kelas}', [SiswaController::class, 'getByKelas'])->name('siswa.getByKelas');
-
+    Route::get('/setoran/export-sample', [SetoranController::class, 'exportSample'])->name('setoran.export.sample');
 });
+
 
 require __DIR__.'/auth.php';

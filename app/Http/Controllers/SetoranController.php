@@ -2,18 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\JenisSampah;
 use App\Models\Setoran;
 use App\Models\Siswa;
-use App\Models\JenisSampah;
 use App\Models\Kelas;
-use App\Models\Pengguna;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Maatwebsite\Excel\Facades\Excel;
-use Maatwebsite\Excel\Validators\ValidationException;
 use App\Imports\SetoranImport;
-use App\Exports\SetoranExport;
+use Maatwebsite\Excel\Validators\ValidationException;
 use App\Exports\SetoranSampleExport;
 
 class SetoranController extends Controller
@@ -21,7 +18,6 @@ class SetoranController extends Controller
     public function index()
     {
         $setoran = Setoran::with(['siswa.pengguna', 'jenisSampah', 'admin'])->latest()->get();
-
         return view('pages.setoran.index', compact('setoran'));
     }
 
@@ -31,16 +27,13 @@ class SetoranController extends Controller
         $jenisSampah = JenisSampah::all();
         return view('pages.setoran.create', compact('kelas', 'jenisSampah'));
     }
-    public function exportSample()
-    {
-        return \Maatwebsite\Excel\Facades\Excel::download(new SetoranSampleExport, 'contoh-impor-setoran.xlsx');
-    }
+
     public function store(Request $request)
     {
         $request->validate([
             'id_siswa' => 'required|exists:siswa,id',
             'id_jenis_sampah' => 'required|exists:jenis_sampah,id',
-            'jumlah_satuan' => 'required|integer|min:1',
+            'jumlah_satuan' => 'required|numeric|min:1',
         ]);
 
         try {
@@ -50,28 +43,19 @@ class SetoranController extends Controller
 
                 $totalHarga = $jenisSampah->harga_per_satuan * $request->jumlah_satuan;
 
-        $siswa = Siswa::with('pengguna')->findOrFail($request->id_siswa);
-        $jenisSampah = JenisSampah::findOrFail($request->id_jenis_sampah);
+                Setoran::create([
+                    'id_siswa' => $request->id_siswa,
+                    'id_jenis_sampah' => $request->id_jenis_sampah,
+                    'id_admin' => Auth::id(),
+                    'jumlah_satuan' => $request->jumlah_satuan,
+                    'total_harga' => $totalHarga,
+                ]);
 
-        DB::transaction(function () use ($request, $siswa, $jenisSampah) {
-            $total_harga = $request->jumlah_satuan * $jenisSampah->harga_per_satuan;
-
-            Setoran::create([
-                'id_siswa' => $siswa->id,
-                'id_jenis_sampah' => $jenisSampah->id,
-                'id_admin' => Auth::id(),
-                'jumlah_satuan' => $request->jumlah_satuan,
-                'total_harga' => $total_harga,
-            ]);
-
-            $siswa->saldo += $total_harga;
-            $siswa->save();
-
-        });
-        // 2. Tambahkan saldo siswa
+                // --- INI BAGIAN YANG DIPERBAIKI ---
+                // Gunakan increment untuk operasi yang aman dan atomik
                 $siswa->increment('saldo', $totalHarga);
 
-                // 3. TAMBAHKAN STOK SAMPAH
+                // Tambahkan stok sampah
                 $jenisSampah->increment('stok', $request->jumlah_satuan);
             });
         } catch (\Exception $e) {
@@ -79,30 +63,12 @@ class SetoranController extends Controller
         }
 
         return redirect()->route('setoran.index')->with('status', 'Transaksi setoran berhasil disimpan!');
-        return redirect()->route('setoran.index')->with('status', 'Setoran baru berhasil dicatat!');
     }
 
-    public function getSiswaByKelas($id_kelas)
-    {
-        $siswa = Siswa::with('pengguna')
-                      ->where('id_kelas', $id_kelas)
-                      ->get()
-                      ->map(function ($item) {
-                          return [
-                              'id' => $item->id,
-                              'nama' => $item->pengguna->nama_lengkap,
-                          ];
-                      });
-        return response()->json($siswa);
-    }
-    
     public function showImportForm()
     {
-        // Ambil 1 data jenis sampah dan 1 data siswa untuk ditampilkan sebagai referensi
-        $jenisSampah = \App\Models\JenisSampah::take(1)->get(); // <-- UBAH DI SINI
-        $siswa = \App\Models\Siswa::with(['pengguna', 'kelas'])->take(1)->get(); // <-- UBAH DI SINI
-
-        // Kirim kedua variabel ke view
+        $jenisSampah = \App\Models\JenisSampah::take(2)->get();
+        $siswa = \App\Models\Siswa::with(['pengguna', 'kelas'])->take(2)->get();
         return view('pages.setoran.import', compact('jenisSampah', 'siswa'));
     }
 
@@ -113,22 +79,21 @@ class SetoranController extends Controller
         ]);
 
         try {
-            \Maatwebsite\Excel\Facades\Excel::import(new \App\Imports\SetoranImport, $request->file('file'));
-        
-        // Tangkap error validasi dari dalam file Excel
+            \Maatwebsite\Excel\Facades\Excel::import(new SetoranImport, $request->file('file'));
         } catch (ValidationException $e) {
             $failures = $e->failures();
             $errorMessages = [];
             foreach ($failures as $failure) {
-                // Kumpulkan semua pesan error untuk setiap baris yang gagal
                 $errorMessages[] = 'Baris ' . $failure->row() . ': ' . implode(', ', $failure->errors());
             }
-            // Kirim kembali pesan error yang jelas ke halaman impor
             return redirect()->route('setoran.import.form')->withErrors($errorMessages);
         }
 
-        // Jika berhasil, kirim pesan sukses
         return redirect()->route('setoran.import.form')->with('success', 'Data setoran berhasil diimpor!');
     }
 
+    public function exportSample()
+    {
+        return \Maatwebsite\Excel\Facades\Excel::download(new SetoranSampleExport, 'contoh-impor-setoran.xlsx');
+    }
 }
