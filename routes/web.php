@@ -48,6 +48,9 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::post('/setoran/import', [SetoranController::class, 'import'])->name('setoran.import');
     Route::get('/setoran/export-sample', [SetoranController::class, 'exportSample'])->name('setoran.export.sample'); // <-- TAMBAHKAN INI
     
+    // Rute Resource Siswa
+    Route::resource('siswa', SiswaController::class)->except(['show']);
+
     // Rute untuk mengambil siswa berdasarkan kelas (AJAX)
     Route::get('/get-siswa-by-kelas/{id_kelas}', [SiswaController::class, 'getByKelas'])->name('siswa.getByKelas');
 

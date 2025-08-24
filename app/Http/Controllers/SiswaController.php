@@ -22,7 +22,7 @@ class SiswaController extends Controller
         $siswa = Siswa::with('pengguna', 'kelas')->get();
         return view('pages.siswa.index', compact('siswa'));
     }
-    public function getByKelas($id_kelas)
+   public function getByKelas($id_kelas)
     {
         // Cari siswa berdasarkan id_kelas dan muat relasi pengguna untuk mengambil nama
         $siswa = \App\Models\Siswa::where('id_kelas', $id_kelas)->with('pengguna')->get();
