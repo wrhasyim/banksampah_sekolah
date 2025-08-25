@@ -1,8 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Tambah Data Siswa') }}
-        </h2>
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ __('Tambah Data Siswa') }}</h2>
     </x-slot>
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
@@ -23,6 +21,7 @@
                         <div class="mt-4">
                             <x-input-label for="password" value="Password" />
                             <x-text-input id="password" class="block mt-1 w-full" type="password" name="password" required />
+                            <p class="mt-1 text-xs text-gray-500">Minimal 8 karakter.</p>
                             <x-input-error :messages="$errors->get('password')" class="mt-2" />
                         </div>
                         <div class="mt-4">
@@ -41,9 +40,7 @@
                             <x-input-error :messages="$errors->get('id_kelas')" class="mt-2" />
                         </div>
                         <div class="flex items-center justify-end mt-4">
-                            <x-primary-button class="ms-4">
-                                {{ __('Simpan') }}
-                            </x-primary-button>
+                            <x-primary-button class="ms-4">{{ __('Simpan') }}</x-primary-button>
                         </div>
                     </form>
                 </div>

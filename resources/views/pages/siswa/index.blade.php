@@ -3,14 +3,17 @@
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
             {{ __('Kelola Data Siswa') }}
         </h2>
+        <p class="mt-1 text-sm text-gray-600">
+            Halaman ini digunakan untuk mengelola data semua siswa yang terdaftar di bank sampah.
+        </p>
     </x-slot>
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
                     @if (session('status'))
-                        <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
-                            <span class="block sm:inline">{{ session('status') }}</span>
+                        <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative">
+                            {{ session('status') }}
                         </div>
                     @endif
 
@@ -38,22 +41,22 @@
                     </div>
 
                     <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
-                        <table class="w-full text-sm text-left rtl:text-right text-gray-500">
+                        <table class="w-full text-sm text-left text-gray-500">
                             <thead class="text-xs text-gray-700 uppercase bg-gray-50">
                                 <tr>
-                                    <th scope="col" class="px-6 py-3">No</th>
-                                    <th scope="col" class="px-6 py-3">Nama Lengkap</th>
-                                    <th scope="col" class="px-6 py-3">Username</th>
-                                    <th scope="col" class="px-6 py-3">NIS</th>
-                                    <th scope="col" class="px-6 py-3">Kelas</th>
-                                    <th scope="col" class="px-6 py-3">Saldo</th>
-                                    <th scope="col" class="px-6 py-3">Aksi</th>
+                                    <th class="px-6 py-3">No</th>
+                                    <th class="px-6 py-3">Nama Lengkap</th>
+                                    <th class="px-6 py-3">Username</th>
+                                    <th class="px-6 py-3">NIS</th>
+                                    <th class="px-6 py-3">Kelas</th>
+                                    <th class="px-6 py-3">Saldo</th>
+                                    <th class="px-6 py-3">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse ($siswa as $item)
                                 <tr class="bg-white border-b hover:bg-gray-50">
-                                    <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{{ $loop->iteration + ($siswa->currentPage() - 1) * $siswa->perPage() }}</th>
+                                    <th class="px-6 py-4">{{ $loop->iteration + ($siswa->currentPage() - 1) * $siswa->perPage() }}</th>
                                     <td class="px-6 py-4">{{ $item->pengguna->nama_lengkap }}</td>
                                     <td class="px-6 py-4">{{ $item->pengguna->username }}</td>
                                     <td class="px-6 py-4">{{ $item->nis ?? '-' }}</td>
@@ -61,18 +64,23 @@
                                     <td class="px-6 py-4 font-bold">Rp {{ number_format($item->saldo, 0, ',', '.') }}</td>
                                     <td class="px-6 py-4 flex items-center">
                                         <a href="{{ route('siswa.edit', $item->id) }}" class="font-medium text-blue-600 hover:underline">Edit</a>
-                                        <form action="{{ route('siswa.destroy', $item->id) }}" method="POST" class="inline">
+                                        <form action="{{ route('siswa.destroy', $item->id) }}" method="POST" class="inline" onsubmit="return confirm('Anda yakin ingin menghapus siswa ini? Semua data transaksi yang terkait juga akan terhapus.');">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="font-medium text-red-600 hover:underline ml-4" onclick="return confirm('Anda yakin ingin menghapus data ini?')">
-                                                Hapus
-                                            </button>
+                                            <button type="submit" class="font-medium text-red-600 hover:underline ml-4">Hapus</button>
                                         </form>
                                     </td>
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="7" class="px-6 py-4 text-center text-gray-500">Data siswa masih kosong.</td>
+                                    <td colspan="7" class="px-6 py-12 text-center">
+                                        <div class="flex flex-col items-center">
+                                            <svg class="w-24 h-24 text-gray-300 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m-7.282 2.72a3 3 0 01-4.682-2.72 9.094 9.094 0 013.741-.479m7.282 2.72a8.973 8.973 0 01-7.282 0M12 12.75a3 3 0 110-6 3 3 0 010 6z" /></svg>
+                                            <h3 class="text-lg font-semibold text-gray-700">Belum Ada Data Siswa</h3>
+                                            <p class="text-sm mt-1 mb-4">Silakan tambahkan data siswa baru untuk memulai.</p>
+                                            <a href="{{ route('siswa.create') }}" class="px-4 py-2 bg-gray-800 text-white rounded-md text-xs uppercase font-semibold">+ Tambah Siswa</a>
+                                        </div>
+                                    </td>
                                 </tr>
                                 @endforelse
                             </tbody>
