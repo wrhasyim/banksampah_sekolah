@@ -28,4 +28,14 @@ class Siswa extends Model
     {
         return $this->belongsTo(Kelas::class, 'id_kelas');
     }
+
+     public function scopePeringkatTeraktif($query)
+    {
+        return $query->select('id_pengguna', DB::raw('SUM(setoran.jumlah) as total_jumlah'))
+            ->join('setoran', 'siswa.id', '=', 'setoran.id_siswa')
+            ->with('pengguna')
+            ->groupBy('id_pengguna')
+            ->orderByDesc('total_jumlah')
+            ->limit(5);
+    }
 }

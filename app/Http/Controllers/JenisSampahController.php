@@ -20,17 +20,13 @@ class JenisSampahController extends Controller
 
     public function store(Request $request)
     {
-        // Tambahkan validasi untuk 'satuan'
         $request->validate([
             'nama_sampah' => 'required|string|max:50',
             'satuan' => 'required|in:pcs,kg',
             'harga_per_satuan' => 'required|numeric',
         ]);
-
-        // Simpan semua data dari request
         JenisSampah::create($request->all());
-
-        return redirect()->route('jenis-sampah.index')->with('status', 'Jenis sampah berhasil ditambahkan!');
+        return redirect()->route('jenis-sampah.index')->with('toastr-success', 'Jenis sampah berhasil ditambahkan!');
     }
 
     public function edit(JenisSampah $jenisSampah)
@@ -40,26 +36,24 @@ class JenisSampahController extends Controller
 
     public function update(Request $request, JenisSampah $jenisSampah)
     {
-        // Tambahkan validasi untuk 'satuan'
         $request->validate([
             'nama_sampah' => 'required|string|max:50',
             'satuan' => 'required|in:pcs,kg',
             'harga_per_satuan' => 'required|numeric',
         ]);
-
-        // Update semua data dari request
         $jenisSampah->update($request->all());
-
-        return redirect()->route('jenis-sampah.index')->with('status', 'Jenis sampah berhasil diperbarui!');
+        return redirect()->route('jenis-sampah.index')->with('toastr-success', 'Jenis sampah berhasil diperbarui!');
     }
 
     public function destroy(JenisSampah $jenisSampah)
     {
-        // Cek apakah sampah memiliki stok sebelum dihapus
         if ($jenisSampah->stok > 0) {
-            return redirect()->route('jenis-sampah.index')->with('error', 'Tidak dapat menghapus jenis sampah yang masih memiliki stok.');
+            return redirect()->route('jenis-sampah.index')->with('toastr-error', 'Tidak dapat menghapus jenis sampah yang masih memiliki stok.');
+        }
+        if ($jenisSampah->detailPenjualan()->exists() || $jenisSampah->setoran()->exists()) {
+            return redirect()->route('jenis-sampah.index')->with('toastr-error', 'Tidak dapat menghapus, jenis sampah ini memiliki riwayat transaksi.');
         }
         $jenisSampah->delete();
-        return redirect()->route('jenis-sampah.index')->with('status', 'Jenis sampah berhasil dihapus!');
+        return redirect()->route('jenis-sampah.index')->with('toastr-success', 'Jenis sampah berhasil dihapus!');
     }
 }

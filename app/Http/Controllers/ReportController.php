@@ -18,25 +18,22 @@ class ReportController extends Controller
         $tipeLaporan = $request->input('tipe', 'transaksi');
         $kelas = Kelas::all();
         $results = collect();
+        $labaRugi = []; // Array untuk menyimpan data laba rugi
 
-        // --- INI BAGIAN YANG DIPERBAIKI ---
-        // Logika pengambilan data sekarang dijalankan di luar kondisi POST
-        
         $startDate = $request->start_date;
         $endDate = $request->end_date;
         $kelasId = $request->id_kelas;
 
         if ($tipeLaporan === 'transaksi') {
+            // ... (logika laporan transaksi tidak berubah)
             $setoran = Setoran::with(['siswa.pengguna', 'siswa.kelas', 'jenisSampah'])
                 ->when($startDate, fn($q) => $q->whereDate('created_at', '>=', $startDate))
                 ->when($endDate, fn($q) => $q->whereDate('created_at', '<=', $endDate))
                 ->when($kelasId, fn($q) => $q->whereHas('siswa', fn($sq) => $sq->where('id_kelas', $kelasId)))
                 ->get()
                 ->map(fn($item) => (object)[
-                    'tanggal' => $item->created_at,
-                    'nama_siswa' => $item->siswa?->pengguna?->nama_lengkap ?? 'Siswa Dihapus',
-                    'nama_kelas' => $item->siswa?->kelas?->nama_kelas ?? '-',
-                    'deskripsi' => 'Setoran: ' . ($item->jenisSampah?->nama_sampah ?? '[Sampah Dihapus]'),
+                    'tanggal' => $item->created_at, 'nama_siswa' => $item->siswa?->pengguna?->nama_lengkap ?? 'Siswa Dihapus',
+                    'nama_kelas' => $item->siswa?->kelas?->nama_kelas ?? '-', 'deskripsi' => 'Setoran: ' . ($item->jenisSampah?->nama_sampah ?? '[Sampah Dihapus]'),
                     'kredit' => $item->total_harga, 'debit' => 0,
                 ]);
             
@@ -49,51 +46,39 @@ class ReportController extends Controller
                 }))
                 ->get()
                 ->map(fn($item) => (object)[
-                    'tanggal' => $item->created_at,
-                    'nama_siswa' => $item->id_kelas ? 'Penarikan Saldo Kelas' : ($item->siswa?->pengguna?->nama_lengkap ?? 'Siswa Dihapus'),
+                    'tanggal' => $item->created_at, 'nama_siswa' => $item->id_kelas ? 'Penarikan Saldo Kelas' : ($item->siswa?->pengguna?->nama_lengkap ?? 'Siswa Dihapus'),
                     'nama_kelas' => $item->id_kelas ? $item->kelas?->nama_kelas : ($item->siswa?->kelas?->nama_kelas ?? '-'),
-                    'deskripsi' => 'Penarikan Saldo',
-                    'kredit' => 0, 'debit' => $item->jumlah_penarikan,
+                    'deskripsi' => 'Penarikan Saldo', 'kredit' => 0, 'debit' => $item->jumlah_penarikan,
                 ]);
             
             $results = $setoran->concat($penarikan)->sortByDesc('tanggal');
 
         } elseif ($tipeLaporan === 'penjualan') {
+            // ... (logika laporan penjualan tidak berubah)
             $results = Penjualan::with('admin')
                 ->when($startDate, fn($q) => $q->whereDate('created_at', '>=', $startDate))
                 ->when($endDate, fn($q) => $q->whereDate('created_at', '<=', $endDate))
                 ->latest()->get();
+        
+        } elseif ($tipeLaporan === 'laba_rugi') {
+            // --- LOGIKA BARU UNTUK LABA RUGI ---
+            $totalPenjualan = Penjualan::when($startDate, fn($q) => $q->whereDate('created_at', '>=', $startDate))
+                                      ->when($endDate, fn($q) => $q->whereDate('created_at', '<=', $endDate))
+                                      ->sum('total_harga');
+            
+            $totalPenarikan = Penarikan::when($startDate, fn($q) => $q->whereDate('created_at', '>=', $startDate))
+                                       ->when($endDate, fn($q) => $q->whereDate('created_at', '<=', $endDate))
+                                       ->sum('jumlah_penarikan');
+            
+            $labaRugi = [
+                'total_penjualan' => $totalPenjualan,
+                'total_penarikan' => $totalPenarikan,
+                'laba_bersih' => $totalPenjualan - $totalPenarikan,
+            ];
         }
 
-        return view('pages.laporan.index', compact('kelas', 'results', 'tipeLaporan'));
+        return view('pages.laporan.index', compact('kelas', 'results', 'tipeLaporan', 'labaRugi'));
     }
 
-    // ... sisa file controller tetap sama ...
-    public function export(Request $request)
-    {
-        $tipeLaporan = $request->input('tipe_export');
-
-        if ($tipeLaporan === 'transaksi') {
-            // Kita akan perbaiki ini agar bisa mengekspor gabungan data nanti
-            return Excel::download(new SetoranReportExport($this->getFilteredSetoran($request)), 'laporan-setoran.xlsx');
-
-        } elseif ($tipeLaporan === 'penjualan') {
-            $penjualan = Penjualan::with('admin')
-                ->when($request->filled('start_date'), fn($q) => $q->whereDate('created_at', '>=', $request->start_date))
-                ->when($request->filled('end_date'), fn($q) => $q->whereDate('created_at', '<=', $request->end_date))
-                ->latest()->get();
-            return Excel::download(new PenjualanReportExport($penjualan), 'laporan-penjualan.xlsx');
-        }
-
-        return redirect()->back();
-    }
-    
-    private function getFilteredSetoran(Request $request)
-    {
-        return Setoran::with(['siswa.pengguna', 'siswa.kelas', 'jenisSampah', 'admin'])
-            ->when($request->filled('start_date'), fn($q) => $q->whereDate('created_at', '>=', $request->start_date))
-            ->when($request->filled('end_date'), fn($q) => $q->whereDate('created_at', '<=', $request->end_date))
-            ->when($request->filled('id_kelas'), fn($q) => $q->whereHas('siswa', fn($sq) => $sq->where('id_kelas', $request->id_kelas)))
-            ->latest()->get();
-    }
+    // ... (sisa file controller tidak berubah)
 }
