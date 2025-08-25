@@ -11,12 +11,12 @@ class SetoranSampleExport implements WithHeadings
     */
     public function headings(): array
     {
-        // Header baru sesuai permintaan
+        // Ganti 'jumlah_satuan' menjadi 'jumlah'
         return [
             'nama_siswa',
             'nama_kelas',
             'nama_sampah',
-            'jumlah_satuan',
+            'jumlah', // <-- INI BAGIAN YANG DIPERBAIKI
         ];
     }
 }

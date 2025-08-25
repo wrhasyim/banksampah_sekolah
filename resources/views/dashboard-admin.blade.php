@@ -89,7 +89,7 @@
                             @forelse ($peringkatSiswa as $siswa)
                                 <li>
                                     <span class="font-semibold">{{ $siswa->pengguna->nama_lengkap }}</span>
-                                    <span class="text-gray-600 text-sm float-right">{{ $siswa->total_satuan }}</span>
+                                    <span class="text-gray-600 text-sm float-right">{{ $siswa->total_jumlah }}</span>
                                 </li>
                             @empty
                                 <p class="text-gray-500">Belum ada data setoran.</p>
@@ -102,7 +102,7 @@
                             @forelse ($peringkatKelas as $kelas)
                                 <li>
                                     <span class="font-semibold">{{ $kelas->nama_kelas }}</span>
-                                    <span class="text-gray-600 text-sm float-right">{{ $kelas->total_satuan }}</span>
+                                    <span class="text-gray-600 text-sm float-right">{{ $kelas->total_jumlah }}</span>
                                 </li>
                             @empty
                                 <p class="text-gray-500">Belum ada data setoran.</p>

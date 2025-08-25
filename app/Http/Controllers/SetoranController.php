@@ -33,7 +33,7 @@ class SetoranController extends Controller
         $request->validate([
             'id_siswa' => 'required|exists:siswa,id',
             'id_jenis_sampah' => 'required|exists:jenis_sampah,id',
-            'jumlah_satuan' => 'required|numeric|min:1',
+            'jumlah' => 'required|numeric|min:0.01',
         ]);
 
         try {
@@ -41,30 +41,28 @@ class SetoranController extends Controller
                 $siswa = Siswa::findOrFail($request->id_siswa);
                 $jenisSampah = JenisSampah::findOrFail($request->id_jenis_sampah);
 
-                $totalHarga = $jenisSampah->harga_per_satuan * $request->jumlah_satuan;
+                $totalHarga = $jenisSampah->harga_per_satuan * $request->jumlah;
 
                 Setoran::create([
                     'id_siswa' => $request->id_siswa,
                     'id_jenis_sampah' => $request->id_jenis_sampah,
                     'id_admin' => Auth::id(),
-                    'jumlah_satuan' => $request->jumlah_satuan,
+                    'jumlah' => $request->jumlah,
                     'total_harga' => $totalHarga,
                 ]);
 
-                // --- INI BAGIAN YANG DIPERBAIKI ---
-                // Gunakan increment untuk operasi yang aman dan atomik
                 $siswa->increment('saldo', $totalHarga);
-
-                // Tambahkan stok sampah
-                $jenisSampah->increment('stok', $request->jumlah_satuan);
+                $jenisSampah->increment('stok', $request->jumlah);
             });
         } catch (\Exception $e) {
-            return redirect()->route('setoran.create')->with('error', 'Terjadi kesalahan saat menyimpan transaksi.');
+            return redirect()->route('setoran.create')->with('toastr-error', 'Terjadi kesalahan saat menyimpan transaksi.');
         }
 
-        return redirect()->route('setoran.index')->with('status', 'Transaksi setoran berhasil disimpan!');
+        return redirect()->route('setoran.index')->with('toastr-success', 'Transaksi setoran berhasil disimpan!');
     }
 
+    // --- METODE YANG HILANG DIKEMBALIKAN DI SINI ---
+    
     public function showImportForm()
     {
         $jenisSampah = \App\Models\JenisSampah::take(2)->get();
@@ -80,6 +78,7 @@ class SetoranController extends Controller
 
         try {
             \Maatwebsite\Excel\Facades\Excel::import(new SetoranImport, $request->file('file'));
+        
         } catch (ValidationException $e) {
             $failures = $e->failures();
             $errorMessages = [];
