@@ -18,14 +18,14 @@ class MasterDataSeeder extends Seeder
         Schema::enableForeignKeyConstraints();
 
         Kelas::insert([
-            ['nama_kelas' => 'Kelas 1A', 'created_at' => now(), 'updated_at' => now()],
-            ['nama_kelas' => 'Kelas 1B', 'created_at' => now(), 'updated_at' => now()],
-            ['nama_kelas' => 'Kelas 2A', 'created_at' => now(), 'updated_at' => now()],
+            ['nama_kelas' => 'Kelas XII MPLB 1', 'created_at' => now(), 'updated_at' => now()],
+            ['nama_kelas' => 'Kelas XII MPLB 2', 'created_at' => now(), 'updated_at' => now()],
+            ['nama_kelas' => 'Kelas XII TM 1', 'created_at' => now(), 'updated_at' => now()],
         ]);
 
         JenisSampah::insert([
             ['nama_sampah' => 'Botol Plastik', 'harga_per_satuan' => 500, 'stok' => 0],
-            ['nama_sampah' => 'Kardus', 'harga_per_satuan' => 1000, 'stok' => 0],
+            ['nama_sampah' => 'Gelas Plastik', 'harga_per_satuan' => 1000, 'stok' => 0],
         ]);
     }
 }
