@@ -6,14 +6,13 @@ use App\Models\Siswa;
 use App\Models\Pengguna;
 use App\Models\Kelas;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
-use Maatwebsite\Excel\Concerns\WithColumnFormatting; // <-- 1. Tambahkan ini
-use PhpOffice\PhpSpreadsheet\Style\NumberFormat; // <-- 2. Tambahkan ini
+use Maatwebsite\Excel\Concerns\WithColumnFormatting; // Pastikan ini ada
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;     // Pastikan ini ada
 
-class SiswaImport implements ToModel, WithHeadingRow, WithValidation, WithColumnFormatting // <-- 3. Tambahkan ini
+class SiswaImport implements ToModel, WithHeadingRow, WithValidation, WithColumnFormatting // Pastikan ini ada
 {
     public function model(array $row)
     {
@@ -40,18 +39,18 @@ class SiswaImport implements ToModel, WithHeadingRow, WithValidation, WithColumn
     {
         return [
             'nama_lengkap' => 'required|string|max:255',
-            'username' => 'required|string|max:50|unique:pengguna,username',
-            'password' => 'required', // Hapus rule 'string', karena sudah kita format
-            'nis' => 'nullable|unique:siswa,nis', // Hapus rule 'string'
+            'username' => 'required|unique:pengguna,username', // Hapus rule 'string'
+            'password' => 'required',
+            'nis' => 'nullable|unique:siswa,nis',
             'nama_kelas' => 'required|exists:kelas,nama_kelas',
         ];
     }
     
-    // <-- 4. Tambahkan metode baru ini
     public function columnFormats(): array
     {
-        // Paksa kolom C (password) dan D (nis) untuk dibaca sebagai TEKS
+        // Paksa kolom B (username), C (password), dan D (nis) untuk dibaca sebagai TEKS
         return [
+            'B' => NumberFormat::FORMAT_TEXT, // <-- TAMBAHKAN INI
             'C' => NumberFormat::FORMAT_TEXT,
             'D' => NumberFormat::FORMAT_TEXT,
         ];
