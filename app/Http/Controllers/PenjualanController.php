@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers; // <-- INI BAGIAN YANG DIPERBAIKI
+namespace App\Http\Controllers;
 
 use App\Models\JenisSampah;
 use App\Models\Penjualan;
@@ -71,7 +71,7 @@ class PenjualanController extends Controller
             return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage())->withInput();
         }
 
-        return redirect()->route('penjualan.index')->with('status', 'Transaksi penjualan berhasil disimpan!');
+        return redirect()->route('penjualan.index')->with('toastr-success', 'Transaksi penjualan berhasil disimpan!');
     }
     
     public function show(Penjualan $penjualan)
