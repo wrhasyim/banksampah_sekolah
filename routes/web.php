@@ -77,6 +77,11 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::post('/kas-kecil', [KasKecilController::class, 'store'])->name('kas-kecil.store');
     Route::delete('/kas-kecil/{kasKecil}', [KasKecilController::class, 'destroy'])->name('kas-kecil.destroy');
 
+// Rute untuk Kas Kecil
+    Route::get('/kas-kecil', [KasKecilController::class, 'index'])->name('kas-kecil.index');
+    Route::post('/kas-kecil', [KasKecilController::class, 'store'])->name('kas-kecil.store');
+    Route::delete('/kas-kecil/{kasKecil}', [KasKecilController::class, 'destroy'])->name('kas-kecil.destroy');
+
     // Rute Pengaturan
     Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
 Route::post('/settings', [SettingController::class, 'update'])->name('settings.update');
