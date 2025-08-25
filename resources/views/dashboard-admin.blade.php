@@ -37,7 +37,7 @@
                             <form action="{{ route('dashboard') }}" method="GET" class="flex space-x-2 items-center text-sm">
                                 <select name="tipe_grafik" onchange="this.form.submit()" class="border-gray-300 rounded-md shadow-sm text-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
                                     <option value="nominal" {{ $tipeGrafik == 'nominal' ? 'selected' : '' }}>Berdasarkan Nominal (Rp)</option>
-                                    <option value="jumlah" {{ $tipeGrafik == 'jumlah' ? 'selected' : '' }}>Berdasarkan Jumlah (pcs)</option>
+                                    <option value="jumlah" {{ $tipeGrafik == 'jumlah' ? 'selected' : '' }}>Berdasarkan Jumlah</option>
                                 </select>
                                 <select name="jangka_waktu" onchange="this.form.submit()" class="border-gray-300 rounded-md shadow-sm text-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
                                     <option value="7" {{ $jangkaWaktu == '7' ? 'selected' : '' }}>7 Hari Terakhir</option>
@@ -66,7 +66,7 @@
                                         <td class="px-4 py-2">{{ $item->created_at->format('d M Y') }}</td>
                                         <td class="px-4 py-2 font-medium">{{ $item->nama_pengepul }}</td>
                                         <td class="px-4 py-2 text-right">
-                                            <span class="font-semibold">{{ $item->detail_penjualan_sum_jumlah_satuan }}</span> pcs
+                                            <span class="font-semibold">{{ $item->detail_penjualan_sum_jumlah }}</span> 
                                             @if($item->detail_penjualan_sum_jumlah_kg > 0)
                                                 <span class="text-gray-500">/ {{ $item->detail_penjualan_sum_jumlah_kg }} Kg</span>
                                             @endif
@@ -89,7 +89,7 @@
                             @forelse ($peringkatSiswa as $siswa)
                                 <li>
                                     <span class="font-semibold">{{ $siswa->pengguna->nama_lengkap }}</span>
-                                    <span class="text-gray-600 text-sm float-right">{{ $siswa->total_satuan }} pcs</span>
+                                    <span class="text-gray-600 text-sm float-right">{{ $siswa->total_satuan }}</span>
                                 </li>
                             @empty
                                 <p class="text-gray-500">Belum ada data setoran.</p>
@@ -102,7 +102,7 @@
                             @forelse ($peringkatKelas as $kelas)
                                 <li>
                                     <span class="font-semibold">{{ $kelas->nama_kelas }}</span>
-                                    <span class="text-gray-600 text-sm float-right">{{ $kelas->total_satuan }} pcs</span>
+                                    <span class="text-gray-600 text-sm float-right">{{ $kelas->total_satuan }}</span>
                                 </li>
                             @empty
                                 <p class="text-gray-500">Belum ada data setoran.</p>

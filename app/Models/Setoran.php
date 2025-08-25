@@ -10,14 +10,8 @@ class Setoran extends Model
     use HasFactory;
 
     protected $table = 'setoran';
-    protected $fillable = [
-        'id_siswa',
-        'id_jenis_sampah',
-        'id_admin',
-        'jumlah_satuan',
-        'tanggal_setoran',
-        'total_harga',
-    ];
+   // Ganti baris ini
+    protected $fillable = ['id_siswa', 'id_jenis_sampah', 'jumlah', 'total_harga', 'id_admin'];
 
     public function siswa()
     {

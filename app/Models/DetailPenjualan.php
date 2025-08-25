@@ -9,8 +9,8 @@ class DetailPenjualan extends Model
 {
     use HasFactory;
     protected $table = 'detail_penjualan';
-    protected $fillable = ['id_penjualan', 'id_jenis_sampah', 'jumlah_satuan', 'jumlah_kg', 'subtotal_harga'];
-
+    // Ganti baris ini
+    protected $fillable = ['id_penjualan', 'id_jenis_sampah', 'jumlah', 'jumlah_kg', 'subtotal_harga'];
     public function jenisSampah()
     {
         return $this->belongsTo(JenisSampah::class, 'id_jenis_sampah');
