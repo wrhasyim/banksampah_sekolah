@@ -4,31 +4,28 @@ namespace Database\Seeders;
 
 use App\Models\Kelas;
 use App\Models\JenisSampah;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Schema; // <-- Tambahkan ini
 
 class MasterDataSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        // Hapus data lama
+        // Nonaktifkan pengecekan, kosongkan tabel, lalu aktifkan kembali
+        Schema::disableForeignKeyConstraints();
         Kelas::truncate();
         JenisSampah::truncate();
+        Schema::enableForeignKeyConstraints();
 
-        // Buat data kelas awal
         Kelas::insert([
-            ['nama_kelas' => 'X MPLB 1'],
-            ['nama_kelas' => 'X MPLB 2'],
+            ['nama_kelas' => 'Kelas 1A', 'created_at' => now(), 'updated_at' => now()],
+            ['nama_kelas' => 'Kelas 1B', 'created_at' => now(), 'updated_at' => now()],
+            ['nama_kelas' => 'Kelas 2A', 'created_at' => now(), 'updated_at' => now()],
         ]);
 
-        // Buat data jenis sampah awal
         JenisSampah::insert([
             ['nama_sampah' => 'Botol Plastik', 'harga_per_satuan' => 500, 'stok' => 0],
-            ['nama_sampah' => 'Gelas Plastik', 'harga_per_satuan' => 300, 'stok' => 0],
-           
+            ['nama_sampah' => 'Kardus', 'harga_per_satuan' => 1000, 'stok' => 0],
         ]);
     }
 }
