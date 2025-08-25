@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Aug 25, 2025 at 07:14 AM
+-- Generation Time: Aug 25, 2025 at 08:37 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -55,7 +55,7 @@ CREATE TABLE `detail_penjualan` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `id_penjualan` bigint(20) UNSIGNED NOT NULL,
   `id_jenis_sampah` bigint(20) UNSIGNED NOT NULL,
-  `jumlah_satuan` int(11) NOT NULL,
+  `jumlah` decimal(8,2) NOT NULL,
   `jumlah_kg` decimal(8,2) DEFAULT NULL,
   `subtotal_harga` decimal(10,2) NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
@@ -71,8 +71,9 @@ CREATE TABLE `detail_penjualan` (
 CREATE TABLE `jenis_sampah` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `nama_sampah` varchar(50) NOT NULL,
+  `satuan` varchar(255) NOT NULL DEFAULT 'pcs',
   `harga_per_satuan` decimal(10,2) NOT NULL,
-  `stok` int(11) NOT NULL DEFAULT 0,
+  `stok` decimal(8,2) NOT NULL DEFAULT 0.00,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -81,10 +82,10 @@ CREATE TABLE `jenis_sampah` (
 -- Dumping data for table `jenis_sampah`
 --
 
-INSERT INTO `jenis_sampah` (`id`, `nama_sampah`, `harga_per_satuan`, `stok`, `created_at`, `updated_at`) VALUES
-(1, 'Botol Plastik', 35.00, 0, NULL, '2025-08-24 18:45:18'),
-(2, 'Gelas Plastik', 20.00, 0, NULL, '2025-08-24 18:45:25'),
-(3, 'Kardus', 2000.00, 0, '2025-08-24 18:45:46', '2025-08-24 18:45:46');
+INSERT INTO `jenis_sampah` (`id`, `nama_sampah`, `satuan`, `harga_per_satuan`, `stok`, `created_at`, `updated_at`) VALUES
+(1, 'Botol Plastik', 'pcs', 35.00, 0.00, NULL, '2025-08-24 18:45:18'),
+(2, 'Gelas Plastik', 'pcs', 20.00, 0.00, NULL, '2025-08-24 18:45:25'),
+(3, 'Kardus', 'pcs', 2000.00, 0.00, '2025-08-24 18:45:46', '2025-08-24 18:45:46');
 
 -- --------------------------------------------------------
 
@@ -179,7 +180,8 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (13, '2025_08_24_193128_modify_penarikan_table_for_class_withdrawal', 1),
 (14, '2025_08_24_201303_add_kg_to_detail_penjualan_table', 1),
 (15, '2025_08_25_040516_create_jobs_table', 2),
-(16, '2025_08_25_050048_create_settings_table', 3);
+(16, '2025_08_25_050048_create_settings_table', 3),
+(17, '2025_08_25_051923_make_unit_system_flexible', 4);
 
 -- --------------------------------------------------------
 
@@ -1080,7 +1082,7 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('td5nhshdQM1rttFHaCF8GKrBnP0cQZ34YnI3G6lV', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoiSXFqc2k0RFBuT3ZjcVBuQTN6c3F1M0Q5OGV5cjZzOTN2VlhiOEN3ciI7czozOiJ1cmwiO2E6MDp7fXM6OToiX3ByZXZpb3VzIjthOjE6e3M6MzoidXJsIjtzOjM0OiJodHRwOi8vMTI3LjAuMC4xOjgwMDAvamVuaXMtc2FtcGFoIjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6MTt9', 1756098835);
+('td5nhshdQM1rttFHaCF8GKrBnP0cQZ34YnI3G6lV', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoiSXFqc2k0RFBuT3ZjcVBuQTN6c3F1M0Q5OGV5cjZzOTN2VlhiOEN3ciI7czozOiJ1cmwiO2E6MDp7fXM6OToiX3ByZXZpb3VzIjthOjE6e3M6MzoidXJsIjtzOjMxOiJodHRwOi8vMTI3LjAuMC4xOjgwMDAvZGFzaGJvYXJkIjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6MTt9', 1756103857);
 
 -- --------------------------------------------------------
 
@@ -1092,7 +1094,7 @@ CREATE TABLE `setoran` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `id_siswa` bigint(20) UNSIGNED NOT NULL,
   `id_jenis_sampah` bigint(20) UNSIGNED NOT NULL,
-  `jumlah_satuan` int(11) NOT NULL,
+  `jumlah` decimal(8,2) NOT NULL,
   `total_harga` decimal(10,2) NOT NULL,
   `id_admin` bigint(20) UNSIGNED NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
@@ -2093,7 +2095,7 @@ ALTER TABLE `kelas`
 -- AUTO_INCREMENT for table `migrations`
 --
 ALTER TABLE `migrations`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT for table `penarikan`
