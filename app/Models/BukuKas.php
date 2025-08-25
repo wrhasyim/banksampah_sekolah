@@ -5,11 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class KasKecil extends Model
+class BukuKas extends Model
 {
     use HasFactory;
-
-    protected $table = 'kas_kecil';
+    protected $table = 'buku_kas';
     protected $fillable = ['tanggal', 'deskripsi', 'tipe', 'jumlah', 'id_admin'];
 
     public function admin()

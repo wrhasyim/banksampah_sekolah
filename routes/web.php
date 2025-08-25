@@ -12,8 +12,7 @@ use App\Http\Controllers\BukuTabunganController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\PenjualanController;
 use App\Http\Controllers\SettingController;
-use App\Http\Controllers\KasKecilController; // Jangan lupa tambahkan di atas
-
+use App\Http\Controllers\BukuKasController; 
 
 /*
 |--------------------------------------------------------------------------
@@ -72,15 +71,10 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::post('/setoran/import', [SetoranController::class, 'import'])->name('setoran.import');
     Route::get('/setoran/export-sample', [SetoranController::class, 'exportSample'])->name('setoran.export.sample');
 
-// Rute untuk Kas Kecil
-    Route::get('/kas-kecil', [KasKecilController::class, 'index'])->name('kas-kecil.index');
-    Route::post('/kas-kecil', [KasKecilController::class, 'store'])->name('kas-kecil.store');
-    Route::delete('/kas-kecil/{kasKecil}', [KasKecilController::class, 'destroy'])->name('kas-kecil.destroy');
-
-// Rute untuk Kas Kecil
-    Route::get('/kas-kecil', [KasKecilController::class, 'index'])->name('kas-kecil.index');
-    Route::post('/kas-kecil', [KasKecilController::class, 'store'])->name('kas-kecil.store');
-    Route::delete('/kas-kecil/{kasKecil}', [KasKecilController::class, 'destroy'])->name('kas-kecil.destroy');
+// Rute untuk Buku Kas (menggantikan Kas Kecil)
+    Route::get('/buku-kas', [BukuKasController::class, 'index'])->name('buku-kas.index');
+    Route::post('/buku-kas', [BukuKasController::class, 'store'])->name('buku-kas.store');
+    Route::delete('/buku-kas/{bukuKa}', [BukuKasController::class, 'destroy'])->name('buku-kas.destroy');
 
     // Rute Pengaturan
     Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');

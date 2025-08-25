@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ __('Buku Kas Kecil') }}</h2>
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ __('Buku Kas') }}</h2>
     </x-slot>
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
@@ -8,7 +8,7 @@
                 <div class="lg:col-span-1">
                     <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
                         <h3 class="text-lg font-medium mb-4">Catat Transaksi Baru</h3>
-                        <form action="{{ route('kas-kecil.store') }}" method="POST">
+                        <form action="{{ route('buku-kas.store') }}" method="POST">
                             @csrf
                             <div>
                                 <x-input-label for="tanggal" value="Tanggal Transaksi" />
@@ -40,7 +40,7 @@
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="text-lg font-medium">Histori Transaksi</h3>
                             <div class="text-right">
-                                <p class="text-sm text-gray-500">Saldo Akhir Kas Kecil</p>
+                                <p class="text-sm text-gray-500">Saldo Akhir Kas</p>
                                 <p class="text-2xl font-bold text-indigo-600">Rp {{ number_format($saldoAkhir, 0, ',', '.') }}</p>
                             </div>
                         </div>
@@ -63,7 +63,7 @@
                                             {{ $trx->tipe == 'pemasukan' ? '+' : '-' }} Rp {{ number_format($trx->jumlah, 0, ',', '.') }}
                                         </td>
                                         <td class="px-6 py-4">
-                                            <form action="{{ route('kas-kecil.destroy', $trx->id) }}" method="POST" onsubmit="return confirm('Hapus transaksi ini?')">
+                                            <form action="{{ route('buku-kas.destroy', $trx->id) }}" method="POST" onsubmit="return confirm('Hapus transaksi ini?')">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="text-red-500 hover:text-red-700 text-xs">Hapus</button>

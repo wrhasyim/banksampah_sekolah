@@ -12,10 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('kelas', function (Blueprint $table) {
-        $table->id(); // Membuat kolom 'id' (Primary Key, auto-increment)
-        $table->string('nama_kelas', 50); // Membuat kolom VARCHAR(50)
-        // Laravel otomatis menambahkan kolom 'created_at' dan 'updated_at'
-        // Jika tidak butuh, kita bisa hapus nanti. Untuk sekarang, biarkan saja.
+            $table->id();
+            $table->string('nama_kelas', 50);
+            $table->timestamps(); // <-- TAMBAHKAN BARIS INI
         });
     }
 
