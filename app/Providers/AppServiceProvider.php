@@ -2,22 +2,24 @@
 
 namespace App\Providers;
 
+use App\Models\Setting;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
-    public function register(): void
+    public function boot(): void
     {
-        //
+        // Bagikan data setting ke semua view
+        if (Schema::hasTable('settings')) {
+            $settings = Setting::pluck('value', 'key')->all();
+            View::share('siteSettings', $settings);
+        }
     }
 
-    /**
-     * Bootstrap any application services.
-     */
-    public function boot(): void
+
+    public function register(): void
     {
         //
     }

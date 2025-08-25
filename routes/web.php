@@ -11,6 +11,7 @@ use App\Http\Controllers\PenarikanController;
 use App\Http\Controllers\BukuTabunganController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\PenjualanController;
+use App\Http\Controllers\SettingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -68,6 +69,10 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/setoran/import', [SetoranController::class, 'showImportForm'])->name('setoran.import.form');
     Route::post('/setoran/import', [SetoranController::class, 'import'])->name('setoran.import');
     Route::get('/setoran/export-sample', [SetoranController::class, 'exportSample'])->name('setoran.export.sample');
+
+    // Rute Pengaturan
+    Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
+Route::post('/settings', [SettingController::class, 'update'])->name('settings.update');
 });
 
 
