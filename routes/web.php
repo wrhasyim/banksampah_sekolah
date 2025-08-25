@@ -61,6 +61,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/siswa/import', [SiswaController::class, 'showImportForm'])->name('siswa.import.form');
     Route::post('/siswa/import', [SiswaController::class, 'import'])->name('siswa.import');
     Route::get('/siswa/export-sample', [SiswaController::class, 'exportSample'])->name('siswa.export.sample');
+     Route::post('/siswa/export', [SiswaController::class, 'export'])->name('siswa.export'); // <-- TAMBAHKAN INI
     Route::get('/get-siswa-by-kelas/{id_kelas}', [SiswaController::class, 'getByKelas'])->name('siswa.getByKelas');
     
     // Rute Tambahan Setoran (Impor)

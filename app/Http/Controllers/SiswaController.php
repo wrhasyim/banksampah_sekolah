@@ -2,38 +2,44 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Siswa;
 use App\Models\Kelas;
 use App\Models\Pengguna;
-use App\Imports\SiswaImport;
-use App\Exports\SiswaExport;
+use App\Models\Siswa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use App\Imports\SiswaImport;
 use Maatwebsite\Excel\Facades\Excel;
-use Maatwebsite\Excel\Validators\ValidationException;
+use App\Exports\SiswaExport;
 use App\Exports\SiswaSampleExport;
 
 class SiswaController extends Controller
 {
-    public function index()
+    /**
+     * Menampilkan daftar siswa dengan paginasi.
+     */
+    public function index(Request $request)
     {
-        $siswa = Siswa::with('pengguna', 'kelas')->get();
-        return view('pages.siswa.index', compact('siswa'));
-    }
-   public function getByKelas($id_kelas)
-    {
-        // Cari siswa berdasarkan id_kelas dan muat relasi pengguna untuk mengambil nama
-        $siswa = \App\Models\Siswa::where('id_kelas', $id_kelas)->with('pengguna')->get();
+        // Ambil nilai 'per_page' dari URL, default-nya 10 jika tidak ada
+        $perPage = $request->query('per_page', 10);
 
-        // Kembalikan data dalam format JSON
+        // Ambil data siswa dengan paginasi
+        $siswa = Siswa::with(['pengguna', 'kelas'])->paginate($perPage);
+
+        // Kirim data siswa dan nilai perPage ke view
+        return view('pages.siswa.index', compact('siswa', 'perPage'));
+    }
+
+    /**
+     * Mengambil data siswa berdasarkan ID Kelas untuk AJAX request.
+     */
+    public function getByKelas($id_kelas)
+    {
+        $siswa = Siswa::where('id_kelas', $id_kelas)->with('pengguna')->get();
         return response()->json($siswa);
     }
-    public function exportSample()
-    {
-        return \Maatwebsite\Excel\Facades\Excel::download(new SiswaSampleExport, 'contoh-impor-siswa.xlsx');
-    }
+
     public function create()
     {
         $kelas = Kelas::all();
@@ -43,10 +49,10 @@ class SiswaController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nama_lengkap' => 'required|string|max:255',
-            'username' => 'required|string|unique:pengguna,username|max:255',
+            'nama_lengkap' => 'required|string|max:100',
+            'username' => 'required|string|max:50|unique:pengguna,username',
             'password' => 'required|string|min:8',
-            'nis' => 'nullable|string|unique:siswa,nis|max:255',
+            'nis' => 'nullable|string|max:20|unique:siswa,nis',
             'id_kelas' => 'required|exists:kelas,id',
         ]);
 
@@ -66,25 +72,22 @@ class SiswaController extends Controller
             ]);
         });
 
-        return redirect()->route('siswa.index')->with('status', 'Siswa berhasil ditambahkan!');
+        return redirect()->route('siswa.index')->with('status', 'Data siswa berhasil ditambahkan!');
     }
 
     public function edit(Siswa $siswa)
     {
         $kelas = Kelas::all();
+        $siswa->load('pengguna');
         return view('pages.siswa.edit', compact('siswa', 'kelas'));
     }
-    public function show(Siswa $siswa)
-    {
-        return redirect()->route('siswa.index');
-    }
+
     public function update(Request $request, Siswa $siswa)
     {
         $request->validate([
-            'nama_lengkap' => 'required|string|max:255',
-            'username' => ['required', 'string', 'max:255', Rule::unique('pengguna')->ignore($siswa->pengguna->id)],
-            'password' => 'nullable|string|min:8',
-            'nis' => ['nullable', 'string', 'max:255', Rule::unique('siswa')->ignore($siswa->id)],
+            'nama_lengkap' => 'required|string|max:100',
+            'username' => ['required', 'string', 'max:50', Rule::unique('pengguna')->ignore($siswa->id_pengguna)],
+            'nis' => ['nullable', 'string', 'max:20', Rule::unique('siswa')->ignore($siswa->id)],
             'id_kelas' => 'required|exists:kelas,id',
         ]);
 
@@ -94,16 +97,15 @@ class SiswaController extends Controller
                 'username' => $request->username,
             ]);
 
-            if ($request->filled('password')) {
-                $siswa->pengguna->update([
-                    'password' => Hash::make($request->password),
-                ]);
-            }
-
             $siswa->update([
                 'nis' => $request->nis,
                 'id_kelas' => $request->id_kelas,
             ]);
+
+            if ($request->filled('password')) {
+                $request->validate(['password' => 'string|min:8']);
+                $siswa->pengguna->update(['password' => Hash::make($request->password)]);
+            }
         });
 
         return redirect()->route('siswa.index')->with('status', 'Data siswa berhasil diperbarui!');
@@ -111,15 +113,10 @@ class SiswaController extends Controller
 
     public function destroy(Siswa $siswa)
     {
-        DB::transaction(function () use ($siswa) {
-            $siswa->pengguna->delete();
-            $siswa->delete();
-        });
-
+        $siswa->pengguna->delete();
         return redirect()->route('siswa.index')->with('status', 'Data siswa berhasil dihapus!');
     }
-
-    // Method baru untuk mengimpor siswa
+    
     public function showImportForm()
     {
         return view('pages.siswa.import');
@@ -128,18 +125,24 @@ class SiswaController extends Controller
     public function import(Request $request)
     {
         $request->validate([
-            'file' => 'required|mimes:xlsx,xls',
+            'file' => 'required|mimes:xlsx,xls'
         ]);
 
-        try {
-            Excel::import(new SiswaImport, $request->file('file'));
-        } catch (ValidationException $e) {
-            $failures = $e->failures();
-            return back()->with('import_errors', $failures)->withInput();
-        }
+        (new SiswaImport)->queue($request->file('file'));
 
-        return redirect()->route('siswa.index')->with('status', 'Data siswa berhasil diimpor!');
+        return redirect()->route('siswa.import.form')->with('success', 'File Anda sedang diproses. Data akan muncul secara bertahap.');
+    }
+    
+    public function exportSample()
+    {
+        return Excel::download(new SiswaSampleExport, 'contoh-impor-siswa.xlsx');
     }
 
-    
+    /**
+     * Mengekspor data siswa ke Excel.
+     */
+    public function export()
+    {
+        return Excel::download(new SiswaExport, 'data-siswa.xlsx');
+    }
 }

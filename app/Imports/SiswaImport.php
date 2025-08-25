@@ -9,16 +9,20 @@ use Illuminate\Support\Facades\Hash;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
-use Maatwebsite\Excel\Concerns\WithColumnFormatting; // Pastikan ini ada
-use PhpOffice\PhpSpreadsheet\Style\NumberFormat;     // Pastikan ini ada
+use Maatwebsite\Excel\Concerns\WithColumnFormatting;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
+use Maatwebsite\Excel\Concerns\Importable; // <-- 1. TAMBAHKAN INI
 
-class SiswaImport implements ToModel, WithHeadingRow, WithValidation, WithColumnFormatting // Pastikan ini ada
+class SiswaImport implements ToModel, WithHeadingRow, WithValidation, WithColumnFormatting, ShouldQueue, WithChunkReading
 {
+    use Importable; // <-- 2. TAMBAHKAN INI
+
     public function model(array $row)
     {
         $kelas = Kelas::where('nama_kelas', $row['nama_kelas'])->first();
 
-        // Buat pengguna baru
         $pengguna = Pengguna::create([
             'nama_lengkap' => $row['nama_lengkap'],
             'username' => $row['username'],
@@ -26,7 +30,6 @@ class SiswaImport implements ToModel, WithHeadingRow, WithValidation, WithColumn
             'role' => 'siswa',
         ]);
 
-        // Buat siswa baru
         return new Siswa([
             'id_pengguna' => $pengguna->id,
             'id_kelas' => $kelas->id,
@@ -39,7 +42,7 @@ class SiswaImport implements ToModel, WithHeadingRow, WithValidation, WithColumn
     {
         return [
             'nama_lengkap' => 'required|string|max:255',
-            'username' => 'required|unique:pengguna,username', // Hapus rule 'string'
+            'username' => 'required|unique:pengguna,username',
             'password' => 'required',
             'nis' => 'nullable|unique:siswa,nis',
             'nama_kelas' => 'required|exists:kelas,nama_kelas',
@@ -48,11 +51,15 @@ class SiswaImport implements ToModel, WithHeadingRow, WithValidation, WithColumn
     
     public function columnFormats(): array
     {
-        // Paksa kolom B (username), C (password), dan D (nis) untuk dibaca sebagai TEKS
         return [
-            'B' => NumberFormat::FORMAT_TEXT, // <-- TAMBAHKAN INI
+            'B' => NumberFormat::FORMAT_TEXT,
             'C' => NumberFormat::FORMAT_TEXT,
             'D' => NumberFormat::FORMAT_TEXT,
         ];
+    }
+
+    public function chunkSize(): int
+    {
+        return 100;
     }
 }
