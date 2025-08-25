@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Aug 25, 2025 at 08:37 AM
+-- Generation Time: Aug 25, 2025 at 10:33 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -83,9 +83,9 @@ CREATE TABLE `jenis_sampah` (
 --
 
 INSERT INTO `jenis_sampah` (`id`, `nama_sampah`, `satuan`, `harga_per_satuan`, `stok`, `created_at`, `updated_at`) VALUES
-(1, 'Botol Plastik', 'pcs', 35.00, 0.00, NULL, '2025-08-24 18:45:18'),
 (2, 'Gelas Plastik', 'pcs', 20.00, 0.00, NULL, '2025-08-24 18:45:25'),
-(3, 'Kardus', 'pcs', 2000.00, 0.00, '2025-08-24 18:45:46', '2025-08-24 18:45:46');
+(4, 'Kardus', 'pcs', 2000.00, 0.00, '2025-08-24 23:51:40', '2025-08-24 23:51:40'),
+(5, 'Botol Plastik', 'pcs', 35.00, 0.00, '2025-08-25 00:28:39', '2025-08-25 00:28:39');
 
 -- --------------------------------------------------------
 
@@ -181,7 +181,7 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (14, '2025_08_24_201303_add_kg_to_detail_penjualan_table', 1),
 (15, '2025_08_25_040516_create_jobs_table', 2),
 (16, '2025_08_25_050048_create_settings_table', 3),
-(17, '2025_08_25_051923_make_unit_system_flexible', 4);
+(18, '2025_08_25_051923_make_unit_system_flexible', 4);
 
 -- --------------------------------------------------------
 
@@ -1082,7 +1082,7 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('td5nhshdQM1rttFHaCF8GKrBnP0cQZ34YnI3G6lV', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoiSXFqc2k0RFBuT3ZjcVBuQTN6c3F1M0Q5OGV5cjZzOTN2VlhiOEN3ciI7czozOiJ1cmwiO2E6MDp7fXM6OToiX3ByZXZpb3VzIjthOjE6e3M6MzoidXJsIjtzOjMxOiJodHRwOi8vMTI3LjAuMC4xOjgwMDAvZGFzaGJvYXJkIjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6MTt9', 1756103857);
+('td5nhshdQM1rttFHaCF8GKrBnP0cQZ34YnI3G6lV', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoiSXFqc2k0RFBuT3ZjcVBuQTN6c3F1M0Q5OGV5cjZzOTN2VlhiOEN3ciI7czozOiJ1cmwiO2E6MDp7fXM6OToiX3ByZXZpb3VzIjthOjE6e3M6MzoidXJsIjtzOjMxOiJodHRwOi8vMTI3LjAuMC4xOjgwMDAvcGVuanVhbGFuIjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6MTt9', 1756110781);
 
 -- --------------------------------------------------------
 
@@ -2077,7 +2077,7 @@ ALTER TABLE `detail_penjualan`
 -- AUTO_INCREMENT for table `jenis_sampah`
 --
 ALTER TABLE `jenis_sampah`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `jobs`
@@ -2095,7 +2095,7 @@ ALTER TABLE `kelas`
 -- AUTO_INCREMENT for table `migrations`
 --
 ALTER TABLE `migrations`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT for table `penarikan`
