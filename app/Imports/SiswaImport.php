@@ -9,24 +9,19 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
-use Maatwebsite\Excel\Concerns\WithValidation;
-use Maatwebsite\Excel\Concerns\WithColumnFormatting;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\Importable;
-use Maatwebsite\Excel\Concerns\SkipsOnFailure;
-use Maatwebsite\Excel\Validators\Failure;
-use Maatwebsite\Excel\Concerns\SkipsFailures;
 use Illuminate\Support\Str;
-use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
-class SiswaImport implements ToModel, WithHeadingRow, WithValidation, WithColumnFormatting, WithChunkReading, SkipsOnFailure
+class SiswaImport implements ToModel, WithHeadingRow, WithChunkReading
 {
-    use Importable, SkipsFailures;
+    use Importable;
 
     private $kelasCollection;
 
     public function __construct()
     {
+        // Ambil semua data kelas sekali saja di awal
         $this->kelasCollection = Kelas::pluck('id', 'nama_kelas');
     }
 
@@ -37,10 +32,22 @@ class SiswaImport implements ToModel, WithHeadingRow, WithValidation, WithColumn
     */
     public function model(array $row)
     {
-        // Cari id kelas berdasarkan nama.
+        // PERBAIKAN: Secara eksplisit konversi data ke string sebelum digunakan.
+        // Ini mengatasi masalah Excel yang membaca NIS dan password sebagai angka.
+        $row['nama_lengkap'] = (string) ($row['nama_lengkap'] ?? '');
+        $row['username']     = (string) ($row['username'] ?? '');
+        $row['password']     = (string) ($row['password'] ?? Str::random(10));
+        $row['nis']          = (string) ($row['nis'] ?? null);
+        $row['nama_kelas']   = (string) ($row['nama_kelas'] ?? '');
+        
+        // Lakukan validasi manual di sini
+        if (empty($row['nama_lengkap']) || empty($row['username']) || empty($row['nama_kelas'])) {
+            return null; // Lewati baris yang tidak lengkap
+        }
+
         $idKelas = $this->kelasCollection->get($row['nama_kelas']);
 
-        // Jika kelas tidak ditemukan, kembalikan null agar baris dilewati.
+        // Jika kelas tidak ditemukan, lewati baris ini.
         if (is_null($idKelas)) {
             return null;
         }
@@ -55,7 +62,7 @@ class SiswaImport implements ToModel, WithHeadingRow, WithValidation, WithColumn
             // Jika pengguna baru, buat data pengguna
             if (!$pengguna->exists) {
                 $pengguna->nama_lengkap = $row['nama_lengkap'];
-                $pengguna->password     = Hash::make($row['password'] ?? Str::random(10));
+                $pengguna->password     = Hash::make($row['password']);
                 $pengguna->role         = 'siswa';
                 $pengguna->save();
             }
@@ -67,6 +74,7 @@ class SiswaImport implements ToModel, WithHeadingRow, WithValidation, WithColumn
             if (!$siswa->exists) {
                 $siswa->id_pengguna = $pengguna->id;
                 $siswa->id_kelas    = $idKelas;
+                $siswa->nis         = $row['nis'];
                 $siswa->saldo       = 0;
                 $siswa->save();
             }
@@ -76,39 +84,11 @@ class SiswaImport implements ToModel, WithHeadingRow, WithValidation, WithColumn
         } catch (\Exception $e) {
             DB::rollback();
             // Lanjutkan impor tanpa menghentikan proses
-            // Pesan kegagalan akan ditangkap oleh SkipsOnFailure
             return null;
         }
     }
 
-    public function rules(): array
-    {
-        return [
-            '*.nama_lengkap' => 'required|string|max:255',
-            '*.username'     => 'required|string|unique:pengguna,username|max:50',
-            '*.password'     => 'nullable|string',
-            '*.nis'          => 'nullable|string|max:20|unique:siswa,nis',
-            '*.nama_kelas'   => 'required|string|exists:kelas,nama_kelas',
-        ];
-    }
-    
-    public function customValidationMessages()
-    {
-        return [
-            '*.username.unique' => 'Username :attribute di baris :row sudah ada.',
-            '*.nis.unique' => 'NIS :attribute di baris :row sudah ada.',
-            '*.nama_kelas.exists' => 'Kelas ":input" di baris :row tidak ditemukan.'
-        ];
-    }
-
-    public function columnFormats(): array
-    {
-        return [
-            'B' => NumberFormat::FORMAT_TEXT,
-            'D' => NumberFormat::FORMAT_TEXT,
-        ];
-    }
-
+    // `rules()` dan metode validasi lainnya dihapus karena validasi sekarang manual
     public function chunkSize(): int
     {
         return 100;

@@ -141,16 +141,6 @@ class SiswaController extends Controller
             Excel::import(new SiswaImport, $request->file('file'));
 
             return redirect()->route('siswa.index')->with('success', 'Data siswa berhasil diimpor!');
-        } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
-            $failures = $e->failures();
-            $errorMessages = [];
-            foreach ($failures as $failure) {
-                $row = $failure->row();
-                foreach ($failure->errors() as $error) {
-                    $errorMessages[] = "Baris {$row}: {$error}";
-                }
-            }
-            return redirect()->back()->withInput()->withErrors($errorMessages);
         } catch (\Exception $e) {
             return redirect()->back()->withInput()->with('error', 'Terjadi kesalahan tak terduga: ' . $e->getMessage());
         }
