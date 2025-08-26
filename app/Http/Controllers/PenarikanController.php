@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Penarikan;
 use App\Models\Siswa;
-use App\Models\Kelas; // Pastikan ini ditambahkan
-use Illuminate\Http\Request;
+use App\Models\Kelas;
+use Illuminate\Http\Request; // Pastikan Request di-import
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -17,9 +17,24 @@ class PenarikanController extends Controller
         return view('pages.penarikan.index', compact('penarikan'));
     }
 
-    public function create()
+    /**
+     * Menampilkan form untuk membuat penarikan baru dengan fitur pencarian.
+     */
+    public function create(Request $request)
     {
-        $siswa = Siswa::with('pengguna')->get();
+        $query = Siswa::with('pengguna')->where('saldo', '>', 0);
+
+        // Logika untuk menangani parameter pencarian
+        if ($request->has('search')) {
+            $searchTerm = $request->search;
+            // Mencari berdasarkan nama_lengkap di relasi pengguna
+            $query->whereHas('pengguna', function ($q) use ($searchTerm) {
+                $q->where('nama_lengkap', 'like', "%{$searchTerm}%");
+            });
+        }
+        
+        $siswa = $query->get();
+
         return view('pages.penarikan.create', compact('siswa'));
     }
 
@@ -53,8 +68,6 @@ class PenarikanController extends Controller
 
         return redirect()->route('penarikan.index')->with('status', 'Transaksi penarikan berhasil disimpan!');
     }
-
-    // --- DUA METODE BARU DITAMBAHKAN DI SINI ---
 
     /**
      * Menampilkan form untuk penarikan per kelas.

@@ -1,40 +1,38 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Catat Penarikan Baru') }}
+            {{ __('Buat Penarikan Baru') }}
         </h2>
     </x-slot>
+
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    @if (session('error'))
-                        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-                            <span class="block sm:inline">{{ session('error') }}</span>
-                        </div>
-                    @endif
+                <div class="p-6 bg-white border-b border-gray-200">
                     <form action="{{ route('penarikan.store') }}" method="POST">
                         @csrf
-                        <div class="mt-4">
-                            <x-input-label for="id_siswa" value="Pilih Siswa" />
-                            <select name="id_siswa" id="id_siswa" class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" required>
-                                <option value="">-- Pilih Siswa (Saldo Saat Ini) --</option>
-                                @foreach ($siswa as $item)
-                                    <option value="{{ $item->id }}">
-                                        {{ $item->pengguna->nama_lengkap }} (Rp {{ number_format($item->saldo, 0, ',', '.') }})
+                        
+                        <div class="mb-4">
+                            <x-input-label for="id_siswa" value="Pilih Siswa (Ketik untuk mencari)" />
+                            <select name="id_siswa" id="id_siswa" class="select2 block mt-1 w-full" required>
+                                <option value="">-- Pilih Siswa --</option>
+                                @foreach($siswa as $item)
+                                    <option value="{{ $item->id }}" data-saldo="{{ $item->saldo }}">
+                                        {{ $item->pengguna->nama_lengkap }} (Saldo: Rp {{ number_format($item->saldo, 0, ',', '.') }})
                                     </option>
                                 @endforeach
                             </select>
-                            <x-input-error :messages="$errors->get('id_siswa')" class="mt-2" />
                         </div>
-                        <div class="mt-4">
+
+                        <div class="mb-4">
                             <x-input-label for="jumlah_penarikan" value="Jumlah Penarikan (Rp)" />
-                            <x-text-input id="jumlah_penarikan" class="block mt-1 w-full" type="number" name="jumlah_penarikan" :value="old('jumlah_penarikan')" required />
-                            <x-input-error :messages="$errors->get('jumlah_penarikan')" class="mt-2" />
+                            <x-text-input type="number" id="jumlah_penarikan" name="jumlah_penarikan" class="block mt-1 w-full" required />
+                            <small id="saldo-info" class="text-gray-500 mt-1 block"></small>
                         </div>
-                        <div class="flex items-center justify-end mt-4">
-                            <x-primary-button class="ms-4">
-                                {{ __('Simpan Transaksi') }}
+
+                        <div class="flex justify-end">
+                            <x-primary-button>
+                                Simpan Transaksi
                             </x-primary-button>
                         </div>
                     </form>
@@ -42,4 +40,29 @@
             </div>
         </div>
     </div>
+
+    @push('scripts')
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Inisialisasi Select2 pada elemen dengan class 'select2'
+            $('.select2').select2({
+                placeholder: 'Ketik nama siswa...',
+                width: '100%'
+            });
+
+            // Tampilkan sisa saldo siswa saat dipilih
+            $('#id_siswa').on('change', function() {
+                var saldo = $(this).find(':selected').data('saldo');
+                if (saldo) {
+                    $('#saldo-info').text('Saldo tersedia: Rp ' + new Intl.NumberFormat('id-ID').format(saldo));
+                } else {
+                    $('#saldo-info').text('');
+                }
+            });
+        });
+    </script>
+    @endpush
 </x-app-layout>
