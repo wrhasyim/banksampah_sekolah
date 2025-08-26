@@ -77,7 +77,10 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::post('/buku-kas', [BukuKasController::class, 'store'])->name('buku-kas.store');
     Route::delete('/buku-kas/{bukuKa}', [BukuKasController::class, 'destroy'])->name('buku-kas.destroy');
     Route::resource('kategori-transaksi', KategoriTransaksiController::class)->except(['show']); // Route untuk Kategori
-
+// Route untuk menampilkan form edit
+Route::get('/buku-kas/{bukuKa}/edit', [BukuKasController::class, 'edit'])->name('buku-kas.edit');
+// Route untuk memproses update
+Route::put('/buku-kas/{bukuKa}', [BukuKasController::class, 'update'])->name('buku-kas.update');
     // Rute Pengaturan
     Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
 Route::post('/settings', [SettingController::class, 'update'])->name('settings.update');
