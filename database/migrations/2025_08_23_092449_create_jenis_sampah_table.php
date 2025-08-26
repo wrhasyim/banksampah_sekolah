@@ -14,7 +14,8 @@ return new class extends Migration
         Schema::create('jenis_sampah', function (Blueprint $table) {
             $table->id();
             $table->string('nama_sampah', 50);
-            $table->decimal('harga_per_satuan', 10, 2);
+            $table->string('satuan', 255)->default("pcs");;
+            $table->decimal('harga_per_satuan', 10, 2);            
             $table->integer('stok')->default(0); // <-- TAMBAHKAN BARIS INI
             $table->timestamps();
         });
