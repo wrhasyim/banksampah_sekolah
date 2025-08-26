@@ -32,6 +32,9 @@
                                     <x-dropdown-link :href="route('jenis-sampah.index')">{{ __('Kelola Jenis Sampah') }}</x-dropdown-link>
                                     <x-dropdown-link :href="route('kelas.index')">{{ __('Kelola Kelas') }}</x-dropdown-link>
                                     <x-dropdown-link :href="route('siswa.index')">{{ __('Kelola Siswa') }}</x-dropdown-link>
+                                    <x-dropdown-link :href="route('kategori-transaksi.index')">
+                                        {{ __('Kategori Transaksi') }}
+                                    </x-dropdown-link>
                                 </x-slot>
                             </x-dropdown>
                         </div>
