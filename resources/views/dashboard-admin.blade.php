@@ -10,7 +10,7 @@
                 <a href="{{ route('penjualan.create') }}" class="px-6 py-3 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 transition duration-150">Catat Penjualan</a>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6 text-center">
                     <h3 class="text-lg font-medium text-gray-900">Total Siswa</h3>
                     <p class="mt-2 text-3xl font-bold">{{ $totalSiswa }}</p>
@@ -20,20 +20,28 @@
                     <p class="mt-2 text-3xl font-bold">Rp {{ number_format($totalSaldo, 0, ',', '.') }}</p>
                 </div>
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6 text-center">
-                    <h3 class="text-lg font-medium text-gray-900">Setoran Hari Ini</h3>
+                    <h3 class="text-lg font-medium text-gray-900">Setoran Siswa Hari Ini</h3>
                     <p class="mt-2 text-3xl font-bold">Rp {{ number_format($totalSetoranHariIni, 0, ',', '.') }}</p>
                 </div>
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6 text-center">
                     <h3 class="text-lg font-medium text-gray-900">Total Penjualan</h3>
                     <p class="mt-2 text-3xl font-bold text-green-600">Rp {{ number_format($totalPenjualan, 0, ',', '.') }}</p>
                 </div>
-            </div>
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6 text-center">
+                    <h3 class="text-lg font-medium text-gray-900">Saldo Kas Saat Ini</h3>
+                    <p class="mt-2 text-3xl font-bold text-indigo-600">Rp {{ number_format($saldoAkhirKas, 0, ',', '.') }}</p>
+                </div>
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6 text-center">
+                    <h3 class="text-lg font-medium text-gray-900">Total Pengeluaran</h3>
+                    <p class="mt-2 text-3xl font-bold text-red-600">Rp {{ number_format($pengeluaranKas, 0, ',', '.') }}</p>
+                </div>
+                </div>
 
             <div class="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div class="lg:col-span-2 space-y-6">
                     <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
                         <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-lg font-medium text-gray-900">📈 Tren Setoran</h3>
+                            <h3 class="text-lg font-medium text-gray-900">📊 Tren Setoran</h3>
                             <form action="{{ route('dashboard') }}" method="GET" class="flex space-x-2 items-center text-sm">
                                 <select name="tipe_grafik" onchange="this.form.submit()" class="border-gray-300 rounded-md shadow-sm text-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
                                     <option value="nominal" {{ $tipeGrafik == 'nominal' ? 'selected' : '' }}>Berdasarkan Nominal (Rp)</option>
@@ -48,8 +56,9 @@
                         </div>
                         <canvas id="setoranChart"></canvas>
                     </div>
+
                     <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                        <h3 class="text-lg font-medium text-gray-900 mb-4">📄 5 Transaksi Penjualan Terakhir</h3>
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">💰 5 Transaksi Penjualan Terakhir</h3>
                         <div class="relative overflow-x-auto">
                             <table class="w-full text-sm text-left text-gray-500">
                                 <thead class="text-xs text-gray-700 uppercase bg-gray-50">
@@ -66,9 +75,7 @@
                                         <td class="px-4 py-2">{{ $item->created_at->format('d M Y') }}</td>
                                         <td class="px-4 py-2 font-medium">{{ $item->nama_pengepul }}</td>
                                         <td class="px-4 py-2 text-right">
-                                            {{-- Properti baru dari withSum (nama diganti) --}}
                                             <span class="font-semibold">{{ $item->detail_penjualan_sum_jumlah }}</span> 
-                                            {{-- Teks satuan dihilangkan karena bisa campur (pcs/kg) --}}
                                         </td>
                                         <td class="px-4 py-2 text-right">Rp {{ number_format($item->total_harga, 0, ',', '.') }}</td>
                                     </tr>
@@ -79,7 +86,35 @@
                             </table>
                         </div>
                     </div>
-                </div>
+                    
+                    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">📈 5 Transaksi Kas Terakhir</h3>
+                        <div class="relative overflow-x-auto">
+                            <table class="w-full text-sm text-left text-gray-500">
+                                <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                                    <tr>
+                                        <th class="px-4 py-2">Tanggal</th>
+                                        <th class="px-4 py-2">Deskripsi</th>
+                                        <th class="px-4 py-2 text-right">Nominal</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse ($historiKas as $kas)
+                                    <tr class="border-b">
+                                        <td class="px-4 py-2">{{ \Carbon\Carbon::parse($kas->tanggal)->format('d M Y') }}</td>
+                                        <td class="px-4 py-2 font-medium">{{ $kas->deskripsi }}</td>
+                                        <td class="px-4 py-2 text-right font-semibold {{ $kas->tipe == 'pemasukan' ? 'text-green-600' : 'text-red-600' }}">
+                                            {{ $kas->tipe == 'pemasukan' ? '+' : '-' }} Rp {{ number_format($kas->jumlah, 0, ',', '.') }}
+                                        </td>
+                                    </tr>
+                                    @empty
+                                    <tr><td colspan="3" class="px-4 py-2 text-center text-gray-500">Belum ada transaksi kas.</td></tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    </div>
 
                 <div class="space-y-6">
                     <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BukuKas; // <-- Ditambahkan
 use App\Models\Kelas;
 use App\Models\Penjualan;
 use App\Models\Setoran;
@@ -17,21 +18,26 @@ class DashboardController extends Controller
         $user = Auth::user();
 
         if ($user->role === 'admin') {
-            // Data Ringkasan
+            // Data Ringkasan yang sudah ada
             $totalSiswa = Siswa::count();
             $totalSaldo = Siswa::sum('saldo');
             $totalSetoranHariIni = Setoran::whereDate('created_at', today())->sum('total_harga');
             $totalPenjualan = Penjualan::sum('total_harga');
 
-            // --- QUERY PENJUALAN TERAKHIR DIPERBAIKI DI SINI ---
-            // Hapus withSum untuk jumlah_kg yang sudah tidak ada
+            // --- START: Logika Baru untuk Mengambil Data Buku Kas ---
+            $pemasukanKas = BukuKas::where('tipe', 'pemasukan')->sum('jumlah');
+            $pengeluaranKas = BukuKas::where('tipe', 'pengeluaran')->sum('jumlah');
+            $saldoAkhirKas = $pemasukanKas - $pengeluaranKas;
+            $historiKas = BukuKas::latest('tanggal')->latest('created_at')->take(5)->get();
+            // --- END ---
+
             $penjualanTerakhir = Penjualan::with('admin')
                 ->withSum('detailPenjualan', 'jumlah')
                 ->latest()
                 ->take(5)
                 ->get();
             
-            // Logika Grafik Dinamis
+            // Logika Grafik (tidak ada perubahan)
             $jangkaWaktu = $request->input('jangka_waktu', '7');
             $tipeGrafik = $request->input('tipe_grafik', 'nominal');
             $kolomAgregat = $tipeGrafik === 'jumlah' ? 'jumlah' : 'total_harga';
@@ -53,13 +59,14 @@ class DashboardController extends Controller
                 'label' => $tipeGrafik === 'jumlah' ? 'Jumlah Sampah' : 'Total Setoran (Rp)',
             ];
 
-            // Panggil Peringkat Menggunakan Scope
+            // Peringkat (tidak ada perubahan)
             $peringkatSiswa = Siswa::peringkatTeraktif()->get();
             $peringkatKelas = Kelas::peringkatTeraktif()->get();
             
             return view('dashboard-admin', compact(
                 'totalSiswa', 'totalSaldo', 'totalSetoranHariIni', 'totalPenjualan', 'penjualanTerakhir',
-                'peringkatSiswa', 'peringkatKelas', 'chartData', 'jangkaWaktu', 'tipeGrafik'
+                'peringkatSiswa', 'peringkatKelas', 'chartData', 'jangkaWaktu', 'tipeGrafik',
+                'saldoAkhirKas', 'pengeluaranKas', 'historiKas' // <-- Variabel baru di-pass ke view
             ));
 
         } elseif ($user->role === 'siswa') {

@@ -84,6 +84,9 @@ Route::put('/buku-kas/{bukuKa}', [BukuKasController::class, 'update'])->name('bu
     // Rute Pengaturan
     Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
 Route::post('/settings', [SettingController::class, 'update'])->name('settings.update');
+
+Route::get('buku-kas-export-excel', [BukuKasController::class, 'exportExcel'])->name('buku-kas.export.excel');
+    Route::get('buku-kas-export-pdf', [BukuKasController::class, 'exportPdf'])->name('buku-kas.export.pdf');
 });
 
 

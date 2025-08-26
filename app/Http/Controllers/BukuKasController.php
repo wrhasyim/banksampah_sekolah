@@ -7,6 +7,9 @@ use App\Models\KategoriTransaksi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use App\Exports\BukuKasExport; // <-- Tambahkan ini
+use Maatwebsite\Excel\Facades\Excel; // <-- Tambahkan ini
+use Barryvdh\DomPDF\Facade\Pdf; // <-- Tambahkan ini
 
 class BukuKasController extends Controller
 {
@@ -23,6 +26,8 @@ class BukuKasController extends Controller
             $endDate = Carbon::parse($request->end_date)->endOfDay();
             $query->whereBetween('tanggal', [$startDate, $endDate]);
         }
+
+        
 
         // Ambil data dengan Paginasi
         $transaksi = $query->paginate(15);
@@ -50,7 +55,45 @@ class BukuKasController extends Controller
 
         return view('pages.buku-kas.index', compact('transaksi', 'saldoAkhir', 'kategori'));
     }
+public function exportExcel(Request $request)
+    {
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
 
+        $fileName = 'laporan-buku-kas-' . Carbon::now()->format('Y-m-d') . '.xlsx';
+        
+        return Excel::download(new BukuKasExport($startDate, $endDate), $fileName);
+    }
+
+    /**
+     * Handle export to PDF.
+     */
+    public function exportPdf(Request $request)
+    {
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+
+        $query = BukuKas::with('kategori')->latest('tanggal');
+
+        if ($startDate && $endDate) {
+            $query->whereBetween('tanggal', [$startDate, $endDate]);
+        }
+        
+        $transaksi = $query->get();
+
+        $totalPemasukan = $transaksi->where('tipe', 'pemasukan')->sum('jumlah');
+        $totalPengeluaran = $transaksi->where('tipe', 'pengeluaran')->sum('jumlah');
+        $saldoAkhir = $totalPemasukan - $totalPengeluaran;
+
+        $pdf = Pdf::loadView('pages.buku-kas.buku-kas-pdf', compact(
+            'transaksi', 'startDate', 'endDate', 
+            'totalPemasukan', 'totalPengeluaran', 'saldoAkhir'
+        ));
+
+        $fileName = 'laporan-buku-kas-' . Carbon::now()->format('Y-m-d') . '.pdf';
+        
+        return $pdf->download($fileName);
+    }
     /**
      * Menyimpan transaksi baru ke database.
      */
