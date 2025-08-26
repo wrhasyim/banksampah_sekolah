@@ -32,7 +32,10 @@ class Siswa extends Model
     {
         return $this->hasMany(Penarikan::class, 'id_siswa');
     }
-
+    public function badges()
+    {
+        return $this->belongsToMany(Badge::class, 'badge_siswa');
+    }
     /**
      * Scope untuk mengambil peringkat siswa teraktif.
      */

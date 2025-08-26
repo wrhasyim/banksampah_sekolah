@@ -36,6 +36,15 @@ class SetoranController extends Controller
             'jumlah' => 'required|numeric|min:0.01',
         ]);
 
+        // Logika untuk memberikan lencana
+        $badges = Badge::where('min_points', '<=', $siswa->points)->get();
+        foreach ($badges as $badge) {
+            // Cek apakah siswa sudah memiliki lencana ini
+            if (!$siswa->badges()->where('badge_id', $badge->id)->exists()) {
+                $siswa->badges()->attach($badge->id);
+            }
+        }
+
         try {
             DB::transaction(function () use ($request) {
                 $siswa = Siswa::findOrFail($request->id_siswa);

@@ -36,6 +36,8 @@ Route::middleware(['auth', 'verified'])->group(function() {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    Route::get('/leaderboard', [\App\Http\Controllers\LeaderboardController::class, 'index'])->name('leaderboard.index');
 });
 
 
@@ -87,6 +89,8 @@ Route::post('/settings', [SettingController::class, 'update'])->name('settings.u
 
 Route::get('buku-kas-export-excel', [BukuKasController::class, 'exportExcel'])->name('buku-kas.export.excel');
     Route::get('buku-kas-export-pdf', [BukuKasController::class, 'exportPdf'])->name('buku-kas.export.pdf');
+
+Route::get('/charts/setoran-per-bulan', [\App\Http\Controllers\ChartController::class, 'setoranPerBulan'])->name('charts.setoran-per-bulan');
 });
 
 

@@ -43,7 +43,10 @@
                         <x-nav-link :href="route('penjualan.index')" :active="request()->routeIs('penjualan.*')">{{ __('Penjualan Sampah') }}</x-nav-link>
                         <x-nav-link :href="route('laporan.index')" :active="request()->routeIs('laporan.*')">{{ __('Laporan') }}</x-nav-link>
                         <x-nav-link :href="route('buku-kas.index')" :active="request()->routeIs('buku-kas.*')">{{ __('Buku Kas') }}</x-nav-link>
-                    @endif
+                   <x-nav-link :href="route('leaderboard.index')" :active="request()->routeIs('leaderboard.index')">
+    {{ __('Papan Peringkat') }}
+</x-nav-link>
+                        @endif
                 </div>
             </div>
 
