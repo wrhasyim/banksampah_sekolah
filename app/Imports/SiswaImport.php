@@ -13,29 +13,46 @@ use Maatwebsite\Excel\Concerns\WithColumnFormatting;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
-use Maatwebsite\Excel\Concerns\Importable; // <-- 1. TAMBAHKAN INI
+use Maatwebsite\Excel\Concerns\Importable;
+use Illuminate\Support\Facades\DB;
 
 class SiswaImport implements ToModel, WithHeadingRow, WithValidation, WithColumnFormatting, ShouldQueue, WithChunkReading
 {
-    use Importable; // <-- 2. TAMBAHKAN INI
+    use Importable;
+    private $kelasCollection;
+
+    // Constructor untuk mengambil semua data kelas satu kali saja di awal.
+    public function __construct()
+    {
+        $this->kelasCollection = Kelas::pluck('id', 'nama_kelas');
+    }
 
     public function model(array $row)
     {
-        $kelas = Kelas::where('nama_kelas', $row['nama_kelas'])->first();
+        // Ambil ID kelas dari "memori" yang sudah kita siapkan, bukan dari database.
+        $id_kelas = $this->kelasCollection->get($row['nama_kelas']);
 
-        $pengguna = Pengguna::create([
-            'nama_lengkap' => $row['nama_lengkap'],
-            'username' => $row['username'],
-            'password' => Hash::make($row['password']),
-            'role' => 'siswa',
-        ]);
+        // Jika kelas tidak ditemukan di "memori", lewati baris ini.
+        // (Aturan validasi 'exists' sudah seharusnya menangani ini, tapi ini lapisan pengaman tambahan).
+        if (!$id_kelas) {
+            return null;
+        }
+        
+        DB::transaction(function () use ($row, $id_kelas) {
+            $pengguna = Pengguna::create([
+                'nama_lengkap' => $row['nama_lengkap'],
+                'username' => $row['username'],
+                'password' => Hash::make($row['password']),
+                'role' => 'siswa',
+            ]);
 
-        return new Siswa([
-            'id_pengguna' => $pengguna->id,
-            'id_kelas' => $kelas->id,
-            'nis' => $row['nis'],
-            'saldo' => 0,
-        ]);
+            Siswa::create([
+                'id_pengguna' => $pengguna->id,
+                'id_kelas' => $id_kelas,
+                'nis' => $row['nis'],
+                'saldo' => 0,
+            ]);
+        });
     }
 
     public function rules(): array

@@ -21,22 +21,22 @@ class SiswaController extends Controller
      */
     public function index(Request $request)
     {
-        // Ambil nilai 'per_page' dari URL, default-nya 10 jika tidak ada
         $perPage = $request->query('per_page', 10);
 
-        // Ambil data siswa dengan paginasi
         $siswa = Siswa::with(['pengguna', 'kelas'])->paginate($perPage);
 
-        // Kirim data siswa dan nilai perPage ke view
         return view('pages.siswa.index', compact('siswa', 'perPage'));
     }
 
     /**
-     * Mengambil data siswa berdasarkan ID Kelas untuk AJAX request.
+     * Mengambil data siswa berdasarkan ID Kelas (untuk AJAX).
      */
     public function getByKelas($id_kelas)
     {
-        $siswa = Siswa::where('id_kelas', $id_kelas)->with('pengguna')->get();
+        $siswa = Siswa::where('id_kelas', $id_kelas)
+                      ->with('pengguna')
+                      ->get();
+
         return response()->json($siswa);
     }
 
@@ -50,25 +50,25 @@ class SiswaController extends Controller
     {
         $request->validate([
             'nama_lengkap' => 'required|string|max:100',
-            'username' => 'required|string|max:50|unique:pengguna,username',
-            'password' => 'required|string|min:8',
-            'nis' => 'nullable|string|max:20|unique:siswa,nis',
-            'id_kelas' => 'required|exists:kelas,id',
+            'username'     => 'required|string|max:50|unique:pengguna,username',
+            'password'     => 'required|string|min:8',
+            'nis'          => 'nullable|string|max:20|unique:siswa,nis',
+            'id_kelas'     => 'required|exists:kelas,id',
         ]);
 
         DB::transaction(function () use ($request) {
             $pengguna = Pengguna::create([
                 'nama_lengkap' => $request->nama_lengkap,
-                'username' => $request->username,
-                'password' => Hash::make($request->password),
-                'role' => 'siswa',
+                'username'     => $request->username,
+                'password'     => Hash::make($request->password),
+                'role'         => 'siswa',
             ]);
 
             Siswa::create([
                 'id_pengguna' => $pengguna->id,
-                'id_kelas' => $request->id_kelas,
-                'nis' => $request->nis,
-                'saldo' => 0,
+                'id_kelas'    => $request->id_kelas,
+                'nis'         => $request->nis,
+                'saldo'       => 0,
             ]);
         });
 
@@ -79,6 +79,7 @@ class SiswaController extends Controller
     {
         $kelas = Kelas::all();
         $siswa->load('pengguna');
+
         return view('pages.siswa.edit', compact('siswa', 'kelas'));
     }
 
@@ -86,25 +87,27 @@ class SiswaController extends Controller
     {
         $request->validate([
             'nama_lengkap' => 'required|string|max:100',
-            'username' => ['required', 'string', 'max:50', Rule::unique('pengguna')->ignore($siswa->id_pengguna)],
-            'nis' => ['nullable', 'string', 'max:20', Rule::unique('siswa')->ignore($siswa->id)],
-            'id_kelas' => 'required|exists:kelas,id',
+            'username'     => ['required', 'string', 'max:50', Rule::unique('pengguna')->ignore($siswa->id_pengguna)],
+            'nis'          => ['nullable', 'string', 'max:20', Rule::unique('siswa')->ignore($siswa->id)],
+            'id_kelas'     => 'required|exists:kelas,id',
         ]);
 
         DB::transaction(function () use ($request, $siswa) {
             $siswa->pengguna->update([
                 'nama_lengkap' => $request->nama_lengkap,
-                'username' => $request->username,
+                'username'     => $request->username,
             ]);
 
             $siswa->update([
-                'nis' => $request->nis,
+                'nis'      => $request->nis,
                 'id_kelas' => $request->id_kelas,
             ]);
 
             if ($request->filled('password')) {
                 $request->validate(['password' => 'string|min:8']);
-                $siswa->pengguna->update(['password' => Hash::make($request->password)]);
+                $siswa->pengguna->update([
+                    'password' => Hash::make($request->password),
+                ]);
             }
         });
 
@@ -117,32 +120,52 @@ class SiswaController extends Controller
         return redirect()->route('siswa.index')->with('status', 'Data siswa berhasil dihapus!');
     }
     
+    /**
+     * Form untuk import siswa
+     */
     public function showImportForm()
     {
         return view('pages.siswa.import');
     }
 
+    /**
+     * Import siswa menggunakan queue
+     */
     public function import(Request $request)
     {
         $request->validate([
-            'file' => 'required|mimes:xlsx,xls'
+            'file' => 'required|mimes:xlsx,xls,csv|max:2048'
         ]);
 
-        (new SiswaImport)->queue($request->file('file'));
+        try {
+            // Import dengan queue
+            (new SiswaImport)->queue($request->file('file'));
 
-        return redirect()->route('siswa.import.form')->with('success', 'File Anda sedang diproses. Data akan muncul secara bertahap.');
+            return redirect()
+                ->route('siswa.import.form')
+                ->with('success', 'Proses import sedang berjalan di background. Silakan tunggu beberapa saat.');
+
+        } catch (\Exception $e) {
+            return redirect()
+                ->route('siswa.import.form')
+                ->with('error', 'Gagal mengimpor data siswa: ' . $e->getMessage());
+        }
     }
     
+    /**
+     * Export template contoh siswa
+     */
     public function exportSample()
     {
         return Excel::download(new SiswaSampleExport, 'contoh-impor-siswa.xlsx');
     }
 
     /**
-     * Mengekspor data siswa ke Excel.
+     * Export data siswa
      */
     public function export()
     {
         return Excel::download(new SiswaExport, 'data-siswa.xlsx');
     }
 }
+    

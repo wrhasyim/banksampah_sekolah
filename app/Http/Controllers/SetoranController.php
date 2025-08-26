@@ -77,7 +77,8 @@ class SetoranController extends Controller
         ]);
 
         try {
-            \Maatwebsite\Excel\Facades\Excel::import(new SetoranImport, $request->file('file'));
+            // Kirim ID admin yang sedang login ke dalam constructor
+            \Maatwebsite\Excel\Facades\Excel::import(new \App\Imports\SetoranImport(Auth::id()), $request->file('file'));
         
         } catch (ValidationException $e) {
             $failures = $e->failures();
