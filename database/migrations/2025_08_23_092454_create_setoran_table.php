@@ -11,15 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-       Schema::create('setoran', function (Blueprint $table) {
-    $table->id(); // Primary Key
-    $table->foreignId('id_siswa')->constrained('siswa')->onDelete('cascade');
-    $table->foreignId('id_jenis_sampah')->constrained('jenis_sampah');
-    $table->integer('jumlah');
-    $table->decimal('total_harga', 10, 2);
-    $table->foreignId('id_admin')->constrained('pengguna');
-    $table->timestamps();
-});
+        Schema::create('setoran', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('siswa_id');
+            $table->date('tanggal_setor'); // PASTIKAN NAMA KOLOM INI BENAR
+            $table->decimal('total_harga', 10, 2);
+            $table->timestamps();
+
+            $table->foreign('siswa_id')->references('id')->on('siswa')->onDelete('cascade');
+        });
     }
 
     /**

@@ -2,83 +2,121 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Kelas;
+use Illuminate\Http\Request;
+use App\Models\Setoran;
 use App\Models\Penarikan;
 use App\Models\Penjualan;
-use App\Models\Setoran;
-use App\Exports\SetoranReportExport;
-use App\Exports\PenjualanReportExport;
-use Illuminate\Http\Request;
+use App\Models\BukuKas;
+use Carbon\Carbon;
 use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
+use App\Exports\LaporanTransaksiExport;
+use App\Exports\LaporanPenjualanExport;
 
 class ReportController extends Controller
 {
+    /**
+     * Mengambil data yang difilter untuk semua laporan.
+     */
+    private function getFilteredData(Request $request)
+    {
+        $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->toDateString());
+        $endDate = $request->input('end_date', Carbon::now()->endOfMonth()->toDateString());
+
+        // Data Laporan Transaksi (Setoran dan Penarikan)
+        $setorans = Setoran::with('siswa')
+            ->whereBetween('tanggal_setor', [$startDate, $endDate])
+            ->latest('tanggal_setor')->get();
+            
+        $penarikans = Penarikan::with('siswa')
+            ->whereBetween('tanggal_penarikan', [$startDate, $endDate])
+            ->latest('tanggal_penarikan')->get();
+            
+        $totalSetoran = $setorans->sum('total_harga');
+        $totalPenarikan = $penarikans->sum('jumlah_penarikan');
+
+        // Data Laporan Penjualan
+        $penjualans = Penjualan::with('details.jenisSampah')
+            ->whereBetween('tanggal_penjualan', [$startDate, $endDate])
+            ->latest('tanggal_penjualan')->get();
+        $totalPenjualan = $penjualans->sum('total_harga');
+
+        // Data Laporan Laba Rugi dari Buku Kas
+        $pendapatan = BukuKas::where('tipe', 'pemasukan')
+            ->whereBetween('tanggal', [$startDate, $endDate])
+            ->sum('jumlah');
+        $beban = BukuKas::where('tipe', 'pengeluaran')
+            ->whereBetween('tanggal', [$startDate, $endDate])
+            ->sum('jumlah');
+        $labaRugi = $pendapatan - $beban;
+
+        return compact(
+            'setorans', 'penarikans', 'totalSetoran', 'totalPenarikan',
+            'penjualans', 'totalPenjualan',
+            'pendapatan', 'beban', 'labaRugi',
+            'startDate', 'endDate'
+        );
+    }
+    
+    /**
+     * Menampilkan halaman utama laporan.
+     */
     public function index(Request $request)
     {
-        $tipeLaporan = $request->input('tipe', 'transaksi');
-        $kelas = Kelas::all();
-        $results = collect();
-        $labaRugi = []; // Array untuk menyimpan data laba rugi
-
-        $startDate = $request->start_date;
-        $endDate = $request->end_date;
-        $kelasId = $request->id_kelas;
-
-        if ($tipeLaporan === 'transaksi') {
-            // ... (logika laporan transaksi tidak berubah)
-            $setoran = Setoran::with(['siswa.pengguna', 'siswa.kelas', 'jenisSampah'])
-                ->when($startDate, fn($q) => $q->whereDate('created_at', '>=', $startDate))
-                ->when($endDate, fn($q) => $q->whereDate('created_at', '<=', $endDate))
-                ->when($kelasId, fn($q) => $q->whereHas('siswa', fn($sq) => $sq->where('id_kelas', $kelasId)))
-                ->get()
-                ->map(fn($item) => (object)[
-                    'tanggal' => $item->created_at, 'nama_siswa' => $item->siswa?->pengguna?->nama_lengkap ?? 'Siswa Dihapus',
-                    'nama_kelas' => $item->siswa?->kelas?->nama_kelas ?? '-', 'deskripsi' => 'Setoran: ' . ($item->jenisSampah?->nama_sampah ?? '[Sampah Dihapus]'),
-                    'kredit' => $item->total_harga, 'debit' => 0,
-                ]);
-            
-            $penarikan = Penarikan::with(['siswa.pengguna', 'siswa.kelas', 'kelas'])
-                ->when($startDate, fn($q) => $q->whereDate('created_at', '>=', $startDate))
-                ->when($endDate, fn($q) => $q->whereDate('created_at', '<=', $endDate))
-                ->when($kelasId, fn($q) => $q->where(function ($query) use ($kelasId) {
-                    $query->whereHas('siswa', fn($sq) => $sq->where('id_kelas', $kelasId))
-                            ->orWhere('id_kelas', $kelasId);
-                }))
-                ->get()
-                ->map(fn($item) => (object)[
-                    'tanggal' => $item->created_at, 'nama_siswa' => $item->id_kelas ? 'Penarikan Saldo Kelas' : ($item->siswa?->pengguna?->nama_lengkap ?? 'Siswa Dihapus'),
-                    'nama_kelas' => $item->id_kelas ? $item->kelas?->nama_kelas : ($item->siswa?->kelas?->nama_kelas ?? '-'),
-                    'deskripsi' => 'Penarikan Saldo', 'kredit' => 0, 'debit' => $item->jumlah_penarikan,
-                ]);
-            
-            $results = $setoran->concat($penarikan)->sortByDesc('tanggal');
-
-        } elseif ($tipeLaporan === 'penjualan') {
-            // ... (logika laporan penjualan tidak berubah)
-            $results = Penjualan::with('admin')
-                ->when($startDate, fn($q) => $q->whereDate('created_at', '>=', $startDate))
-                ->when($endDate, fn($q) => $q->whereDate('created_at', '<=', $endDate))
-                ->latest()->get();
-        
-        } elseif ($tipeLaporan === 'laba_rugi') {
-            // --- LOGIKA BARU UNTUK LABA RUGI ---
-            $totalPenjualan = Penjualan::when($startDate, fn($q) => $q->whereDate('created_at', '>=', $startDate))
-                                      ->when($endDate, fn($q) => $q->whereDate('created_at', '<=', $endDate))
-                                      ->sum('total_harga');
-            
-            $totalPenarikan = Penarikan::when($startDate, fn($q) => $q->whereDate('created_at', '>=', $startDate))
-                                       ->when($endDate, fn($q) => $q->whereDate('created_at', '<=', $endDate))
-                                       ->sum('jumlah_penarikan');
-            
-            $labaRugi = [
-                'total_penjualan' => $totalPenjualan,
-                'total_penarikan' => $totalPenarikan,
-                'laba_bersih' => $totalPenjualan - $totalPenarikan,
-            ];
-        }
-
-        return view('pages.laporan.index', compact('kelas', 'results', 'tipeLaporan', 'labaRugi'));
+        $data = $this->getFilteredData($request);
+        return view('pages.laporan.index', $data);
     }
 
-    // ... (sisa file controller tidak berubah)
+    /**
+     * Ekspor Laporan Transaksi ke Excel.
+     */
+    public function exportTransaksiExcel(Request $request)
+    {
+        $data = $this->getFilteredData($request);
+        $fileName = 'laporan-transaksi-' . Carbon::now()->format('Y-m-d') . '.xlsx';
+        return Excel::download(new LaporanTransaksiExport($data), $fileName);
+    }
+
+    /**
+     * Ekspor Laporan Transaksi ke PDF.
+     */
+    public function exportTransaksiPdf(Request $request)
+    {
+        $data = $this->getFilteredData($request);
+        $pdf = Pdf::loadView('pages.laporan.pdf.laporan-transaksi-pdf', $data);
+        $fileName = 'laporan-transaksi-' . Carbon::now()->format('Y-m-d') . '.pdf';
+        return $pdf->download($fileName);
+    }
+
+    /**
+     * Ekspor Laporan Penjualan ke Excel.
+     */
+    public function exportPenjualanExcel(Request $request)
+    {
+        $data = $this->getFilteredData($request);
+        $fileName = 'laporan-penjualan-' . Carbon::now()->format('Y-m-d') . '.xlsx';
+        return Excel::download(new LaporanPenjualanExport($data), $fileName);
+    }
+
+    /**
+     * Ekspor Laporan Penjualan ke PDF.
+     */
+    public function exportPenjualanPdf(Request $request)
+    {
+        $data = $this->getFilteredData($request);
+        $pdf = Pdf::loadView('pages.laporan.pdf.laporan-penjualan-pdf', $data);
+        $fileName = 'laporan-penjualan-' . Carbon::now()->format('Y-m-d') . '.pdf';
+        return $pdf->download($fileName);
+    }
+
+    /**
+     * Ekspor Laporan Laba Rugi ke PDF.
+     */
+    public function exportLabaRugiPdf(Request $request)
+    {
+        $data = $this->getFilteredData($request);
+        $pdf = Pdf::loadView('pages.laporan.pdf.laporan-laba-rugi-pdf', $data);
+        $fileName = 'laporan-laba-rugi-' . Carbon::now()->format('Y-m-d') . '.pdf';
+        return $pdf->download($fileName);
+    }
 }

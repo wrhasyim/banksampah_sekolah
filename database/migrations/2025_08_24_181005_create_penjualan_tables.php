@@ -8,16 +8,15 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Tabel utama untuk transaksi penjualan
         Schema::create('penjualan', function (Blueprint $table) {
             $table->id();
             $table->foreignId('id_admin')->constrained('pengguna');
             $table->string('nama_pengepul');
+            $table->date('tanggal_penjualan'); // TAMBAHKAN KOLOM INI
             $table->decimal('total_harga', 10, 2);
             $table->timestamps();
         });
 
-        // Tabel untuk detail item yang terjual dalam satu transaksi
         Schema::create('detail_penjualan', function (Blueprint $table) {
             $table->id();
             $table->foreignId('id_penjualan')->constrained('penjualan')->onDelete('cascade');
