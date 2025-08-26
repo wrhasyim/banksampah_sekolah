@@ -4,10 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB; // <-- TAMBAHKAN BARIS INI
 
 class Kelas extends Model
 {
     use HasFactory;
+
+    public $timestamps = false;
 
     protected $table = 'kelas';
     protected $fillable = ['nama_kelas'];

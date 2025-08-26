@@ -22,7 +22,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('id_penjualan')->constrained('penjualan')->onDelete('cascade');
             $table->foreignId('id_jenis_sampah')->constrained('jenis_sampah');
-            $table->integer('jumlah_satuan');
+            $table->integer('jumlah');
             $table->decimal('subtotal_harga', 10, 2);
             $table->timestamps();
         });

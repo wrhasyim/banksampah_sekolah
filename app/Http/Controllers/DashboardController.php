@@ -31,7 +31,7 @@ class DashboardController extends Controller
                 ->take(5)
                 ->get();
             
-            // ... (Sisa logika untuk Grafik dan Peringkat tidak berubah) ...
+            // Logika Grafik Dinamis
             $jangkaWaktu = $request->input('jangka_waktu', '7');
             $tipeGrafik = $request->input('tipe_grafik', 'nominal');
             $kolomAgregat = $tipeGrafik === 'jumlah' ? 'jumlah' : 'total_harga';
@@ -52,12 +52,10 @@ class DashboardController extends Controller
                 'labels' => $labels, 'data' => $data,
                 'label' => $tipeGrafik === 'jumlah' ? 'Jumlah Sampah' : 'Total Setoran (Rp)',
             ];
-            $peringkatSiswa = Siswa::select('id_pengguna', DB::raw('SUM(setoran.jumlah) as total_jumlah'))
-                ->join('setoran', 'siswa.id', '=', 'setoran.id_siswa')
-                ->with('pengguna')->groupBy('id_pengguna')->orderByDesc('total_jumlah')->limit(5)->get();
-            $peringkatKelas = Kelas::select('nama_kelas', DB::raw('SUM(setoran.jumlah) as total_jumlah'))
-                ->join('siswa', 'kelas.id', '=', 'siswa.id_kelas')->join('setoran', 'siswa.id', '=', 'setoran.id_siswa')
-                ->groupBy('nama_kelas')->orderByDesc('total_jumlah')->limit(5)->get();
+
+            // Panggil Peringkat Menggunakan Scope
+            $peringkatSiswa = Siswa::peringkatTeraktif()->get();
+            $peringkatKelas = Kelas::peringkatTeraktif()->get();
             
             return view('dashboard-admin', compact(
                 'totalSiswa', 'totalSaldo', 'totalSetoranHariIni', 'totalPenjualan', 'penjualanTerakhir',
@@ -71,7 +69,6 @@ class DashboardController extends Controller
                 return redirect('/login')->with('error', 'Data siswa tidak ditemukan. Silakan hubungi admin.');
             }
             
-            // Gabungkan 5 transaksi terakhir (setoran dan penarikan)
             $setoran = $siswa->setoran()->with('jenisSampah')->latest()->take(5)->get()->map(fn($i) => ['tipe' => 'setoran', 'data' => $i]);
             $penarikan = $siswa->penarikan()->latest()->take(5)->get()->map(fn($i) => ['tipe' => 'penarikan', 'data' => $i]);
 

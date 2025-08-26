@@ -4,32 +4,39 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB; // <-- TAMBAHKAN BARIS INI
 
 class Siswa extends Model
 {
     use HasFactory;
 
     protected $table = 'siswa';
-    protected $primaryKey = 'id';
-    protected $fillable = [
-        'id_pengguna',
-        'id_kelas',
-        'nis',
-        'saldo',
-    ];
+    protected $fillable = ['id_pengguna', 'id_kelas', 'nis', 'saldo'];
 
     public function pengguna()
     {
         return $this->belongsTo(Pengguna::class, 'id_pengguna');
     }
 
-    // Hubungan ke model Kelas
     public function kelas()
     {
         return $this->belongsTo(Kelas::class, 'id_kelas');
     }
 
-     public function scopePeringkatTeraktif($query)
+    public function setoran()
+    {
+        return $this->hasMany(Setoran::class, 'id_siswa');
+    }
+
+    public function penarikan()
+    {
+        return $this->hasMany(Penarikan::class, 'id_siswa');
+    }
+
+    /**
+     * Scope untuk mengambil peringkat siswa teraktif.
+     */
+    public function scopePeringkatTeraktif($query)
     {
         return $query->select('id_pengguna', DB::raw('SUM(setoran.jumlah) as total_jumlah'))
             ->join('setoran', 'siswa.id', '=', 'setoran.id_siswa')

@@ -109,22 +109,6 @@ CREATE TABLE `jobs` (
   `created_at` int(10) UNSIGNED NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `kas_kecil`
---
-
-CREATE TABLE `kas_kecil` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `tanggal` date NOT NULL,
-  `deskripsi` varchar(255) NOT NULL,
-  `tipe` enum('pemasukan','pengeluaran') NOT NULL,
-  `jumlah` decimal(10,2) NOT NULL,
-  `id_admin` bigint(20) UNSIGNED NOT NULL,
-  `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -2034,13 +2018,7 @@ ALTER TABLE `jobs`
   ADD KEY `jobs_queue_index` (`queue`);
 
 --
--- Indexes for table `kas_kecil`
---
-ALTER TABLE `kas_kecil`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `kas_kecil_id_admin_foreign` (`id_admin`);
 
---
 -- Indexes for table `kelas`
 --
 ALTER TABLE `kelas`
@@ -2140,10 +2118,6 @@ ALTER TABLE `jobs`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
--- AUTO_INCREMENT for table `kas_kecil`
---
-ALTER TABLE `kas_kecil`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `kelas`
@@ -2211,10 +2185,6 @@ ALTER TABLE `detail_penjualan`
   ADD CONSTRAINT `detail_penjualan_id_penjualan_foreign` FOREIGN KEY (`id_penjualan`) REFERENCES `penjualan` (`id`) ON DELETE CASCADE;
 
 --
--- Constraints for table `kas_kecil`
---
-ALTER TABLE `kas_kecil`
-  ADD CONSTRAINT `kas_kecil_id_admin_foreign` FOREIGN KEY (`id_admin`) REFERENCES `pengguna` (`id`);
 
 --
 -- Constraints for table `penarikan`

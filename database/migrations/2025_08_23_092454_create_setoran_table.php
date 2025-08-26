@@ -15,7 +15,7 @@ return new class extends Migration
     $table->id(); // Primary Key
     $table->foreignId('id_siswa')->constrained('siswa')->onDelete('cascade');
     $table->foreignId('id_jenis_sampah')->constrained('jenis_sampah');
-    $table->integer('jumlah_satuan');
+    $table->integer('jumlah');
     $table->decimal('total_harga', 10, 2);
     $table->foreignId('id_admin')->constrained('pengguna');
     $table->timestamps();

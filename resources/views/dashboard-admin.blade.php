@@ -56,7 +56,7 @@
                                     <tr>
                                         <th class="px-4 py-2">Tanggal</th>
                                         <th class="px-4 py-2">Pengepul</th>
-                                        <th class="px-4 py-2 text-right">Jumlah</th>
+                                        <th class="px-4 py-2 text-right">Total Jumlah</th>
                                         <th class="px-4 py-2 text-right">Nominal</th>
                                     </tr>
                                 </thead>
@@ -66,10 +66,9 @@
                                         <td class="px-4 py-2">{{ $item->created_at->format('d M Y') }}</td>
                                         <td class="px-4 py-2 font-medium">{{ $item->nama_pengepul }}</td>
                                         <td class="px-4 py-2 text-right">
+                                            {{-- Properti baru dari withSum (nama diganti) --}}
                                             <span class="font-semibold">{{ $item->detail_penjualan_sum_jumlah }}</span> 
-                                            @if($item->detail_penjualan_sum_jumlah_kg > 0)
-                                                <span class="text-gray-500">/ {{ $item->detail_penjualan_sum_jumlah_kg }} Kg</span>
-                                            @endif
+                                            {{-- Teks satuan dihilangkan karena bisa campur (pcs/kg) --}}
                                         </td>
                                         <td class="px-4 py-2 text-right">Rp {{ number_format($item->total_harga, 0, ',', '.') }}</td>
                                     </tr>
