@@ -112,23 +112,6 @@ CREATE TABLE `jobs` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `kas_kecil`
---
-
-CREATE TABLE `kas_kecil` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `tanggal` date NOT NULL,
-  `deskripsi` varchar(255) NOT NULL,
-  `tipe` enum('pemasukan','pengeluaran') NOT NULL,
-  `jumlah` decimal(10,2) NOT NULL,
-  `id_admin` bigint(20) UNSIGNED NOT NULL,
-  `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
-
---
 -- Table structure for table `kelas`
 --
 
