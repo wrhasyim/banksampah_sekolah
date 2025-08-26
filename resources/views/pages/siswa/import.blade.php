@@ -33,6 +33,13 @@
                         </div>
                     @endif
 
+                    {{-- Notifikasi error dari session 'error' --}}
+                    @if (session('error'))
+                        <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+                            <span class="font-medium">Kesalahan Impor:</span> {{ session('error') }}
+                        </div>
+                    @endif
+
                     {{-- Form Upload --}}
                     <form action="{{ route('siswa.import') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
                         @csrf

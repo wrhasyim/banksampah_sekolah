@@ -119,7 +119,7 @@ class SiswaController extends Controller
         $siswa->pengguna->delete();
         return redirect()->route('siswa.index')->with('status', 'Data siswa berhasil dihapus!');
     }
-    
+
     /**
      * Form untuk import siswa
      */
@@ -129,44 +129,33 @@ class SiswaController extends Controller
     }
 
     /**
-     * Import siswa menggunakan queue
+     * Import siswa menggunakan pustaka Excel.
      */
     public function import(Request $request)
     {
         $request->validate([
-            'file' => 'required|mimes:xlsx,xls',
+            'file' => 'required|file|mimes:xlsx,xls',
         ]);
 
-        $file = $request->file('file');
-
-        // Hitung jumlah baris di dalam file Excel untuk menentukan metode impor
-        $rowCount = \Maatwebsite\Excel\Facades\Excel::toCollection(new \App\Imports\SiswaImport, $file)->first()->count();
-
-        // Tentukan ambang batas, misalnya 100 baris
-        $threshold = 100;
-
         try {
-            if ($rowCount > $threshold) {
-                // Jika data besar, gunakan QUEUE
-                (new \App\Imports\SiswaImport)->queue($file);
-                return redirect()->route('siswa.import.form')->with('toastr-success', 'File Anda besar dan sedang diproses di latar belakang. Data akan muncul secara bertahap.');
-            } else {
-                // Jika data kecil, proses langsung (sinkron)
-                \Maatwebsite\Excel\Facades\Excel::import(new \App\Imports\SiswaImport, $file);
-                return redirect()->route('siswa.index')->with('toastr-success', 'Data siswa berhasil diimpor!');
-            }
+            Excel::import(new SiswaImport, $request->file('file'));
+
+            return redirect()->route('siswa.index')->with('success', 'Data siswa berhasil diimpor!');
         } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
             $failures = $e->failures();
             $errorMessages = [];
             foreach ($failures as $failure) {
-                $errorMessages[] = 'Baris ' . $failure->row() . ': ' . implode(', ', $failure->errors());
+                $row = $failure->row();
+                foreach ($failure->errors() as $error) {
+                    $errorMessages[] = "Baris {$row}: {$error}";
+                }
             }
-            return redirect()->route('siswa.import.form')->withErrors($errorMessages);
+            return redirect()->back()->withInput()->withErrors($errorMessages);
         } catch (\Exception $e) {
-            return redirect()->route('siswa.import.form')->with('toastr-error', 'Terjadi kesalahan tak terduga saat impor: ' . $e->getMessage());
+            return redirect()->back()->withInput()->with('error', 'Terjadi kesalahan tak terduga: ' . $e->getMessage());
         }
     }
-    
+
     /**
      * Export template contoh siswa
      */
@@ -183,4 +172,3 @@ class SiswaController extends Controller
         return Excel::download(new SiswaExport, 'data-siswa.xlsx');
     }
 }
-    

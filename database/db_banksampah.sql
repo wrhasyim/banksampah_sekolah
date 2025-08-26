@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Aug 25, 2025 at 11:53 AM
+-- Generation Time: Aug 26, 2025 at 06:41 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -20,6 +20,23 @@ SET time_zone = "+00:00";
 --
 -- Database: `db_banksampah`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `buku_kas`
+--
+
+CREATE TABLE `buku_kas` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `tanggal` date NOT NULL,
+  `deskripsi` varchar(255) NOT NULL,
+  `tipe` enum('pemasukan','pengeluaran') NOT NULL,
+  `jumlah` decimal(10,2) NOT NULL,
+  `id_admin` bigint(20) UNSIGNED NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -112,23 +129,6 @@ CREATE TABLE `jobs` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `kas_kecil`
---
-
-CREATE TABLE `kas_kecil` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `tanggal` date NOT NULL,
-  `deskripsi` varchar(255) NOT NULL,
-  `tipe` enum('pemasukan','pengeluaran') NOT NULL,
-  `jumlah` decimal(10,2) NOT NULL,
-  `id_admin` bigint(20) UNSIGNED NOT NULL,
-  `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
-
---
 -- Table structure for table `kelas`
 --
 
@@ -206,7 +206,8 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (16, '2025_08_25_050048_create_settings_table', 3),
 (18, '2025_08_25_051923_make_unit_system_flexible', 4),
 (19, '2025_08_25_065512_drop_kg_column_from_detail_penjualan_table', 5),
-(20, '2025_08_25_083932_create_kas_kecil_table', 5);
+(20, '2025_08_25_083932_create_kas_kecil_table', 5),
+(21, '2025_08_25_232512_create_buku_kas_table', 6);
 
 -- --------------------------------------------------------
 
@@ -1121,7 +1122,8 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('td5nhshdQM1rttFHaCF8GKrBnP0cQZ34YnI3G6lV', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoiSXFqc2k0RFBuT3ZjcVBuQTN6c3F1M0Q5OGV5cjZzOTN2VlhiOEN3ciI7czozOiJ1cmwiO2E6MDp7fXM6OToiX3ByZXZpb3VzIjthOjE6e3M6MzoidXJsIjtzOjMxOiJodHRwOi8vMTI3LjAuMC4xOjgwMDAvZGFzaGJvYXJkIjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6MTt9', 1756115573);
+('M4zLS8eisnuSO3Isc6i5HcFw3r66xpRknylWYjJF', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoieEVVNlRGU25ITXZnRGhDT0IybVlYek5ldDRobDJVU0V0WWdDM1VuaSI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MjE6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMCI7fX0=', 1756116187),
+('X5mkKV1cxLl2rJsWmXDrt6Hgn7PPZ86JVTJqQVZE', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoieDJEOXY4MGVOcGdwMzM4aDdqa1JDY0JWb1ZPN2lOSmY0OHo5UElIUyI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MzE6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9kYXNoYm9hcmQiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX1zOjUwOiJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI7aToxO30=', 1756183232);
 
 -- --------------------------------------------------------
 
@@ -2001,6 +2003,13 @@ INSERT INTO `siswa` (`id`, `id_pengguna`, `id_kelas`, `nis`, `saldo`, `created_a
 --
 
 --
+-- Indexes for table `buku_kas`
+--
+ALTER TABLE `buku_kas`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `buku_kas_id_admin_foreign` (`id_admin`);
+
+--
 -- Indexes for table `cache`
 --
 ALTER TABLE `cache`
@@ -2034,7 +2043,6 @@ ALTER TABLE `jobs`
   ADD KEY `jobs_queue_index` (`queue`);
 
 --
-
 -- Indexes for table `kelas`
 --
 ALTER TABLE `kelas`
@@ -2116,6 +2124,12 @@ ALTER TABLE `siswa`
 --
 
 --
+-- AUTO_INCREMENT for table `buku_kas`
+--
+ALTER TABLE `buku_kas`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `detail_penjualan`
 --
 ALTER TABLE `detail_penjualan`
@@ -2131,9 +2145,7 @@ ALTER TABLE `jenis_sampah`
 -- AUTO_INCREMENT for table `jobs`
 --
 ALTER TABLE `jobs`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
-
---
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT for table `kelas`
@@ -2145,7 +2157,7 @@ ALTER TABLE `kelas`
 -- AUTO_INCREMENT for table `migrations`
 --
 ALTER TABLE `migrations`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
 
 --
 -- AUTO_INCREMENT for table `penarikan`
@@ -2194,13 +2206,17 @@ ALTER TABLE `siswa`
 --
 
 --
+-- Constraints for table `buku_kas`
+--
+ALTER TABLE `buku_kas`
+  ADD CONSTRAINT `buku_kas_id_admin_foreign` FOREIGN KEY (`id_admin`) REFERENCES `pengguna` (`id`);
+
+--
 -- Constraints for table `detail_penjualan`
 --
 ALTER TABLE `detail_penjualan`
   ADD CONSTRAINT `detail_penjualan_id_jenis_sampah_foreign` FOREIGN KEY (`id_jenis_sampah`) REFERENCES `jenis_sampah` (`id`),
   ADD CONSTRAINT `detail_penjualan_id_penjualan_foreign` FOREIGN KEY (`id_penjualan`) REFERENCES `penjualan` (`id`) ON DELETE CASCADE;
-
---
 
 --
 -- Constraints for table `penarikan`
