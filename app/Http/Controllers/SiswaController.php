@@ -134,21 +134,36 @@ class SiswaController extends Controller
     public function import(Request $request)
     {
         $request->validate([
-            'file' => 'required|mimes:xlsx,xls,csv|max:2048'
+            'file' => 'required|mimes:xlsx,xls',
         ]);
 
+        $file = $request->file('file');
+
+        // Hitung jumlah baris di dalam file Excel untuk menentukan metode impor
+        $rowCount = \Maatwebsite\Excel\Facades\Excel::toCollection(new \App\Imports\SiswaImport, $file)->first()->count();
+
+        // Tentukan ambang batas, misalnya 100 baris
+        $threshold = 100;
+
         try {
-            // Import dengan queue
-            (new SiswaImport)->queue($request->file('file'));
-
-            return redirect()
-                ->route('siswa.import.form')
-                ->with('success', 'Proses import sedang berjalan di background. Silakan tunggu beberapa saat.');
-
+            if ($rowCount > $threshold) {
+                // Jika data besar, gunakan QUEUE
+                (new \App\Imports\SiswaImport)->queue($file);
+                return redirect()->route('siswa.import.form')->with('toastr-success', 'File Anda besar dan sedang diproses di latar belakang. Data akan muncul secara bertahap.');
+            } else {
+                // Jika data kecil, proses langsung (sinkron)
+                \Maatwebsite\Excel\Facades\Excel::import(new \App\Imports\SiswaImport, $file);
+                return redirect()->route('siswa.index')->with('toastr-success', 'Data siswa berhasil diimpor!');
+            }
+        } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
+            $failures = $e->failures();
+            $errorMessages = [];
+            foreach ($failures as $failure) {
+                $errorMessages[] = 'Baris ' . $failure->row() . ': ' . implode(', ', $failure->errors());
+            }
+            return redirect()->route('siswa.import.form')->withErrors($errorMessages);
         } catch (\Exception $e) {
-            return redirect()
-                ->route('siswa.import.form')
-                ->with('error', 'Gagal mengimpor data siswa: ' . $e->getMessage());
+            return redirect()->route('siswa.import.form')->with('toastr-error', 'Terjadi kesalahan tak terduga saat impor: ' . $e->getMessage());
         }
     }
     
