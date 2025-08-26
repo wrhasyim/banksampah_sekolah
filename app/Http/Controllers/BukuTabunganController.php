@@ -3,44 +3,43 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use App\Models\Siswa;
+use App\Models\Setoran;
+use App\Models\Penarikan;
 
 class BukuTabunganController extends Controller
 {
+    /**
+     * Menampilkan halaman utama buku tabungan dengan form pencarian.
+     */
     public function index()
     {
-        $user = Auth::user();
+        // KIRIMKAN VARIABEL $results SEBAGAI ARRAY KOSONG
+        $results = []; 
+        return view('pages.buku-tabungan.index', compact('results'));
+    }
 
-        // Pastikan user adalah siswa dan punya data siswa
-        if ($user->role !== 'siswa' || !$user->siswa) {
-            abort(403, 'Akses Ditolak.');
-        }
+    /**
+     * Mencari siswa berdasarkan nama dan menampilkan hasilnya.
+     */
+    public function search(Request $request)
+    {
+        $request->validate(['query' => 'required|string|max:100']);
+        $query = $request->input('query');
+        $results = Siswa::where('nama_siswa', 'like', "%$query%")->get();
 
-        $siswa = $user->siswa;
+        return view('pages.buku-tabungan.index', compact('results', 'query'));
+    }
 
-        // Ambil semua data setoran dan format
-        $setoran = $siswa->setoran()->with('jenisSampah')->get()->map(function ($item) {
-            return (object) [
-                'tanggal' => $item->created_at,
-                'deskripsi' => 'Setoran: ' . $item->jenisSampah->nama_sampah . ' (' . $item->jumlah_satuan . ' pcs)',
-                'kredit' => $item->total_harga,
-                'debit' => 0,
-            ];
-        });
+    /**
+     * Menampilkan detail tabungan seorang siswa.
+     */
+    public function show(Siswa $siswa)
+    {
+        $setorans = Setoran::where('siswa_id', $siswa->id)->latest('tanggal_setor')->paginate(10);
+        $penarikans = Penarikan::where('siswa_id', $siswa->id)->latest('tanggal_penarikan')->paginate(10);
+        $saldo = $siswa->saldo;
 
-        // Ambil semua data penarikan dan format
-        $penarikan = $siswa->penarikan()->get()->map(function ($item) {
-            return (object) [
-                'tanggal' => $item->created_at,
-                'deskripsi' => 'Penarikan Saldo',
-                'kredit' => 0,
-                'debit' => $item->jumlah_penarikan,
-            ];
-        });
-
-        // Gabungkan kedua koleksi data dan urutkan berdasarkan tanggal
-        $transaksi = $setoran->concat($penarikan)->sortByDesc('tanggal');
-
-        return view('pages.buku-tabungan.index', compact('siswa', 'transaksi'));
+        return view('pages.buku-tabungan.show', compact('siswa', 'setorans', 'penarikans', 'saldo'));
     }
 }
