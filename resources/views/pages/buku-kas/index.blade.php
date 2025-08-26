@@ -26,6 +26,15 @@
                                 </select>
                             </div>
                             <div class="mt-4">
+                                <x-input-label for="id_kategori" value="Kategori" />
+                                <select name="id_kategori" id="id_kategori" class="block mt-1 w-full border-gray-300 rounded-md">
+                                    <option value="">-- Pilih Kategori --</option>
+                                    @foreach ($kategori as $kat)
+                                        <option value="{{ $kat->id }}">{{ $kat->nama_kategori }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="mt-4">
                                 <x-input-label for="jumlah" value="Jumlah (Rp)" />
                                 <x-text-input id="jumlah" class="block mt-1 w-full" type="number" name="jumlah" :value="old('jumlah')" required />
                             </div>
@@ -44,25 +53,37 @@
                                 <p class="text-2xl font-bold text-indigo-600">Rp {{ number_format($saldoAkhir, 0, ',', '.') }}</p>
                             </div>
                         </div>
+
+                        <form action="{{ route('buku-kas.index') }}" method="GET" class="flex items-center space-x-4 mb-4">
+                            <x-text-input type="date" name="start_date" :value="request('start_date')" />
+                            <span class="mx-2">s/d</span>
+                            <x-text-input type="date" name="end_date" :value="request('end_date')" />
+                            <x-primary-button type="submit">Filter</x-primary-button>
+                        </form>
+                        
                         <div class="relative overflow-x-auto shadow-md sm:rounded-lg max-h-96">
                             <table class="w-full text-sm text-left text-gray-500">
                                 <thead class="text-xs text-gray-700 uppercase bg-gray-50 sticky top-0">
                                     <tr>
                                         <th class="px-6 py-3">Tanggal</th>
                                         <th class="px-6 py-3">Deskripsi</th>
+                                        <th class="px-6 py-3">Kategori</th>
                                         <th class="px-6 py-3 text-right">Nominal</th>
                                         <th class="px-6 py-3">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y">
+                                    @php $saldoBerjalan = 0; @endphp
                                     @forelse ($transaksi as $trx)
                                     <tr>
                                         <td class="px-6 py-4">{{ \Carbon\Carbon::parse($trx->tanggal)->format('d M Y') }}</td>
                                         <td class="px-6 py-4">{{ $trx->deskripsi }}</td>
+                                        <td class="px-6 py-4"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">{{ $trx->kategori->nama_kategori ?? '-' }}</span></td>
                                         <td class="px-6 py-4 text-right font-semibold {{ $trx->tipe == 'pemasukan' ? 'text-green-600' : 'text-red-600' }}">
                                             {{ $trx->tipe == 'pemasukan' ? '+' : '-' }} Rp {{ number_format($trx->jumlah, 0, ',', '.') }}
                                         </td>
-                                        <td class="px-6 py-4">
+                                        <td class="px-6 py-4 flex items-center space-x-2">
+                                            <a href="{{ route('buku-kas.edit', $trx->id) }}" class="text-indigo-600 hover:text-indigo-900 text-xs">Edit</a>
                                             <form action="{{ route('buku-kas.destroy', $trx->id) }}" method="POST" onsubmit="return confirm('Hapus transaksi ini?')">
                                                 @csrf
                                                 @method('DELETE')
@@ -71,10 +92,13 @@
                                         </td>
                                     </tr>
                                     @empty
-                                    <tr><td colspan="4" class="px-6 py-4 text-center">Belum ada transaksi.</td></tr>
+                                    <tr><td colspan="5" class="px-6 py-4 text-center">Belum ada transaksi.</td></tr>
                                     @endforelse
                                 </tbody>
                             </table>
+                        </div>
+                         <div class="mt-4">
+                            {{ $transaksi->links() }}
                         </div>
                     </div>
                 </div>

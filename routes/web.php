@@ -13,6 +13,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\PenjualanController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\BukuKasController; 
+use App\Http\Controllers\KategoriTransaksiController;
 
 /*
 |--------------------------------------------------------------------------
@@ -75,6 +76,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/buku-kas', [BukuKasController::class, 'index'])->name('buku-kas.index');
     Route::post('/buku-kas', [BukuKasController::class, 'store'])->name('buku-kas.store');
     Route::delete('/buku-kas/{bukuKa}', [BukuKasController::class, 'destroy'])->name('buku-kas.destroy');
+    Route::resource('kategori-transaksi', KategoriTransaksiController::class)->except(['show']); // Route untuk Kategori
 
     // Rute Pengaturan
     Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
