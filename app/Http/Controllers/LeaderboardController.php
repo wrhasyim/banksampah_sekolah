@@ -10,28 +10,28 @@ class LeaderboardController extends Controller
 {
     public function index()
     {
-        // Peringkat Siswa Berdasarkan Total Setoran (Query Diperbaiki)
+        // Peringkat Siswa Berdasarkan Total Setoran (Query Final & Benar)
         $studentRankings = Siswa::select(
-                'pengguna.nama_lengkap as nama', // Mengambil nama dari tabel pengguna
-                'kelas.nama as nama_kelas', 
+                'pengguna.nama_lengkap as nama',
+                'kelas.nama_kelas as nama_kelas',
                 DB::raw('SUM(setoran.total_harga) as total_setoran')
             )
-            ->join('pengguna', 'siswa.pengguna_id', '=', 'pengguna.id') // JOIN ke tabel pengguna
-            ->join('setoran', 'siswa.id', '=', 'setoran.siswa_id')
-            ->join('kelas', 'siswa.kelas_id', '=', 'kelas.id')
-            ->groupBy('siswa.id', 'pengguna.nama_lengkap', 'kelas.nama')
+            ->join('pengguna', 'siswa.id_pengguna', '=', 'pengguna.id')
+            ->join('setoran', 'siswa.id', '=', 'setoran.id_siswa')
+            ->join('kelas', 'siswa.id_kelas', '=', 'kelas.id') // DIUBAH DISINI
+            ->groupBy('siswa.id', 'pengguna.nama_lengkap', 'kelas.nama_kelas')
             ->orderByDesc('total_setoran')
             ->limit(10)
             ->get();
 
-        // Peringkat Kelas Berdasarkan Total Setoran (Query sudah benar)
+        // Peringkat Kelas Berdasarkan Total Setoran (Query Final & Benar)
         $classRankings = Siswa::select(
-                'kelas.nama as nama_kelas', 
+                'kelas.nama_kelas as nama_kelas',
                 DB::raw('SUM(setoran.total_harga) as total_setoran')
             )
-            ->join('setoran', 'siswa.id', '=', 'setoran.siswa_id')
-            ->join('kelas', 'siswa.kelas_id', '=', 'kelas.id')
-            ->groupBy('kelas.nama')
+            ->join('setoran', 'siswa.id', '=', 'setoran.id_siswa')
+            ->join('kelas', 'siswa.id_kelas', '=', 'kelas.id') // DIUBAH DISINI
+            ->groupBy('kelas.nama_kelas')
             ->orderByDesc('total_setoran')
             ->limit(5)
             ->get();
