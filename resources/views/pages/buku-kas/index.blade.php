@@ -54,11 +54,31 @@
                             </div>
                         </div>
 
-                        <form action="{{ route('buku-kas.index') }}" method="GET" class="flex items-center space-x-4 mb-4">
-                            <x-text-input type="date" name="start_date" :value="request('start_date')" />
-                            <span class="mx-2">s/d</span>
-                            <x-text-input type="date" name="end_date" :value="request('end_date')" />
-                            <x-primary-button type="submit">Filter</x-primary-button>
+                        <!-- Form Filter Tanggal & Tombol Ekspor -->
+                        <form action="{{ route('buku-kas.index') }}" method="GET" class="mb-4">
+                            <div class="flex flex-wrap items-center gap-4">
+                                <!-- Input Tanggal -->
+                                <div class="flex items-center space-x-2">
+                                    <x-text-input type="date" name="start_date" :value="request('start_date')" />
+                                    <span>s/d</span>
+                                    <x-text-input type="date" name="end_date" :value="request('end_date')" />
+                                </div>
+                                
+                                <!-- Tombol Filter -->
+                                <x-primary-button type="submit">Filter</x-primary-button>
+                                
+                                <!-- Tombol Ekspor -->
+                                <div class="flex items-center space-x-2">
+                                    <!-- Tombol Excel -->
+                                    <a href="{{ route('buku-kas.export.excel', ['start_date' => request('start_date'), 'end_date' => request('end_date')]) }}" class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700">
+                                        Excel
+                                    </a>
+                                    <!-- Tombol PDF -->
+                                    <a href="{{ route('buku-kas.export.pdf', ['start_date' => request('start_date'), 'end_date' => request('end_date')]) }}" class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700">
+                                        PDF
+                                    </a>
+                                </div>
+                            </div>
                         </form>
                         
                         <div class="relative overflow-x-auto shadow-md sm:rounded-lg max-h-96">
@@ -73,7 +93,6 @@
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y">
-                                    @php $saldoBerjalan = 0; @endphp
                                     @forelse ($transaksi as $trx)
                                     <tr>
                                         <td class="px-6 py-4">{{ \Carbon\Carbon::parse($trx->tanggal)->format('d M Y') }}</td>
