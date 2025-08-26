@@ -11,7 +11,10 @@ class Penjualan extends Model
     protected $table = 'penjualan';
     protected $fillable = ['id_admin', 'nama_pengepul', 'total_harga'];
 
-    public function detailPenjualan()
+    /**
+     * Mengubah nama metode menjadi bentuk plural agar sesuai konvensi.
+     */
+    public function detailPenjualans()
     {
         return $this->hasMany(DetailPenjualan::class, 'id_penjualan');
     }
