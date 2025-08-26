@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Aug 26, 2025 at 06:41 AM
+-- Generation Time: Aug 26, 2025 at 07:38 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -78,13 +78,6 @@ CREATE TABLE `detail_penjualan` (
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Dumping data for table `detail_penjualan`
---
-
-INSERT INTO `detail_penjualan` (`id`, `id_penjualan`, `id_jenis_sampah`, `jumlah`, `subtotal_harga`, `created_at`, `updated_at`) VALUES
-(2, 2, 5, 10.00, 1000.00, '2025-08-25 02:46:13', '2025-08-25 02:46:13');
-
 -- --------------------------------------------------------
 
 --
@@ -106,9 +99,9 @@ CREATE TABLE `jenis_sampah` (
 --
 
 INSERT INTO `jenis_sampah` (`id`, `nama_sampah`, `satuan`, `harga_per_satuan`, `stok`, `created_at`, `updated_at`) VALUES
-(2, 'Gelas Plastik', 'pcs', 20.00, 0.00, NULL, '2025-08-24 18:45:25'),
-(4, 'Kardus', 'kg', 2000.00, 0.00, '2025-08-24 23:51:40', '2025-08-25 02:44:28'),
-(5, 'Botol Plastik', 'pcs', 35.00, 0.00, '2025-08-25 00:28:39', '2025-08-25 02:46:13');
+(7, 'Botol Plastik', 'pcs', 35.00, 1.00, '2025-08-25 22:36:14', '2025-08-25 22:36:52'),
+(8, 'Gelas Plastik', 'pcs', 20.00, 0.00, '2025-08-25 22:36:23', '2025-08-25 22:36:23'),
+(9, 'Kardus', 'kg', 2000.00, 0.00, '2025-08-25 22:36:30', '2025-08-25 22:36:30');
 
 -- --------------------------------------------------------
 
@@ -224,13 +217,6 @@ CREATE TABLE `penarikan` (
   `updated_at` timestamp NULL DEFAULT NULL,
   `id_kelas` bigint(20) UNSIGNED DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `penarikan`
---
-
-INSERT INTO `penarikan` (`id`, `id_siswa`, `jumlah_penarikan`, `id_admin`, `created_at`, `updated_at`, `id_kelas`) VALUES
-(1, 431, 50.00, 1, '2025-08-25 02:05:07', '2025-08-25 02:05:07', NULL);
 
 -- --------------------------------------------------------
 
@@ -1076,13 +1062,6 @@ CREATE TABLE `penjualan` (
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Dumping data for table `penjualan`
---
-
-INSERT INTO `penjualan` (`id`, `id_admin`, `nama_pengepul`, `total_harga`, `created_at`, `updated_at`) VALUES
-(2, 1, 'test', 1000.00, '2025-08-25 02:46:13', '2025-08-25 02:46:13');
-
 -- --------------------------------------------------------
 
 --
@@ -1122,6 +1101,7 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
+('HDoiYAKJS1V0NqcIhMo5lPQdPqIycQ16Dy0a3HnM', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoiR3FCMG9oeGhEbFJBQmQ3MjZvc0U5R0dEa2tGV04wSUlZR1VTUTFjbCI7czozOiJ1cmwiO2E6MDp7fXM6OToiX3ByZXZpb3VzIjthOjE6e3M6MzoidXJsIjtzOjMxOiJodHRwOi8vMTI3LjAuMC4xOjgwMDAvZGFzaGJvYXJkIjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6MTt9', 1756186683),
 ('M4zLS8eisnuSO3Isc6i5HcFw3r66xpRknylWYjJF', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoieEVVNlRGU25ITXZnRGhDT0IybVlYek5ldDRobDJVU0V0WWdDM1VuaSI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MjE6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMCI7fX0=', 1756116187),
 ('X5mkKV1cxLl2rJsWmXDrt6Hgn7PPZ86JVTJqQVZE', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoieDJEOXY4MGVOcGdwMzM4aDdqa1JDY0JWb1ZPN2lOSmY0OHo5UElIUyI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MzE6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9kYXNoYm9hcmQiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX1zOjUwOiJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI7aToxO30=', 1756183232);
 
@@ -1141,14 +1121,6 @@ CREATE TABLE `setoran` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `setoran`
---
-
-INSERT INTO `setoran` (`id`, `id_siswa`, `id_jenis_sampah`, `jumlah`, `total_harga`, `id_admin`, `created_at`, `updated_at`) VALUES
-(1, 431, 5, 10.00, 350.00, 1, '2025-08-25 02:04:42', '2025-08-25 02:04:42'),
-(2, 957, 4, 1.00, 2000.00, 1, '2025-08-25 02:19:20', '2025-08-25 02:19:20');
 
 -- --------------------------------------------------------
 
@@ -1192,7 +1164,7 @@ CREATE TABLE `siswa` (
 --
 
 INSERT INTO `siswa` (`id`, `id_pengguna`, `id_kelas`, `nis`, `saldo`, `created_at`, `updated_at`) VALUES
-(431, 432, 19, '252610001', 300.00, '2025-08-24 21:11:06', '2025-08-25 02:05:07'),
+(431, 432, 19, '252610001', 0.00, '2025-08-24 21:11:06', '2025-08-25 02:05:07'),
 (432, 433, 19, '252610002', 0.00, '2025-08-24 21:11:06', '2025-08-24 21:11:06'),
 (433, 434, 19, '252610003', 0.00, '2025-08-24 21:11:06', '2025-08-24 21:11:06'),
 (434, 435, 19, '252610004', 0.00, '2025-08-24 21:11:06', '2025-08-24 21:11:06'),
@@ -1718,7 +1690,7 @@ INSERT INTO `siswa` (`id`, `id_pengguna`, `id_kelas`, `nis`, `saldo`, `created_a
 (954, 955, 18, '242510262', 0.00, '2025-08-24 21:24:38', '2025-08-24 21:24:38'),
 (955, 956, 18, '242510263', 0.00, '2025-08-24 21:24:38', '2025-08-24 21:24:38'),
 (956, 957, 18, '242510264', 0.00, '2025-08-24 21:24:38', '2025-08-24 21:24:38'),
-(957, 958, 1, '232410001', 2000.00, '2025-08-24 21:47:44', '2025-08-25 02:19:20'),
+(957, 958, 1, '232410001', 0.00, '2025-08-24 21:47:44', '2025-08-25 22:36:52'),
 (958, 959, 1, '232410002', 0.00, '2025-08-24 21:47:45', '2025-08-24 21:47:45'),
 (959, 960, 1, '232410003', 0.00, '2025-08-24 21:47:45', '2025-08-24 21:47:45'),
 (960, 961, 1, '232410004', 0.00, '2025-08-24 21:47:45', '2025-08-24 21:47:45'),
@@ -2139,7 +2111,7 @@ ALTER TABLE `detail_penjualan`
 -- AUTO_INCREMENT for table `jenis_sampah`
 --
 ALTER TABLE `jenis_sampah`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `jobs`
@@ -2187,7 +2159,7 @@ ALTER TABLE `personal_access_tokens`
 -- AUTO_INCREMENT for table `setoran`
 --
 ALTER TABLE `setoran`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `settings`
