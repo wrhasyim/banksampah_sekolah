@@ -18,19 +18,15 @@
                                 <x-input-label for="deskripsi" value="Deskripsi" />
                                 <x-text-input id="deskripsi" class="block mt-1 w-full" type="text" name="deskripsi" :value="old('deskripsi')" required placeholder="Contoh: Beli karung sampah" />
                             </div>
-                            <div class="mt-4">
-                                <x-input-label for="tipe" value="Tipe Transaksi" />
-                                <select name="tipe" id="tipe" class="block mt-1 w-full border-gray-300 rounded-md" required>
-                                    <option value="pengeluaran">Pengeluaran</option>
-                                    <option value="pemasukan">Pemasukan</option>
-                                </select>
-                            </div>
+                            
+                            {{-- Dropdown Tipe Transaksi Dihapus --}}
+
                             <div class="mt-4">
                                 <x-input-label for="id_kategori" value="Kategori" />
-                                <select name="id_kategori" id="id_kategori" class="block mt-1 w-full border-gray-300 rounded-md">
+                                <select name="id_kategori" id="id_kategori" class="block mt-1 w-full border-gray-300 rounded-md" required>
                                     <option value="">-- Pilih Kategori --</option>
                                     @foreach ($kategori as $kat)
-                                        <option value="{{ $kat->id }}">{{ $kat->nama_kategori }}</option>
+                                        <option value="{{ $kat->id }}">{{ $kat->nama_kategori }} ({{ ucfirst($kat->tipe) }})</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -54,26 +50,20 @@
                             </div>
                         </div>
 
-                        <!-- Form Filter Tanggal & Tombol Ekspor -->
                         <form action="{{ route('buku-kas.index') }}" method="GET" class="mb-4">
                             <div class="flex flex-wrap items-center gap-4">
-                                <!-- Input Tanggal -->
                                 <div class="flex items-center space-x-2">
                                     <x-text-input type="date" name="start_date" :value="request('start_date')" />
                                     <span>s/d</span>
                                     <x-text-input type="date" name="end_date" :value="request('end_date')" />
                                 </div>
                                 
-                                <!-- Tombol Filter -->
                                 <x-primary-button type="submit">Filter</x-primary-button>
                                 
-                                <!-- Tombol Ekspor -->
                                 <div class="flex items-center space-x-2">
-                                    <!-- Tombol Excel -->
                                     <a href="{{ route('buku-kas.export.excel', ['start_date' => request('start_date'), 'end_date' => request('end_date')]) }}" class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700">
                                         Excel
                                     </a>
-                                    <!-- Tombol PDF -->
                                     <a href="{{ route('buku-kas.export.pdf', ['start_date' => request('start_date'), 'end_date' => request('end_date')]) }}" class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700">
                                         PDF
                                     </a>
