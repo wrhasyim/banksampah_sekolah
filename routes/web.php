@@ -15,6 +15,9 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\BukuKasController;
 use App\Http\Controllers\KategoriTransaksiController;
 use App\Http\Controllers\LeaderboardController; // Tambahkan ini
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -60,5 +63,21 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::get('laporan', [ReportController::class, 'index'])->name('laporan.index');
 });
 
+Route::get('/cek-kolom', function () {
+    try {
+        $kolom_penjualan = Schema::getColumnListing('penjualan');
+        echo '<h3>Kolom di tabel "penjualan":</h3>';
+        echo '<pre>' . print_r($kolom_penjualan, true) . '</pre>';
+
+        echo '<hr>';
+
+        $kolom_setoran = Schema::getColumnListing('setoran');
+        echo '<h3>Kolom di tabel "setoran":</h3>';
+        echo '<pre>' . print_r($kolom_setoran, true) . '</pre>';
+
+    } catch (\Exception $e) {
+        return 'Gagal memeriksa skema tabel: ' . $e->getMessage();
+    }
+});
 
 require __DIR__.'/auth.php';

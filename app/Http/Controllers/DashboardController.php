@@ -19,11 +19,11 @@ class DashboardController extends Controller
         if (auth()->user()->role == 'admin') {
             $totalSiswa = Siswa::count();
             $totalSampah = JenisSampah::count();
-            // Kolom yang benar untuk tabel setoran adalah 'total_harga'
+            // Kolom di tabel 'setoran' adalah 'total_harga'
             $totalSetoran = Setoran::sum('total_harga'); 
             
-            // Kolom yang benar untuk tabel penjualan adalah 'total'
-            $totalPenjualan = Penjualan::sum('total');
+            // PERBAIKAN FINAL: Kolom yang benar untuk tabel 'penjualan' adalah 'total_harga'
+            $totalPenjualan = Penjualan::sum('total_harga');
 
             // --- Data untuk Chart ---
             $setoranPerBulan = Setoran::select(
@@ -34,10 +34,10 @@ class DashboardController extends Controller
             ->orderBy('bulan')
             ->pluck('total_setoran', 'bulan')->all();
 
-            // Menggunakan 'total' di dalam SUM dari tabel penjualan
+            // PERBAIKAN FINAL: Menggunakan 'total_harga' di dalam SUM dari tabel 'penjualan'
             $penjualanPerBulan = Penjualan::select(
                 DB::raw('MONTH(created_at) as bulan'),
-                DB::raw('SUM(total) as total_penjualan')
+                DB::raw('SUM(total_harga) as total_penjualan')
             )
             ->groupBy('bulan')
             ->orderBy('bulan')

@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\DB; // <-- TAMBAHKAN BARIS INI
+use Illuminate\Support\Facades\DB;
 
 class Siswa extends Model
 {
@@ -25,24 +25,26 @@ class Siswa extends Model
 
     public function setoran()
     {
-        return $this->hasMany(Setoran::class, 'id_siswa');
+        // PERBAIKAN: Menggunakan 'siswa_id' sesuai dengan file migrasi
+        return $this->hasMany(Setoran::class, 'siswa_id');
     }
 
     public function penarikan()
     {
-        return $this->hasMany(Penarikan::class, 'id_siswa');
+        // PERBAIKAN: Menggunakan 'siswa_id' sesuai dengan file migrasi
+        return $this->hasMany(Penarikan::class, 'siswa_id');
     }
+    
     public function badges()
     {
         return $this->belongsToMany(Badge::class, 'badge_siswa');
     }
-    /**
-     * Scope untuk mengambil peringkat siswa teraktif.
-     */
+    
     public function scopePeringkatTeraktif($query)
     {
         return $query->select('id_pengguna', DB::raw('SUM(setoran.jumlah) as total_jumlah'))
-            ->join('setoran', 'siswa.id', '=', 'setoran.id_siswa')
+            // PERBAIKAN: Menggunakan 'siswa_id' untuk join
+            ->join('setoran', 'siswa.id', '=', 'setoran.siswa_id')
             ->with('pengguna')
             ->groupBy('id_pengguna')
             ->orderByDesc('total_jumlah')

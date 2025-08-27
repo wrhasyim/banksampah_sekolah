@@ -10,12 +10,14 @@ class Setoran extends Model
     use HasFactory;
 
     protected $table = 'setoran';
-// Ganti baris ini
-    protected $fillable = ['id_siswa', 'id_jenis_sampah', 'jumlah', 'total_harga', 'id_admin'];
+
+    // PERBAIKAN: Mengganti 'id_siswa' menjadi 'siswa_id'
+    protected $fillable = ['siswa_id', 'id_jenis_sampah', 'jumlah', 'total_harga', 'id_admin'];
 
     public function siswa()
     {
-        return $this->belongsTo(Siswa::class, 'id_siswa');
+        // PERBAIKAN: Menggunakan 'siswa_id' sebagai foreign key
+        return $this->belongsTo(Siswa::class, 'siswa_id');
     }
 
     public function jenisSampah()

@@ -15,16 +15,18 @@ class LeaderboardController extends Controller
         $filter = $request->get('filter', 'all');
         $now = Carbon::now();
 
+        // Query untuk peringkat siswa (ini sudah benar dari perbaikan sebelumnya)
         $peringkatSiswa = Siswa::with('kelas')
-            ->withSum(['setoran' => function ($query) use ($filter, $now) {
+            ->withSum(['setoran as setoran_sum_total' => function ($query) use ($filter, $now) {
                 $this->applyDateFilter($query, $filter, $now);
-            }], 'total')
+            }], 'total_harga')
             ->orderByDesc('setoran_sum_total')
             ->get();
 
-        $peringkatKelas = Kelas::withSum(['siswa.setoran' => function ($query) use ($filter, $now) {
+        // PERBAIKAN: Menggunakan relasi 'setoran' yang baru dari Model Kelas
+        $peringkatKelas = Kelas::withSum(['setoran as siswa_setoran_sum_total' => function ($query) use ($filter, $now) {
                 $this->applyDateFilter($query, $filter, $now);
-            }], 'total')
+            }], 'total_harga')
             ->orderByDesc('siswa_setoran_sum_total')
             ->get();
 
