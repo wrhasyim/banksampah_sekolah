@@ -2,102 +2,68 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Models\Siswa;
-use App\Models\Setoran;
+use App\Models\JenisSampah;
 use App\Models\Penjualan;
-use App\Models\BukuKas;
-use App\Models\Pengguna;
+use App\Models\Setoran;
+use App\Models\Siswa;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
-use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
-    public function index()
+    /**
+     * Handle the incoming request.
+     */
+    public function __invoke(Request $request)
     {
-        $user = Auth::user();
+        if (auth()->user()->role == 'admin') {
+            $totalSiswa = Siswa::count();
+            $totalSampah = JenisSampah::count();
+            // Kolom yang benar untuk tabel setoran adalah 'total_harga'
+            $totalSetoran = Setoran::sum('total_harga'); 
+            
+            // Kolom yang benar untuk tabel penjualan adalah 'total'
+            $totalPenjualan = Penjualan::sum('total');
 
-        if ($user->role === 'admin') {
-            return $this->adminDashboard();
-        } elseif ($user->role === 'siswa') {
-            return $this->siswaDashboard($user);
+            // --- Data untuk Chart ---
+            $setoranPerBulan = Setoran::select(
+                DB::raw('MONTH(created_at) as bulan'),
+                DB::raw('SUM(total_harga) as total_setoran') 
+            )
+            ->groupBy('bulan')
+            ->orderBy('bulan')
+            ->pluck('total_setoran', 'bulan')->all();
+
+            // Menggunakan 'total' di dalam SUM dari tabel penjualan
+            $penjualanPerBulan = Penjualan::select(
+                DB::raw('MONTH(created_at) as bulan'),
+                DB::raw('SUM(total) as total_penjualan')
+            )
+            ->groupBy('bulan')
+            ->orderBy('bulan')
+            ->pluck('total_penjualan', 'bulan')->all();
+
+            $labels = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+            $dataSetoran = [];
+            $dataPenjualan = [];
+
+            for ($i=1; $i <= 12; $i++) {
+                $dataSetoran[] = $setoranPerBulan[$i] ?? 0;
+                $dataPenjualan[] = $penjualanPerBulan[$i] ?? 0;
+            }
+
+            return view('dashboard-admin', compact('totalSiswa', 'totalSampah', 'totalSetoran', 'totalPenjualan', 'labels', 'dataSetoran', 'dataPenjualan'));
         }
 
-        return redirect('/');
-    }
-
-    private function adminDashboard()
-    {
-        // Card metrics
-        $jumlahSiswa = Siswa::count();
-        $totalSaldo = Siswa::sum('saldo');
-        $setoranHariIni = Setoran::whereDate('created_at', today())->sum('total_harga');
-        $totalPenjualan = Penjualan::sum('total_harga');
-        
-        // Saldo Kas
-        $pemasukanKas = BukuKas::where('tipe', 'pemasukan')->sum('jumlah');
-        $pengeluaranKas = BukuKas::where('tipe', 'pengeluaran')->sum('jumlah');
-        $saldoKas = $pemasukanKas - $pengeluaranKas;
-
-        // Recent transactions
-        $recentTransactions = BukuKas::latest('tanggal')->limit(5)->get();
-
-        // Recent sales
-        $recentSales = Penjualan::withSum('detailPenjualans', 'jumlah')->latest()->limit(5)->get();
-        
-        // Chart data
-        $setoranChart = Setoran::select(
-            DB::raw('DATE(created_at) as tanggal'),
-            DB::raw('SUM(total_harga) as total')
-        )
-        ->where('created_at', '>=', now()->subDays(7))
-        ->groupBy('tanggal')
-        ->orderBy('tanggal', 'asc')
-        ->get();
-        
-        // Top 5 Siswa
-        $topSiswaData = Siswa::join('setoran', 'siswa.id', '=', 'setoran.siswa_id')
-            ->join('pengguna', 'siswa.id_pengguna', '=', 'pengguna.id')
-            ->select('pengguna.nama_lengkap', DB::raw('SUM(setoran.total_harga) as total_setoran')) // DIPERBAIKI
-            ->groupBy('pengguna.nama_lengkap') // DIPERBAIKI
-            ->orderByDesc('total_setoran')
-            ->limit(5)
-            ->get();
-            
-        $topSiswa = [
-            'labels' => $topSiswaData->pluck('nama_lengkap'), // DIPERBAIKI
-            'data' => $topSiswaData->pluck('total_setoran'),
-        ];
-        
-        return view('dashboard-admin', compact(
-            'jumlahSiswa',
-            'totalSaldo',
-            'setoranHariIni',
-            'totalPenjualan',
-            'saldoKas',
-            'recentTransactions',
-            'recentSales',
-            'setoranChart',
-            'topSiswa'
-        ));
-    }
-
-    private function siswaDashboard($user)
-    {
-        $siswa = $user->siswa;
-        $saldo = $siswa->saldo;
-        $totalSetoran = $siswa->setorans()->sum('total_harga');
-        $totalPenarikan = $siswa->penarikans()->sum('jumlah_penarikan');
-        
-        $recentSetoran = $siswa->setorans()->latest('tanggal_setor')->limit(5)->get();
-        
-        return view('dashboard-siswa', compact(
-            'siswa',
-            'saldo',
-            'totalSetoran',
-            'totalPenarikan',
-            'recentSetoran'
-        ));
+        if (auth()->user()->role == 'siswa') {
+            $siswa = Siswa::where('pengguna_id', auth()->id())->first();
+            return view('dashboard-siswa', [
+                'siswa' => $siswa,
+                'totalSetoran' => $siswa->setoran->sum('total_harga'),
+                'totalPenarikan' => $siswa->penarikan->sum('jumlah'),
+                'totalPoint' => $siswa->points,
+                'badges' => $siswa->badges,
+            ]);
+        }
     }
 }
