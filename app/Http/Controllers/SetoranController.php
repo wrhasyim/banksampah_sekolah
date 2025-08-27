@@ -2,107 +2,89 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\SetoranSampleExport;
+use App\Imports\SetoranImport;
 use App\Models\JenisSampah;
 use App\Models\Setoran;
 use App\Models\Siswa;
-use App\Models\Kelas;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use App\Imports\SetoranImport;
-use Maatwebsite\Excel\Validators\ValidationException;
-use App\Exports\SetoranSampleExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class SetoranController extends Controller
 {
-    public function index()
-    {
-        $setoran = Setoran::with(['siswa.pengguna', 'jenisSampah', 'admin'])->latest()->get();
-        return view('pages.setoran.index', compact('setoran'));
-    }
-
-    public function create()
-    {
-        $kelas = Kelas::all();
-        $jenisSampah = JenisSampah::all();
-        return view('pages.setoran.create', compact('kelas', 'jenisSampah'));
-    }
-
-    public function store(Request $request)
-    {
-        $request->validate([
-            'id_siswa' => 'required|exists:siswa,id',
-            'id_jenis_sampah' => 'required|exists:jenis_sampah,id',
-            'jumlah' => 'required|numeric|min:0.01',
-        ]);
-
-        // Logika untuk memberikan lencana
-        $badges = Badge::where('min_points', '<=', $siswa->points)->get();
-        foreach ($badges as $badge) {
-            // Cek apakah siswa sudah memiliki lencana ini
-            if (!$siswa->badges()->where('badge_id', $badge->id)->exists()) {
-                $siswa->badges()->attach($badge->id);
-            }
-        }
-
-        try {
-            DB::transaction(function () use ($request) {
-                $siswa = Siswa::findOrFail($request->id_siswa);
-                $jenisSampah = JenisSampah::findOrFail($request->id_jenis_sampah);
-
-                $totalHarga = $jenisSampah->harga_per_satuan * $request->jumlah;
-
-                Setoran::create([
-                    'id_siswa' => $request->id_siswa,
-                    'id_jenis_sampah' => $request->id_jenis_sampah,
-                    'id_admin' => Auth::id(),
-                    'jumlah' => $request->jumlah,
-                    'total_harga' => $totalHarga,
-                ]);
-
-                $siswa->increment('saldo', $totalHarga);
-                $jenisSampah->increment('stok', $request->jumlah);
-            });
-        } catch (\Exception $e) {
-            return redirect()->route('setoran.create')->with('toastr-error', 'Terjadi kesalahan saat menyimpan transaksi.');
-        }
-
-        return redirect()->route('setoran.index')->with('toastr-success', 'Transaksi setoran berhasil disimpan!');
-    }
-
-    // --- METODE YANG HILANG DIKEMBALIKAN DI SINI ---
-    
+    /**
+     * PERBAIKAN: Method untuk menampilkan form impor.
+     */
     public function showImportForm()
     {
-        $jenisSampah = \App\Models\JenisSampah::take(2)->get();
-        $siswa = \App\Models\Siswa::with(['pengguna', 'kelas'])->take(2)->get();
-        return view('pages.setoran.import', compact('jenisSampah', 'siswa'));
+        return view('pages.setoran.import');
     }
 
     public function import(Request $request)
     {
         $request->validate([
-            'file' => 'required|mimes:xlsx,xls',
+            'file' => 'required|mimes:xls,xlsx'
         ]);
 
-        try {
-            // Kirim ID admin yang sedang login ke dalam constructor
-            \Maatwebsite\Excel\Facades\Excel::import(new \App\Imports\SetoranImport(Auth::id()), $request->file('file'));
-        
-        } catch (ValidationException $e) {
-            $failures = $e->failures();
-            $errorMessages = [];
-            foreach ($failures as $failure) {
-                $errorMessages[] = 'Baris ' . $failure->row() . ': ' . implode(', ', $failure->errors());
-            }
-            return redirect()->route('setoran.import.form')->withErrors($errorMessages);
-        }
+        Excel::import(new SetoranImport, $request->file('file'));
 
-        return redirect()->route('setoran.import.form')->with('success', 'Data setoran berhasil diimpor!');
+        return redirect()->route('setoran.index')->with('success', 'Data setoran berhasil diimpor!');
+    }
+    
+    public function sampleExport()
+    {
+        return Excel::download(new SetoranSampleExport, 'sample-setoran.xlsx');
+    }
+    
+    public function index()
+    {
+        $setoran = Setoran::with(['siswa.pengguna', 'jenisSampah'])->latest()->get();
+        return view('pages.setoran.index', compact('setoran'));
     }
 
-    public function exportSample()
+    public function create()
     {
-        return \Maatwebsite\Excel\Facades\Excel::download(new SetoranSampleExport, 'contoh-impor-setoran.xlsx');
+        return view('pages.setoran.create', [
+            'siswa' => Siswa::all(),
+            'jenisSampah' => JenisSampah::all(),
+        ]);
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'siswa_id' => 'required|exists:siswa,id',
+            'id_jenis_sampah' => 'required|exists:jenis_sampah,id',
+            'jumlah' => 'required|numeric',
+        ]);
+
+        $jenisSampah = JenisSampah::find($request->id_jenis_sampah);
+        $totalHarga = $jenisSampah->harga_per_kg * $request->jumlah;
+
+        $setoran = Setoran::create([
+            'siswa_id' => $request->siswa_id,
+            'id_jenis_sampah' => $request->id_jenis_sampah,
+            'jumlah' => $request->jumlah,
+            'total_harga' => $totalHarga,
+            'id_admin' => auth()->id(),
+            'tanggal_setor' => now(),
+        ]);
+        
+        $siswa = Siswa::find($request->siswa_id);
+        $siswa->saldo += $totalHarga;
+        $siswa->save();
+
+        return redirect()->route('setoran.index')->with('success', 'Setoran berhasil ditambahkan.');
+    }
+
+    public function destroy(Setoran $setoran)
+    {
+        $siswa = Siswa::find($setoran->siswa_id);
+        $siswa->saldo -= $setoran->total_harga;
+        $siswa->save();
+        
+        $setoran->delete();
+
+        return redirect()->route('setoran.index')->with('success', 'Setoran berhasil dihapus.');
     }
 }

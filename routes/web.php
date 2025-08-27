@@ -14,20 +14,12 @@ use App\Http\Controllers\SettingController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\BukuKasController;
 use App\Http\Controllers\KategoriTransaksiController;
-use App\Http\Controllers\LeaderboardController; // Tambahkan ini
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
-
+use App\Http\Controllers\LeaderboardController;
 
 /*
 |--------------------------------------------------------------------------
 | Web Routes
 |--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "web" middleware group. Make something great!
-|
 */
 
 Route::get('/', function () {
@@ -43,41 +35,43 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
-    // Rute lainnya...
-    Route::resource('siswa', SiswaController::class);
+    
+    // PERBAIKAN: Pindahkan route spesifik ke atas Route::resource
+    Route::get('siswa/import', [SiswaController::class, 'showImportForm'])->name('siswa.import.form');
+    Route::post('siswa/import', [SiswaController::class, 'import'])->name('siswa.import');
+    Route::get('siswa/export/sample', [SiswaController::class, 'sampleExport'])->name('siswa.sample-export');
+    Route::get('siswa/export', [SiswaController::class, 'export'])->name('siswa.export');
+    
+    // PERBAIKAN: Daftarkan resource route dan kecualikan method 'show'
+    Route::resource('siswa', SiswaController::class)->except(['show']);
+    
     Route::resource('kelas', KelasController::class);
     Route::resource('jenis-sampah', JenisSampahController::class);
-    Route::resource('setoran', SetoranController::class);
-    Route::resource('penarikan', PenarikanController::class);
+    
+    Route::resource('setoran', SetoranController::class)->only([
+        'index', 'create', 'store', 'destroy'
+    ]);
+    
+    Route::get('setoran/import', [SetoranController::class, 'showImportForm'])->name('setoran.import.form');
+    Route::post('setoran/import', [SetoranController::class, 'import'])->name('setoran.import');
+    Route::get('setoran/export/sample', [SetoranController::class, 'sampleExport'])->name('setoran.sample-export');
+
+    Route::resource('penarikan', PenarikanController::class)->except(['show', 'edit', 'update']);
+    Route::get('penarikan/kelas/create', [PenarikanController::class, 'createKelas'])->name('penarikan.create.kelas');
+    Route::post('penarikan/kelas', [PenarikanController::class, 'storeKelas'])->name('penarikan.storeKelas');
+
     Route::resource('penjualan', PenjualanController::class);
     Route::resource('buku-kas', BukuKasController::class);
     Route::resource('kategori-transaksi', KategoriTransaksiController::class);
     
-    // Rute Baru untuk Leaderboard
     Route::get('/leaderboard', [LeaderboardController::class, 'index'])->name('leaderboard.index');
     
-    // Rute lainnya...
     Route::get('buku-tabungan', [BukuTabunganController::class, 'index'])->name('buku-tabungan.index');
     Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
     Route::post('settings', [SettingController::class, 'update'])->name('settings.update');
     Route::get('laporan', [ReportController::class, 'index'])->name('laporan.index');
+    Route::post('laporan/export', [ReportController::class, 'export'])->name('laporan.export');
 });
 
-Route::get('/cek-kolom', function () {
-    try {
-        $kolom_penjualan = Schema::getColumnListing('penjualan');
-        echo '<h3>Kolom di tabel "penjualan":</h3>';
-        echo '<pre>' . print_r($kolom_penjualan, true) . '</pre>';
-
-        echo '<hr>';
-
-        $kolom_setoran = Schema::getColumnListing('setoran');
-        echo '<h3>Kolom di tabel "setoran":</h3>';
-        echo '<pre>' . print_r($kolom_setoran, true) . '</pre>';
-
-    } catch (\Exception $e) {
-        return 'Gagal memeriksa skema tabel: ' . $e->getMessage();
-    }
-});
 
 require __DIR__.'/auth.php';

@@ -1,150 +1,89 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Kelola Data Siswa') }}
+        <h2 class="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
+            {{ __('Data Siswa') }}
         </h2>
-        <p class="mt-1 text-sm text-gray-600">
-            Halaman ini digunakan untuk mengelola data semua siswa yang terdaftar di bank sampah.
-        </p>
     </x-slot>
 
     <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
+        <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
+            <div class="overflow-hidden bg-white shadow-sm dark:bg-gray-800 sm:rounded-lg">
+                <div class="p-6 text-gray-900 dark:text-gray-100">
 
-                    {{-- Flash Message Success --}}
-                    @if (session('success'))
-                        <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative">
-                            {{ session('success') }}
-                        </div>
-                    @endif
-
-                    {{-- Flash Message Error --}}
-                    @if (session('error'))
-                        <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
-                            {{ session('error') }}
-                        </div>
-                    @endif
-
-                    {{-- Flash Message Status Biasa --}}
-                    @if (session('status'))
-                        <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative">
-                            {{ session('status') }}
-                        </div>
-                    @endif
-
-                    <div class="flex justify-between items-center mb-4">
-                        <div class="flex space-x-2">
-                            <a href="{{ route('siswa.create') }}" 
-                               class="px-4 py-2 bg-gray-800 text-white rounded-md text-xs uppercase font-semibold">
+                    <div class="flex flex-col items-start justify-between gap-4 mb-6 md:flex-row md:items-center">
+                        <div class="flex items-center space-x-2">
+                            <a href="{{ route('siswa.create') }}"
+                                class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-700 border border-transparent rounded-md hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                 Tambah Siswa
                             </a>
-                            <a href="{{ route('siswa.import.form') }}" 
-                               class="px-4 py-2 bg-yellow-500 text-white rounded-md text-xs uppercase font-semibold">
-                                Impor Siswa
+                            <a href="{{ route('siswa.import.form') }}"
+                                class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 border border-transparent rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">
+                                Impor
                             </a>
-                            <form action="{{ route('siswa.export') }}" method="POST">
-                                @csrf
-                                <button type="submit" 
-                                    class="px-4 py-2 bg-green-600 text-white rounded-md text-xs uppercase font-semibold">
-                                    Ekspor Siswa
-                                </button>
-                            </form>
                         </div>
-                        
-                        <div class="flex items-center space-x-2 text-sm">
-                            <form action="{{ route('siswa.index') }}" method="GET">
-                                <label for="per_page">Tampilkan:</label>
-                                <select name="per_page" id="per_page" onchange="this.form.submit()" 
-                                    class="border-gray-300 rounded-md shadow-sm text-sm">
-                                    <option value="10" {{ $perPage == 10 ? 'selected' : '' }}>10</option>
-                                    <option value="20" {{ $perPage == 20 ? 'selected' : '' }}>20</option>
-                                    <option value="50" {{ $perPage == 50 ? 'selected' : '' }}>50</option>
-                                    <option value="100" {{ $perPage == 100 ? 'selected' : '' }}>100</option>
-                                </select>
-                            </form>
+                        <div class="flex items-center space-x-2">
+                            <a href="{{ route('siswa.export') }}"
+                                class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                Ekspor
+                            </a>
                         </div>
                     </div>
+                    
+                    {{-- PERBAIKAN: Form untuk paginasi --}}
+                    <form method="GET" action="{{ route('siswa.index') }}" class="flex items-center mb-4">
+                        <label for="perPage" class="mr-2 text-sm text-gray-600 dark:text-gray-400">Tampilkan:</label>
+                        <select name="perPage" id="perPage" onchange="this.form.submit()" class="block w-24 text-sm border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300">
+                            <option value="10" {{ $perPage == 10 ? 'selected' : '' }}>10</option>
+                            <option value="25" {{ $perPage == 25 ? 'selected' : '' }}>25</option>
+                            <option value="50" {{ $perPage == 50 ? 'selected' : '' }}>50</option>
+                            <option value="100" {{ $perPage == 100 ? 'selected' : '' }}>100</option>
+                        </select>
+                        <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">data per halaman</span>
+                    </form>
 
-                    <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
-                        <table class="w-full text-sm text-left text-gray-500">
-                            <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
+                            <thead class="bg-gray-50 dark:bg-gray-700">
                                 <tr>
-                                    <th class="px-6 py-3">No</th>
-                                    <th class="px-6 py-3">Nama Lengkap</th>
-                                    <th class="px-6 py-3">Username</th>
-                                    <th class="px-6 py-3">NIS</th>
-                                    <th class="px-6 py-3">Kelas</th>
-                                    <th class="px-6 py-3">Saldo</th>
-                                    <th class="px-6 py-3">Aksi</th>
+                                    <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-400">No</th>
+                                    <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-400">Nama</th>
+                                    <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-400">NIS</th>
+                                    <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-400">Kelas</th>
+                                    <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-400">Saldo</th>
+                                    <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-400">Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                                 @forelse ($siswa as $item)
-                                    <tr class="bg-white border-b hover:bg-gray-50">
-                                        <th class="px-6 py-4">
-                                            {{ $loop->iteration + ($siswa->currentPage() - 1) * $siswa->perPage() }}
-                                        </th>
-                                        <td class="px-6 py-4">{{ $item->pengguna->nama_lengkap }}</td>
-                                        <td class="px-6 py-4">{{ $item->pengguna->username }}</td>
-                                        <td class="px-6 py-4">{{ $item->nis ?? '-' }}</td>
-                                        <td class="px-6 py-4">{{ $item->kelas->nama_kelas }}</td>
-                                        <td class="px-6 py-4 font-bold">
-                                            Rp {{ number_format($item->saldo, 0, ',', '.') }}
-                                        </td>
-                                        <td class="px-6 py-4 flex items-center">
-                                            <a href="{{ route('siswa.edit', $item->id) }}" 
-                                               class="font-medium text-blue-600 hover:underline">
-                                                Edit
-                                            </a>
-                                            <form action="{{ route('siswa.destroy', $item->id) }}" method="POST" class="inline"
-                                                onsubmit="return confirm('Anda yakin ingin menghapus siswa ini? Semua data transaksi yang terkait juga akan terhapus.');">
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap">{{ $loop->iteration + ($siswa->currentPage() - 1) * $siswa->perPage() }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">{{ $item->pengguna->name }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">{{ $item->nis }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">{{ $item->kelas->nama }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">Rp. {{ number_format($item->saldo) }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <a href="{{ route('siswa.edit', $item->id) }}" class="text-indigo-600 hover:text-indigo-900">Edit</a>
+                                            <form action="{{ route('siswa.destroy', $item->id) }}" method="POST" class="inline">
                                                 @csrf
-                                                @method('DELETE')
-                                                <button type="submit" 
-                                                    class="font-medium text-red-600 hover:underline ml-4">
-                                                    Hapus
-                                                </button>
+                                                @method('delete')
+                                                <button type="submit" class="ml-2 text-red-600 hover:text-red-900" onclick="return confirm('Apakah anda yakin ingin menghapus data ini?')">Hapus</button>
                                             </form>
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="7" class="px-6 py-12 text-center">
-                                            <div class="flex flex-col items-center">
-                                                <svg class="w-24 h-24 text-gray-300 mb-4" 
-                                                    xmlns="http://www.w3.org/2000/svg" fill="none" 
-                                                    viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" 
-                                                        d="M18 18.72a9.094 9.094 0 003.741-.479 
-                                                           3 3 0 00-4.682-2.72m-7.282 2.72a3 3 
-                                                           0 01-4.682-2.72 9.094 9.094 
-                                                           0 013.741-.479m7.282 2.72a8.973 
-                                                           8.973 0 01-7.282 0M12 12.75a3 
-                                                           3 0 110-6 3 3 0 010 6z" />
-                                                </svg>
-                                                <h3 class="text-lg font-semibold text-gray-700">
-                                                    Belum Ada Data Siswa
-                                                </h3>
-                                                <p class="text-sm mt-1 mb-4">
-                                                    Silakan tambahkan data siswa baru untuk memulai.
-                                                </p>
-                                                <a href="{{ route('siswa.create') }}" 
-                                                   class="px-4 py-2 bg-gray-800 text-white rounded-md text-xs uppercase font-semibold">
-                                                    + Tambah Siswa
-                                                </a>
-                                            </div>
-                                        </td>
+                                        <td colspan="6" class="px-6 py-4 text-center whitespace-nowrap">Tidak ada data</td>
                                     </tr>
                                 @endforelse
                             </tbody>
                         </table>
                     </div>
                     
-                    <div class="mt-4">
-                        {{ $siswa->appends(['per_page' => $perPage])->links() }}
+                    {{-- PERBAIKAN: Menampilkan link paginasi --}}
+                    <div class="mt-6">
+                        {{ $siswa->appends(['perPage' => $perPage])->links() }}
                     </div>
+
                 </div>
             </div>
         </div>
