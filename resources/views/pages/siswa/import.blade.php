@@ -1,82 +1,60 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+        <h2 class="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
             {{ __('Impor Data Siswa') }}
         </h2>
-        <p class="mt-1 text-sm text-gray-600">
-            Halaman ini digunakan untuk menambahkan data siswa secara massal melalui file Excel.
-        </p>
     </x-slot>
 
     <div class="py-12">
-        <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    <h3 class="text-lg font-medium mb-4">Unggah File Excel</h3>
+        <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
+            <div class="overflow-hidden bg-white shadow-sm dark:bg-gray-800 sm:rounded-lg">
+                <div class="p-6 text-gray-900 dark:text-gray-100">
 
-                    {{-- Notifikasi sukses --}}
+                    <div class="mb-4">
+                        <p class="text-gray-600 dark:text-gray-400">
+                            Silakan unggah file Excel (XLSX) untuk mengimpor data siswa baru. Pastikan format file sesuai dengan template yang disediakan.
+                        </p>
+                    </div>
+
+                    <div class="flex items-center justify-between mb-6">
+                        <a href="{{ route('siswa.index') }}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-gray-500 border border-transparent rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                            Kembali
+                        </a>
+                        {{-- PERBAIKAN: Mengubah nama route agar sesuai --}}
+                        <a href="{{ route('siswa.sample-export') }}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                            Unduh Template
+                        </a>
+                    </div>
+
                     @if (session('success'))
-                        <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
-                            <span class="font-medium">Berhasil!</span> {{ session('success') }}
+                        <div class="p-4 mb-4 text-sm text-green-700 bg-green-100 rounded-lg dark:bg-green-200 dark:text-green-800" role="alert">
+                            {{ session('success') }}
                         </div>
                     @endif
 
-                    {{-- Notifikasi error --}}
-                    @if ($errors->any())
-                        <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
-                            <strong class="block font-medium mb-1">Terjadi kesalahan:</strong>
-                            <ul class="list-disc list-inside text-sm">
-                                @foreach ($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                @endforeach
-                            </ul>
-                        </div>
-                    @endif
-
-                    {{-- Notifikasi error dari session 'error' --}}
                     @if (session('error'))
-                        <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
-                            <span class="font-medium">Kesalahan Impor:</span> {{ session('error') }}
+                        <div class="p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg dark:bg-red-200 dark:text-red-800" role="alert">
+                            {{ session('error') }}
                         </div>
                     @endif
 
-                    {{-- Form Upload --}}
-                    <form action="{{ route('siswa.import') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
+                    <form action="{{ route('siswa.import') }}" method="POST" enctype="multipart/form-data">
                         @csrf
-                        <div>
-                            <label for="file" class="block text-sm font-medium text-gray-700">Pilih file Excel</label>
-                            <input 
-                                type="file" 
-                                name="file" 
-                                id="file" 
-                                accept=".xlsx,.xls" 
-                                class="mt-1 block w-full text-sm text-gray-500 
-                                       file:mr-4 file:py-2 file:px-4 
-                                       file:rounded-md file:border-0 
-                                       file:text-sm file:font-semibold 
-                                       file:bg-gray-100 file:text-gray-700 
-                                       hover:file:bg-gray-200" 
-                                required>
-                            <p class="mt-1 text-xs text-gray-500">Format yang didukung: .xlsx, .xls</p>
+                        <div class="mb-4">
+                            <label for="file" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Pilih file Excel</label>
+                            <input type="file" name="file" id="file" class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400">
+                            @error('file')
+                                <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ $message }}</p>
+                            @enderror
                         </div>
-
-                        <div class="flex items-center justify-between">
-                            <x-primary-button class="bg-green-600 hover:bg-green-700">
-                                {{ __('Impor Data') }}
-                            </x-primary-button>
-
-                            <a href="{{ route('siswa.export.sample') }}" class="text-sm text-gray-600 hover:text-gray-900 underline">
-                                Download Template Contoh
-                            </a>
+                        
+                        <div class="flex justify-end">
+                            <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">
+                                Impor Data
+                            </button>
                         </div>
                     </form>
 
-                    {{-- Tombol kembali --}}
-                    <div class="mt-6">
-                        <a href="{{ route('siswa.index') }}" class="inline-block text-sm px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200">
-                            ← Kembali ke Data Siswa
-                        </a>
-                    </div>
                 </div>
             </div>
         </div>

@@ -36,13 +36,10 @@ Route::middleware('auth')->group(function () {
 
 Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     
-    // PERBAIKAN: Pindahkan route spesifik ke atas Route::resource
     Route::get('siswa/import', [SiswaController::class, 'showImportForm'])->name('siswa.import.form');
     Route::post('siswa/import', [SiswaController::class, 'import'])->name('siswa.import');
     Route::get('siswa/export/sample', [SiswaController::class, 'sampleExport'])->name('siswa.sample-export');
     Route::get('siswa/export', [SiswaController::class, 'export'])->name('siswa.export');
-    
-    // PERBAIKAN: Daftarkan resource route dan kecualikan method 'show'
     Route::resource('siswa', SiswaController::class)->except(['show']);
     
     Route::resource('kelas', KelasController::class);
@@ -51,7 +48,6 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::resource('setoran', SetoranController::class)->only([
         'index', 'create', 'store', 'destroy'
     ]);
-    
     Route::get('setoran/import', [SetoranController::class, 'showImportForm'])->name('setoran.import.form');
     Route::post('setoran/import', [SetoranController::class, 'import'])->name('setoran.import');
     Route::get('setoran/export/sample', [SetoranController::class, 'sampleExport'])->name('setoran.sample-export');
@@ -61,7 +57,11 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::post('penarikan/kelas', [PenarikanController::class, 'storeKelas'])->name('penarikan.storeKelas');
 
     Route::resource('penjualan', PenjualanController::class);
+
+    Route::get('buku-kas/export/excel', [BukuKasController::class, 'exportExcel'])->name('buku-kas.export.excel');
+    Route::get('buku-kas/export/pdf', [BukuKasController::class, 'exportPdf'])->name('buku-kas.export.pdf');
     Route::resource('buku-kas', BukuKasController::class);
+    
     Route::resource('kategori-transaksi', KategoriTransaksiController::class);
     
     Route::get('/leaderboard', [LeaderboardController::class, 'index'])->name('leaderboard.index');
@@ -69,6 +69,10 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::get('buku-tabungan', [BukuTabunganController::class, 'index'])->name('buku-tabungan.index');
     Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
     Route::post('settings', [SettingController::class, 'update'])->name('settings.update');
+    
+    // PERBAIKAN: Tambahkan route ini untuk mengekspor laporan transaksi
+    Route::get('laporan/transaksi/export/excel', [ReportController::class, 'exportTransaksiExcel'])->name('laporan.transaksi.export.excel');
+    
     Route::get('laporan', [ReportController::class, 'index'])->name('laporan.index');
     Route::post('laporan/export', [ReportController::class, 'export'])->name('laporan.export');
 });

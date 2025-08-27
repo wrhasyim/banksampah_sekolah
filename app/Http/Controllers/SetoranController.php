@@ -7,14 +7,12 @@ use App\Imports\SetoranImport;
 use App\Models\JenisSampah;
 use App\Models\Setoran;
 use App\Models\Siswa;
+use App\Models\Kelas; // <-- Tambahkan ini
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 
 class SetoranController extends Controller
 {
-    /**
-     * PERBAIKAN: Method untuk menampilkan form impor.
-     */
     public function showImportForm()
     {
         return view('pages.setoran.import');
@@ -42,11 +40,15 @@ class SetoranController extends Controller
         return view('pages.setoran.index', compact('setoran'));
     }
 
+    /**
+     * PERBAIKAN: Menambahkan data 'kelas' untuk dikirim ke view.
+     */
     public function create()
     {
         return view('pages.setoran.create', [
             'siswa' => Siswa::all(),
             'jenisSampah' => JenisSampah::all(),
+            'kelas' => Kelas::all(), // <-- Tambahkan baris ini
         ]);
     }
 
