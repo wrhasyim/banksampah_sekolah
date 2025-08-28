@@ -6,6 +6,7 @@ use App\Models\Setoran;
 use App\Models\Siswa;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Models\Penjualan; // Tambahkan ini di atas
 
 class DashboardController extends Controller
 {
@@ -26,8 +27,37 @@ class DashboardController extends Controller
             $totalSetoran = Setoran::sum('jumlah'); 
             $totalPenjualan = DB::table('detail_penjualan')->sum('jumlah');
             $stokSampah = $totalSetoran - $totalPenjualan;
+// Data untuk Chart (Grafik)
+           // Data untuk Chart (Grafik)
+$setoranBulanan = Setoran::select(
+    DB::raw('sum(total_harga) as total'),
+    DB::raw("DATE_FORMAT(created_at, '%Y-%m') as month") // Perbaikan untuk MySQL
+)
+->groupBy('month')
+->orderBy('month', 'asc')
+->get();
 
-            return view('dashboard-admin', compact('totalSiswa', 'totalSaldo', 'stokSampah'));
+           $penjualanBulanan = Penjualan::select(
+    DB::raw('sum(total_harga) as total'),
+    DB::raw("DATE_FORMAT(created_at, '%Y-%m') as month") // Perbaikan untuk MySQL
+)
+->groupBy('month')
+->orderBy('month', 'asc')
+->get();
+            
+            // Siapkan data untuk dikirim ke view
+            $labels = $setoranBulanan->pluck('month');
+            $dataSetoran = $setoranBulanan->pluck('total');
+            $dataPenjualan = $penjualanBulanan->pluck('total');
+            return view('dashboard-admin', compact(
+                'totalSiswa', 
+                'totalSaldo', 
+                'stokSampah', 
+                'labels', 
+                
+    'totalSetoran',
+    'totalPenjualan' // Tambahkan ini
+));
 
         } elseif ($user->role === 'siswa') {
             // Data untuk Siswa Dashboard
