@@ -10,22 +10,10 @@
                         @csrf
                         {{-- Nama Lengkap --}}
                         <div>
-                            <x-input-label for="nama_lengkap" value="Nama Lengkap" />
-                            <x-text-input id="nama_lengkap" class="block mt-1 w-full" type="text" name="nama_lengkap" :value="old('nama_lengkap')" required autofocus />
-                            <x-input-error :messages="$errors->get('nama_lengkap')" class="mt-2" />
-                        </div>
-                        {{-- Username --}}
-                        <div class="mt-4">
-                            <x-input-label for="username" value="Username" />
-                            <x-text-input id="username" class="block mt-1 w-full" type="text" name="username" :value="old('username')" required />
-                            <x-input-error :messages="$errors->get('username')" class="mt-2" />
-                        </div>
-                        {{-- Password --}}
-                        <div class="mt-4">
-                            <x-input-label for="password" value="Password" />
-                            <x-text-input id="password" class="block mt-1 w-full" type="password" name="password" required />
-                            <p class="mt-1 text-xs text-gray-500">Minimal 8 karakter.</p>
-                            <x-input-error :messages="$errors->get('password')" class="mt-2" />
+                            {{-- PERBAIKAN: Mengubah nama input dari 'nama_lengkap' menjadi 'nama' --}}
+                            <x-input-label for="nama" value="Nama Lengkap" />
+                            <x-text-input id="nama" class="block mt-1 w-full" type="text" name="nama" :value="old('nama')" required autofocus />
+                            <x-input-error :messages="$errors->get('nama')" class="mt-2" />
                         </div>
                         {{-- NIS --}}
                         <div class="mt-4">

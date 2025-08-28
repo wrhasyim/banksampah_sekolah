@@ -38,9 +38,9 @@
                             <tbody>
                                 @forelse ($siswas as $siswa)
                                 <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                                    <td class="px-6 py-4">{{ $siswa->nama }}</td>
+                                    <td class="px-6 py-4">{{ $siswa->pengguna->nama_lengkap }}</td>
                                     <td class="px-6 py-4">{{ $siswa->nis }}</td>
-                                    <td class="px-6 py-4">{{ $siswa->kelas->nama }}</td>
+                                    <td class="px-6 py-4">{{ $siswa->kelas->nama_kelas }}</td>
                                     <td class="px-6 py-4">Rp {{ number_format($siswa->saldo, 2, ',', '.') }}</td>
                                     <td class="px-6 py-4">
                                         <div class="flex space-x-2">
@@ -62,7 +62,6 @@
                         </table>
                     </div>
 
-                    {{-- PERBAIKAN: Menambahkan link paginasi --}}
                     <div class="mt-4">
                         {{ $siswas->links() }}
                     </div>
