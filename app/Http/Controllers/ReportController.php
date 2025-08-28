@@ -11,7 +11,7 @@ use App\Models\Setoran;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Carbon\Carbon; // <-- Tambahkan Carbon
+use Carbon\Carbon;
 
 class ReportController extends Controller
 {
@@ -67,26 +67,26 @@ class ReportController extends Controller
     }
 
     /**
-     * PERBAIKAN: Mendefinisikan dan mengirim variabel $startDate dan $endDate.
+     * PERBAIKAN: Menambahkan perhitungan dan pengiriman variabel $totalPenjualan.
      */
     public function index(Request $request)
     {
         $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->toDateString());
         $endDate = $request->input('end_date', Carbon::now()->endOfMonth()->toDateString());
     
-        // Mengambil data berdasarkan rentang tanggal
         $setoran = Setoran::whereBetween('tanggal_setor', [$startDate, $endDate])->orderBy('tanggal_setor', 'desc')->get();
         $penarikan = Penarikan::whereBetween('tanggal_penarikan', [$startDate, $endDate])->orderBy('tanggal_penarikan', 'desc')->get();
         $penjualan = Penjualan::whereBetween('tanggal_penjualan', [$startDate, $endDate])->orderBy('tanggal_penjualan', 'desc')->get();
     
+        // Menghitung total
+        $totalPenjualan = $penjualan->sum('total_harga'); // <-- Tambahkan baris ini
         $pemasukan = BukuKas::where('tipe', 'pemasukan')->whereBetween('tanggal', [$startDate, $endDate])->sum('jumlah');
         $pengeluaran = BukuKas::where('tipe', 'pengeluaran')->whereBetween('tanggal', [$startDate, $endDate])->sum('jumlah');
         
-        // Variabel bulan dan tahun tetap ada untuk filter default atau jika diperlukan
         $bulan = Carbon::parse($startDate)->format('m');
         $tahun = Carbon::parse($startDate)->format('Y');
 
-        return view('pages.laporan.index', compact('setoran', 'penarikan', 'penjualan', 'pemasukan', 'pengeluaran', 'bulan', 'tahun', 'startDate', 'endDate'));
+        return view('pages.laporan.index', compact('setoran', 'penarikan', 'penjualan', 'totalPenjualan', 'pemasukan', 'pengeluaran', 'bulan', 'tahun', 'startDate', 'endDate'));
     }
 
     public function export(Request $request)
