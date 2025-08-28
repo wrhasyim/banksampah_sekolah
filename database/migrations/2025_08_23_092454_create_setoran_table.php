@@ -13,12 +13,11 @@ return new class extends Migration
     {
         Schema::create('setoran', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('siswa_id');
-            $table->date('tanggal_setor'); // PASTIKAN NAMA KOLOM INI BENAR
+            $table->foreignId('siswa_id')->constrained('siswa')->onDelete('cascade');
+            $table->foreignId('jenis_sampah_id')->constrained('jenis_sampah')->onDelete('cascade');
+            $table->decimal('jumlah', 8, 2); // Kilo gram
             $table->decimal('total_harga', 10, 2);
             $table->timestamps();
-
-            $table->foreign('siswa_id')->references('id')->on('siswa')->onDelete('cascade');
         });
     }
 
