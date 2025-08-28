@@ -58,27 +58,28 @@ class ReportController extends Controller
     }
 
     public function exportTransaksiPdf(Request $request)
-    {
-        $selectedMonth = $request->input('bulan', date('Y-m'));
-        $startDate = Carbon::createFromFormat('Y-m', $selectedMonth)->startOfMonth();
-        $endDate = Carbon::createFromFormat('Y-m', $selectedMonth)->endOfMonth();
+{
+    $selectedMonth = $request->input('bulan', date('Y-m'));
+    $startDate = Carbon::createFromFormat('Y-m', $selectedMonth)->startOfMonth();
+    $endDate = Carbon::createFromFormat('Y-m', $selectedMonth)->endOfMonth();
 
-        // PERBAIKAN: Mengganti 'tanggal_setor' menjadi 'created_at'
-        $setorans = Setoran::whereBetween('created_at', [$startDate, $endDate])
+    // PERBAIKAN: Mengganti 'tanggal_setor' menjadi 'created_at'
+    $setorans = Setoran::whereBetween('created_at', [$startDate, $endDate])
+                       ->orderBy('created_at', 'desc')
+                       ->get();
+
+    // PERBAIKAN: Mengganti 'tanggal_penarikan' menjadi 'created_at'
+    $penarikans = Penarikan::whereBetween('created_at', [$startDate, $endDate])
                            ->orderBy('created_at', 'desc')
                            ->get();
+    
+    $totalSetoran = $setorans->sum('total');
+    $totalPenarikan = $penarikans->sum('jumlah');
 
-        // PERBAIKAN: Mengganti 'tanggal_penarikan' menjadi 'created_at'
-        $penarikans = Penarikan::whereBetween('created_at', [$startDate, $endDate])
-                               ->orderBy('created_at', 'desc')
-                               ->get();
-        
-        $totalSetoran = $setorans->sum('total');
-        $totalPenarikan = $penarikans->sum('jumlah');
-
-        $pdf = PDF::loadView('pages.laporan.pdf.laporan-transaksi-pdf', compact('setorans', 'penarikans', 'selectedMonth', 'totalSetoran', 'totalPenarikan'));
-        return $pdf->download('laporan-transaksi-'.$selectedMonth.'.pdf');
-    }
+    // PERBAIKAN: Menambahkan 'startDate' dan 'endDate' ke compact
+    $pdf = PDF::loadView('pages.laporan.pdf.laporan-transaksi-pdf', compact('setorans', 'penarikans', 'selectedMonth', 'totalSetoran', 'totalPenarikan', 'startDate', 'endDate'));
+    return $pdf->download('laporan-transaksi-'.$selectedMonth.'.pdf');
+}
 
     public function exportPenjualanExcel(Request $request)
     {
@@ -119,4 +120,5 @@ class ReportController extends Controller
         $pdf = PDF::loadView('pages.laporan.pdf.laporan-laba-rugi-pdf', compact('pendapatan', 'beban', 'labaRugi', 'selectedMonth'));
         return $pdf->download('laporan-laba-rugi-'.$selectedMonth.'.pdf');
     }
+    
 }
