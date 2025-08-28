@@ -89,4 +89,27 @@ class SetoranController extends Controller
 
         return redirect()->route('setoran.index')->with('success', 'Setoran berhasil dihapus.');
     }
+
+    // METHOD BARU UNTUK PENCARIAN SISWA (AJAX)
+    public function getSiswa(Request $request)
+    {
+        $search = $request->input('q');
+
+        $siswa = Siswa::with('pengguna', 'kelas')
+            ->whereHas('pengguna', function ($query) use ($search) {
+                $query->where('nama_lengkap', 'LIKE', "%{$search}%")
+                      ->orWhere('username', 'LIKE', "%{$search}%");
+            })
+            ->limit(10) // Batasi hasil untuk performa
+            ->get();
+
+        $formattedSiswa = $siswa->map(function ($item) {
+            return [
+                'id' => $item->id,
+                'text' => $item->pengguna->nama_lengkap . ' (' . $item->kelas->nama_kelas . ')'
+            ];
+        });
+
+        return response()->json($formattedSiswa);
+    }
 }

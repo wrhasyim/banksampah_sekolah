@@ -80,6 +80,11 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
 
     Route::get('laporan', [ReportController::class, 'index'])->name('laporan.index');
     Route::post('laporan/export', [ReportController::class, 'export'])->name('laporan.export');
+
+    // ROUTE BARU UNTUK SETORAN
+    Route::get('/setoran/get-siswa', [SetoranController::class, 'getSiswa'])->name('setoran.getSiswa');
+    Route::resource('setoran', SetoranController::class);
+
 });
 
 
