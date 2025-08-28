@@ -5,12 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\Setoran;
 use App\Models\Siswa;
 use App\Models\JenisSampah;
+use App\Models\Kelas; // FIX: Menambahkan import untuk model Kelas
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Imports\SetoranImport;
 use App\Exports\SetoranSampleExport;
 use Maatwebsite\Excel\Facades\Excel;
-
 
 class SetoranController extends Controller
 {
@@ -48,7 +48,6 @@ class SetoranController extends Controller
 
         DB::transaction(function () use ($request) {
             $totalHargaKeseluruhan = 0;
-
             foreach ($request->sampah as $item) {
                 $jenisSampah = JenisSampah::find($item['jenis_sampah_id']);
                 $totalHarga = $jenisSampah->harga_per_kg * $item['jumlah'];
@@ -61,11 +60,8 @@ class SetoranController extends Controller
                     'total_harga' => $totalHarga,
                 ]);
             }
-
             $siswa = Siswa::find($request->siswa_id);
-            $siswa->update([
-                'saldo' => $siswa->saldo + $totalHargaKeseluruhan
-            ]);
+            $siswa->increment('saldo', $totalHargaKeseluruhan);
         });
 
         return redirect()->route('setoran.index')->with('success', 'Setoran berhasil ditambahkan.');
@@ -89,13 +85,11 @@ class SetoranController extends Controller
         return response()->json($formattedSiswa);
     }
 
-    // METHOD BARU UNTUK TAMPILAN FORM IMPOR
     public function showImportForm()
     {
         return view('pages.setoran.import');
     }
 
-    // METHOD BARU UNTUK PROSES IMPOR
     public function import(Request $request)
     {
         $request->validate(['file' => 'required|mimes:xls,xlsx']);
@@ -107,13 +101,11 @@ class SetoranController extends Controller
         return redirect()->route('setoran.index')->with('success', 'Data setoran berhasil diimpor!');
     }
 
-    // METHOD BARU UNTUK DOWNLOAD SAMPLE
     public function sampleExport()
     {
         return Excel::download(new SetoranSampleExport, 'sample-setoran.xlsx');
     }
 
-    // METHOD BARU: Menampilkan form setoran massal
     public function createMassal()
     {
         $kelas = Kelas::orderBy('nama_kelas')->get();
@@ -121,7 +113,6 @@ class SetoranController extends Controller
         return view('pages.setoran.create-massal', compact('kelas', 'jenisSampah'));
     }
 
-    // METHOD BARU: Menyimpan data dari form setoran massal
     public function storeMassal(Request $request)
     {
         $request->validate([
@@ -136,19 +127,14 @@ class SetoranController extends Controller
 
             foreach ($request->siswa as $siswaId => $data) {
                 $jumlah = (float)($data['jumlah'] ?? 0);
-
-                // Hanya proses siswa yang menyetor (jumlah > 0)
                 if ($jumlah > 0) {
                     $totalHarga = $jenisSampah->harga_per_kg * $jumlah;
-                    
                     Setoran::create([
                         'siswa_id' => $siswaId,
                         'jenis_sampah_id' => $request->jenis_sampah_id,
                         'jumlah' => $jumlah,
                         'total_harga' => $totalHarga,
                     ]);
-
-                    // Update saldo siswa
                     $siswa = Siswa::find($siswaId);
                     if ($siswa) {
                         $siswa->increment('saldo', $totalHarga);
