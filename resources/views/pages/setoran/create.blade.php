@@ -12,10 +12,13 @@
                     <form action="{{ route('setoran.store') }}" method="POST" id="setoranForm">
                         @csrf
                         <div class="mb-4">
-                            <label for="siswa_id" class="block text-sm font-medium text-gray-700">Pilih Siswa</label>
-                            <select id="siswa_id" name="siswa_id" required>
-                                <option value="">Cari nama siswa...</option>
-                            </select>
+                         <label for="siswa_id" class="block text-sm font-medium text-gray-700">Pilih Siswa</label>
+<select name="siswa_id" id="siswa_id" class="w-full mt-1 border-gray-300 rounded-md shadow-sm" required>
+    <option value="">-- Pilih Siswa --</option>
+    @foreach($siswa as $item)
+        <option value="{{ $item->id }}">{{ $item->nama }} - {{ $item->kelas->nama_kelas }}</option>
+    @endforeach
+</select>
                             @error('siswa_id')
                                 <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                             @enderror
@@ -28,8 +31,8 @@
                                         <label class="block text-sm font-medium text-gray-700">Jenis Sampah</label>
                                         <select name="sampah[0][jenis_sampah_id]" class="w-full mt-1 border-gray-300 rounded-md shadow-sm" required>
                                             @foreach($jenisSampah as $item)
-                                                <option value="{{ $item->id }}" data-harga="{{ $item->harga_per_kg }}">{{ $item->nama_jenis }}</option>
-                                            @endforeach
+        <option value="{{ $item->id }}" data-harga="{{ $item->harga_per_satuan }}">{{ $item->nama_sampah }}</option>
+    @endforeach
                                         </select>
                                     </div>
                                     <div>
@@ -109,8 +112,8 @@
                                 <label class="block text-sm font-medium text-gray-700">Jenis Sampah</label>
                                 <select name="sampah[${sampahIndex}][jenis_sampah_id]" class="w-full mt-1 border-gray-300 rounded-md shadow-sm" required>
                                     @foreach($jenisSampah as $item)
-                                        <option value="{{ $item->id }}" data-harga="{{ $item->harga_per_kg }}">{{ $item->nama_jenis }}</option>
-                                    @endforeach
+        <option value="{{ $item->id }}" data-harga="{{ $item->harga_per_satuan }}">{{ $item->nama_sampah }}</option>
+    @endforeach
                                 </select>
                             </div>
                             <div>

@@ -31,11 +31,13 @@ class SetoranController extends Controller
         return view('pages.setoran.index', compact('setoran', 'perPage'));
     }
 
-    public function create()
-    {
-        $jenisSampah = JenisSampah::all();
-        return view('pages.setoran.create', compact('jenisSampah'));
-    }
+    // Ubah method create() menjadi seperti ini
+public function create()
+{
+    $jenisSampah = JenisSampah::all();
+    $siswa = Siswa::with('kelas')->get(); // Ambil data siswa beserta relasi kelas
+    return view('pages.setoran.create', compact('jenisSampah', 'siswa'));
+}
 
     public function store(Request $request)
     {
@@ -50,7 +52,7 @@ class SetoranController extends Controller
             $totalHargaKeseluruhan = 0;
             foreach ($request->sampah as $item) {
                 $jenisSampah = JenisSampah::find($item['jenis_sampah_id']);
-                $totalHarga = $jenisSampah->harga_per_kg * $item['jumlah'];
+                $totalHarga = $jenisSampah->harga_per_satuan * $item['jumlah'];
                 $totalHargaKeseluruhan += $totalHarga;
 
                 Setoran::create([
@@ -128,7 +130,7 @@ class SetoranController extends Controller
             foreach ($request->siswa as $siswaId => $data) {
                 $jumlah = (float)($data['jumlah'] ?? 0);
                 if ($jumlah > 0) {
-                    $totalHarga = $jenisSampah->harga_per_kg * $jumlah;
+                    $totalHarga = $jenisSampah->harga_per_satuan * $jumlah;
                     Setoran::create([
                         'siswa_id' => $siswaId,
                         'jenis_sampah_id' => $request->jenis_sampah_id,

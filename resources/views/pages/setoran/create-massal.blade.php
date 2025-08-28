@@ -27,9 +27,9 @@
                                 <label for="jenis_sampah_id" class="block text-sm font-medium text-gray-700">Pilih Jenis Sampah (untuk semua)</label>
                                 <select id="jenis_sampah_id" name="jenis_sampah_id" class="w-full mt-1 border-gray-300 rounded-md shadow-sm" required>
                                      <option value="">-- Pilih Jenis Sampah --</option>
-                                    @foreach($jenisSampah as $item)
-                                        <option value="{{ $item->id }}">{{ $item->nama_jenis }} (Rp {{ number_format($item->harga_per_kg, 0, ',', '.') }}/kg)</option>
-                                    @endforeach
+    @foreach($jenisSampah as $item)
+        <option value="{{ $item->id }}">{{ $item->nama_sampah }} (Rp {{ number_format($item->harga_per_satuan, 0, ',', '.') }}/{{ $item->satuan }})</option>
+    @endforeach
                                 </select>
                             </div>
                         </div>

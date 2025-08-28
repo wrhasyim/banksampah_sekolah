@@ -18,9 +18,9 @@ class PenarikanController extends Controller
 
     public function create()
     {
-        return view('pages.penarikan.create', [
-            'siswa' => Siswa::all(),
-        ]);
+        $siswa = Siswa::with('kelas')->get();
+    return view('pages.penarikan.create', compact('siswa'));
+        
     }
 
     public function createKelas()
