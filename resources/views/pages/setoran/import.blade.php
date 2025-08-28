@@ -19,8 +19,8 @@
                         <a href="{{ route('setoran.index') }}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-gray-500 border border-transparent rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
                             Kembali
                         </a>
-                        {{-- PERBAIKAN: Mengubah nama route agar sesuai --}}
-                        <a href="{{ route('setoran.sample-export') }}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                        {{-- PERBAIKAN: Mengubah nama route agar sesuai dengan file web.php --}}
+                        <a href="{{ route('setoran.sample.export') }}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
                             Unduh Template
                         </a>
                     </div>

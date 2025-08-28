@@ -9,10 +9,9 @@
         <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
             <div class="overflow-hidden bg-white shadow-sm dark:bg-gray-800 sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
-
                     <div class="mb-4">
                         <p class="text-gray-600 dark:text-gray-400">
-                            Silakan unggah file Excel (XLSX) untuk mengimpor data siswa baru. Pastikan format file sesuai dengan template yang disediakan.
+                            Silakan unggah file Excel (XLSX) untuk mengimpor data siswa. Pastikan format file sesuai dengan template yang disediakan.
                         </p>
                     </div>
 
@@ -20,23 +19,11 @@
                         <a href="{{ route('siswa.index') }}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-gray-500 border border-transparent rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
                             Kembali
                         </a>
-                        {{-- PERBAIKAN: Mengubah nama route agar sesuai --}}
-                        <a href="{{ route('siswa.sample-export') }}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                        {{-- PERBAIKAN: Mengubah nama route dari siswa.sample-export menjadi siswa.sample.export --}}
+                        <a href="{{ route('siswa.sample.export') }}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
                             Unduh Template
                         </a>
                     </div>
-
-                    @if (session('success'))
-                        <div class="p-4 mb-4 text-sm text-green-700 bg-green-100 rounded-lg dark:bg-green-200 dark:text-green-800" role="alert">
-                            {{ session('success') }}
-                        </div>
-                    @endif
-
-                    @if (session('error'))
-                        <div class="p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg dark:bg-red-200 dark:text-red-800" role="alert">
-                            {{ session('error') }}
-                        </div>
-                    @endif
 
                     <form action="{{ route('siswa.import') }}" method="POST" enctype="multipart/form-data">
                         @csrf
@@ -54,7 +41,6 @@
                             </button>
                         </div>
                     </form>
-
                 </div>
             </div>
         </div>
