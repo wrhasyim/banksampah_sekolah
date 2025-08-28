@@ -25,4 +25,10 @@ class Siswa extends Model
     {
         return $this->belongsTo(Pengguna::class, 'id_pengguna');
     }
+
+    // Add this new method
+    public function setoran()
+    {
+        return $this->hasMany(Setoran::class, 'siswa_id');
+    }
 }
