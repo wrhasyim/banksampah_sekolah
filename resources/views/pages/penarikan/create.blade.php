@@ -16,11 +16,12 @@
                             <x-input-label for="id_siswa" value="Pilih Siswa (Ketik untuk mencari)" />
                             <select name="id_siswa" id="id_siswa" class="select2 block mt-1 w-full" required>
                                 <option value="">-- Pilih Siswa --</option>
-                                @foreach($siswa as $item)
-                                    <option value="{{ $item->id }}" data-saldo="{{ $item->saldo }}">
-                                        {{ $item->pengguna->nama_lengkap }} (Saldo: Rp {{ number_format($item->saldo, 0, ',', '.') }})
-                                    </option>
-                                @endforeach
+                                @foreach($siswas as $item)
+    <option value="{{ $item->id }}" data-saldo="{{ $item->saldo }}">
+        {{ $item->pengguna->nama_lengkap }} (Saldo: Rp {{ number_format($item->saldo, 0, ',', '.') }})
+    </option>
+@endforeach
+
                             </select>
                         </div>
 
