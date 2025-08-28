@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Kelas;
 use App\Models\Penarikan;
 use App\Models\Siswa;
+use App\Models\Kelas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -12,94 +12,79 @@ class PenarikanController extends Controller
 {
     public function index()
     {
-        $penarikan = Penarikan::with('siswa.pengguna')->latest()->get();
-        return view('pages.penarikan.index', compact('penarikan'));
+        $penarikans = Penarikan::orderBy('created_at', 'desc')->get();
+        return view('pages.penarikan.index', compact('penarikans'));
     }
 
     public function create()
     {
-        $siswa = Siswa::with('kelas')->get();
-    return view('pages.penarikan.create', compact('siswa'));
-        
-    }
-
-    public function createKelas()
-    {
-        return view('pages.penarikan.create-kelas', [
-            'kelas' => Kelas::with('siswa')->get(),
-        ]);
-    }
-
-    /**
-     * PERBAIKAN: Method baru untuk menyimpan penarikan per kelas.
-     */
-    public function storeKelas(Request $request)
-    {
-        $request->validate([
-            'id_kelas' => 'required|exists:kelas,id',
-            'jumlah' => 'required|numeric|min:1',
-        ]);
-
-        $kelas = Kelas::with('siswa')->find($request->id_kelas);
-        $jumlahPenarikan = $request->jumlah;
-
-        DB::beginTransaction();
-        try {
-            foreach ($kelas->siswa as $siswa) {
-                if ($siswa->saldo >= $jumlahPenarikan) {
-                    $siswa->saldo -= $jumlahPenarikan;
-                    $siswa->save();
-
-                    Penarikan::create([
-                        'siswa_id' => $siswa->id,
-                        'jumlah' => $jumlahPenarikan,
-                        'id_admin' => auth()->id(),
-                        'tanggal_penarikan' => now(),
-                    ]);
-                }
-            }
-            DB::commit();
-            return redirect()->route('penarikan.index')->with('success', 'Penarikan untuk kelas ' . $kelas->nama . ' berhasil diproses.');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return redirect()->back()->with('error', 'Terjadi kesalahan saat memproses penarikan.');
-        }
+        $siswas = Siswa::all();
+        return view('pages.penarikan.create', compact('siswas'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'siswa_id' => 'required|exists:siswa,id',
+            'id_siswa' => 'required|exists:siswa,id',
             'jumlah' => 'required|numeric|min:1',
         ]);
 
-        $siswa = Siswa::find($request->siswa_id);
+        $siswa = Siswa::findOrFail($request->id_siswa);
 
-        if ($siswa->saldo < $request->jumlah) {
-            return redirect()->back()->with('error', 'Saldo siswa tidak mencukupi.');
+        if ($request->jumlah > $siswa->saldo) {
+            return redirect()->back()->with('error', 'Saldo tidak mencukupi.');
         }
 
-        $siswa->saldo -= $request->jumlah;
-        $siswa->save();
+        DB::transaction(function () use ($request, $siswa) {
+            Penarikan::create([
+                'id_siswa' => $request->id_siswa,
+                'jumlah' => $request->jumlah,
+            ]);
 
-        Penarikan::create([
-            'siswa_id' => $request->siswa_id,
-            'jumlah' => $request->jumlah,
-            'id_admin' => auth()->id(),
-            'tanggal_penarikan' => now(),
-        ]);
+            $siswa->decrement('saldo', $request->jumlah);
+        });
 
         return redirect()->route('penarikan.index')->with('success', 'Penarikan berhasil ditambahkan.');
     }
 
-    public function destroy(Penarikan $penarikan)
+    public function createKelas()
     {
-        $siswa = Siswa::find($penarikan->siswa_id);
-        $siswa->saldo += $penarikan->jumlah;
-        $siswa->save();
-        
-        $penarikan->delete();
+        $kelas = Kelas::all();
+        $siswas = Siswa::all();
+        return view('pages.penarikan.create-kelas', compact('kelas', 'siswas'));
+    }
 
-        return redirect()->route('penarikan.index')->with('success', 'Data penarikan berhasil dihapus.');
+    public function storeKelas(Request $request)
+    {
+        $request->validate([
+            'id_kelas' => 'required|exists:kelas,id',
+        ]);
+    
+        $siswas = Siswa::where('id_kelas', $request->id_kelas)->get();
+        $penarikanCount = 0;
+    
+        DB::transaction(function () use ($siswas, &$penarikanCount) {
+            foreach ($siswas as $siswa) {
+                // Lakukan penarikan hanya jika siswa memiliki saldo
+                if ($siswa->saldo > 0) {
+                    Penarikan::create([
+                        'id_siswa' => $siswa->id,
+                        'id_kelas' => $request->id_kelas,
+                        'jumlah' => $siswa->saldo, // Ambil seluruh saldo
+                        'tipe' => 'kelas',
+                    ]);
+    
+                    // Nolkan saldo siswa
+                    $siswa->update(['saldo' => 0]);
+                    $penarikanCount++;
+                }
+            }
+        });
+    
+        if ($penarikanCount > 0) {
+            return redirect()->route('penarikan.index')->with('success', "Berhasil mengosongkan saldo untuk {$penarikanCount} siswa.");
+        } else {
+            return redirect()->route('penarikan.index')->with('info', 'Tidak ada siswa di kelas tersebut yang memiliki saldo untuk ditarik.');
+        }
     }
 }
