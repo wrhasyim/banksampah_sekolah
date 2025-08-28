@@ -18,20 +18,18 @@ use App\Http\Controllers\DashboardController;
 
 // Rute untuk halaman utama
 Route::get('/', function () {
-    // Jika pengguna sudah login, arahkan ke dashboard
     if (auth()->check()) {
         return redirect('/dashboard');
     }
-    // Jika belum, tampilkan halaman login
     return app(AuthenticatedSessionController::class)->create();
 })->name('home');
 
-// Rute untuk dashboard, memerlukan autentikasi
+// Rute untuk dashboard
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
-// Grup rute yang memerlukan autentikasi, verifikasi email, dan role admin
+// Grup rute yang memerlukan role admin
 Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     // CRUD Kelas
     Route::resource('kelas', KelasController::class);
@@ -41,6 +39,8 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::get('siswa/sample-export', [SiswaController::class, 'sampleExport'])->name('siswa.sample.export');
     Route::post('siswa/import', [SiswaController::class, 'import'])->name('siswa.import');
     Route::get('siswa/import', [SiswaController::class, 'showImportForm'])->name('siswa.import.form');
+    // PERBAIKAN: Menambahkan route untuk mengambil siswa berdasarkan kelas
+    Route::get('/get-siswa-by-kelas/{id_kelas}', [SiswaController::class, 'getSiswaByKelas'])->name('siswa.get-by-kelas');
     Route::resource('siswa', SiswaController::class);
 
     // CRUD Jenis Sampah
@@ -56,7 +56,6 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::resource('setoran', SetoranController::class);
 
     // Transaksi Penarikan
-    // PERBAIKAN: Mengubah nama route agar konsisten menggunakan titik
     Route::get('penarikan/create/kelas', [PenarikanController::class, 'createKelas'])->name('penarikan.create.kelas');
     Route::post('penarikan/store/kelas', [PenarikanController::class, 'storeKelas'])->name('penarikan.store.kelas');
     Route::resource('penarikan', PenarikanController::class);
@@ -68,11 +67,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::resource('penjualan', PenjualanController::class);
 
     // Buku Kas
-    Route::get('buku-kas', [BukuKasController::class, 'index'])->name('buku-kas.index');
-    Route::post('buku-kas', [BukuKasController::class, 'store'])->name('buku-kas.store');
-    Route::get('buku-kas/{bukuKas}/edit', [BukuKasController::class, 'edit'])->name('buku-kas.edit');
-    Route::put('buku-kas/{bukuKas}', [BukuKasController::class, 'update'])->name('buku-kas.update');
-    Route::delete('buku-kas/{bukuKas}', [BukuKasController::class, 'destroy'])->name('buku-kas.destroy');
+    Route::resource('buku-kas', BukuKasController::class)->except(['create', 'show']);
     Route::get('buku-kas/export/excel', [BukuKasController::class, 'exportExcel'])->name('buku-kas.export.excel');
     Route::get('buku-kas/export/pdf', [BukuKasController::class, 'exportPdf'])->name('buku-kas.export.pdf');
 
