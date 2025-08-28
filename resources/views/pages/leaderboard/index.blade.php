@@ -1,62 +1,61 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
             {{ __('Papan Peringkat') }}
         </h2>
     </x-slot>
 
     <div class="py-12">
-        <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
-            <div class="overflow-hidden bg-white shadow-sm dark:bg-gray-800 sm:rounded-lg">
-                <div class="p-6 text-gray-900 dark:text-gray-100">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="p-6 text-gray-900">
+                    <form action="{{ route('leaderboard.index') }}" method="GET" class="mb-4">
+                        <select name="filter" onchange="this.form.submit()" class="rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                            <option value="minggu_ini" {{ $filter == 'minggu_ini' ? 'selected' : '' }}>Minggu Ini</option>
+                            <option value="bulan_ini" {{ $filter == 'bulan_ini' ? 'selected' : '' }}>Bulan Ini</option>
+                            <option value="tahun_ini" {{ $filter == 'tahun_ini' ? 'selected' : '' }}>Tahun Ini</option>
+                            <option value="hari_ini" {{ $filter == 'hari_ini' ? 'selected' : '' }}>Hari Ini</option>
+                        </select>
+                    </form>
 
-                    <div class="flex items-center mb-6 space-x-2">
-                        <a href="{{ route('leaderboard.index', ['filter' => 'all']) }}" class="px-4 py-2 text-sm font-medium {{ $filter == 'all' ? 'bg-blue-700 text-white' : 'bg-white text-gray-900' }} rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600">Semua</a>
-                        <a href="{{ route('leaderboard.index', ['filter' => '7']) }}" class="px-4 py-2 text-sm font-medium {{ $filter == '7' ? 'bg-blue-700 text-white' : 'bg-white text-gray-900' }} rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600">7 Hari Terakhir</a>
-                        <a href="{{ route('leaderboard.index', ['filter' => '30']) }}" class="px-4 py-2 text-sm font-medium {{ $filter == '30' ? 'bg-blue-700 text-white' : 'bg-white text-gray-900' }} rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600">30 Hari Terakhir</a>
-                        <a href="{{ route('leaderboard.index', ['filter' => 'this_month']) }}" class="px-4 py-2 text-sm font-medium {{ $filter == 'this_month' ? 'bg-blue-700 text-white' : 'bg-white text-gray-900' }} rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600">Bulan Ini</a>
-                    </div>
-
-                    <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                        <div class="p-4 bg-gray-100 border border-gray-200 rounded-lg shadow-sm dark:bg-gray-700 dark:border-gray-600">
-                            <h5 class="mb-3 text-base font-semibold text-gray-900 md:text-xl dark:text-white">
-                                Peringkat Siswa
-                            </h5>
-                            <ul class="my-4 space-y-3">
-                                @forelse ($peringkatSiswa as $index => $siswa)
-                                    <li>
-                                        <a href="#" class="flex items-center p-3 text-base font-bold text-gray-900 bg-gray-50 rounded-lg hover:bg-gray-100 group hover:shadow dark:bg-gray-600 dark:hover:bg-gray-500 dark:text-white">
-                                            <span class="mr-2">{{ $index + 1 }}.</span>
-                                            <span class="flex-1 whitespace-nowrap">{{ $siswa->nama }} ({{ $siswa->kelas->nama }})</span>
-                                            <span class="inline-flex items-center justify-center px-2 py-0.5 ml-3 text-xs font-medium text-gray-500 bg-gray-200 rounded dark:bg-gray-700 dark:text-gray-400">Rp {{ number_format($siswa->setoran_sum_total, 0, ',', '.') }}</span>
-                                        </a>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h3 class="font-semibold text-lg mb-2">🏆 Top 10 Siswa Penyetor Terbanyak</h3>
+                            <ul class="divide-y divide-gray-200">
+                                @forelse($topSiswa as $index => $siswa)
+                                    <li class="py-3 flex items-center justify-between">
+                                        <div class="flex items-center">
+                                            <span class="text-lg font-bold text-gray-500 mr-4">{{ $index + 1 }}</span>
+                                            <div>
+                                                <p class="font-medium text-gray-800">{{ $siswa->nama }}</p>
+                                                <p class="text-sm text-gray-600">{{ $siswa->kelas->nama_kelas }}</p>
+                                            </div>
+                                        </div>
+                                        <span class="font-semibold text-green-600">Rp {{ number_format($siswa->setoran_sum_total_harga, 0, ',', '.') }}</span>
                                     </li>
                                 @empty
-                                    <p class="text-gray-500 dark:text-gray-400">Tidak ada data setoran.</p>
+                                    <li class="py-3 text-gray-500">Belum ada data setoran.</li>
                                 @endforelse
                             </ul>
                         </div>
 
-                        <div class="p-4 bg-gray-100 border border-gray-200 rounded-lg shadow-sm dark:bg-gray-700 dark:border-gray-600">
-                            <h5 class="mb-3 text-base font-semibold text-gray-900 md:text-xl dark:text-white">
-                                Peringkat Kelas
-                            </h5>
-                            <ul class="my-4 space-y-3">
-                                @forelse ($peringkatKelas as $index => $kelas)
-                                    <li>
-                                        <a href="#" class="flex items-center p-3 text-base font-bold text-gray-900 bg-gray-50 rounded-lg hover:bg-gray-100 group hover:shadow dark:bg-gray-600 dark:hover:bg-gray-500 dark:text-white">
-                                            <span class="mr-2">{{ $index + 1 }}.</span>
-                                            <span class="flex-1 whitespace-nowrap">{{ $kelas->nama }}</span>
-                                            <span class="inline-flex items-center justify-center px-2 py-0.5 ml-3 text-xs font-medium text-gray-500 bg-gray-200 rounded dark:bg-gray-700 dark:text-gray-400">Rp {{ number_format($kelas->siswa_setoran_sum_total, 0, ',', '.') }}</span>
-                                        </a>
+                        <div>
+                            <h3 class="font-semibold text-lg mb-2">🚀 Top 10 Kelas Penyetor Terbanyak</h3>
+                            <ul class="divide-y divide-gray-200">
+                                @forelse($topKelas as $index => $kelas)
+                                    <li class="py-3 flex items-center justify-between">
+                                        <div class="flex items-center">
+                                            <span class="text-lg font-bold text-gray-500 mr-4">{{ $index + 1 }}</span>
+                                            <p class="font-medium text-gray-800">{{ $kelas->nama_kelas }}</p>
+                                        </div>
+                                        <span class="font-semibold text-blue-600">Rp {{ number_format($kelas->siswa_setoran_sum_total_harga, 0, ',', '.') }}</span>
                                     </li>
                                 @empty
-                                    <p class="text-gray-500 dark:text-gray-400">Tidak ada data setoran.</p>
+                                    <li class="py-3 text-gray-500">Belum ada data setoran.</li>
                                 @endforelse
                             </ul>
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>

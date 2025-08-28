@@ -4,27 +4,26 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough; // Pastikan baris ini ada
 
 class Kelas extends Model
 {
     use HasFactory;
-
     protected $table = 'kelas';
-    protected $fillable = ['nama'];
+    protected $guarded = ['id'];
 
-    /**
-     * Mendapatkan semua siswa di dalam kelas ini.
-     */
-    public function siswa()
+
+    public function siswa(): HasMany
     {
         return $this->hasMany(Siswa::class, 'id_kelas');
     }
 
     /**
-     * PERBAIKAN: Mendapatkan semua setoran dari semua siswa di kelas ini.
-     * Ini adalah relasi "Has Many Through".
+     * Define a has-many-through relationship.
+     * Mendapatkan semua setoran untuk kelas ini melalui siswa.
      */
-    public function setoran()
+    public function setoran(): HasManyThrough
     {
         return $this->hasManyThrough(Setoran::class, Siswa::class, 'id_kelas', 'siswa_id');
     }
