@@ -1,84 +1,99 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\JenisSampahController;
 use App\Http\Controllers\SiswaController;
+use App\Http\Controllers\KelasController;
 use App\Http\Controllers\SetoranController;
 use App\Http\Controllers\PenarikanController;
-use App\Http\Controllers\KelasController;
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\BukuTabunganController;
+use App\Http\Controllers\JenisSampahController;
 use App\Http\Controllers\PenjualanController;
-use App\Http\Controllers\SettingController;
 use App\Http\Controllers\BukuKasController;
 use App\Http\Controllers\KategoriTransaksiController;
+use App\Http\Controllers\SettingController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\LeaderboardController;
-use App\Http\Controllers\BukuTabunganController;
+use App\Http\Controllers\DashboardController;
 
+// Rute untuk halaman utama
 Route::get('/', function () {
-    return view('welcome');
-});
+    // Jika pengguna sudah login, arahkan ke dashboard
+    if (auth()->check()) {
+        return redirect('/dashboard');
+    }
+    // Jika belum, tampilkan halaman login
+    return app(AuthenticatedSessionController::class)->create();
+})->name('home');
 
-Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
+// Rute untuk dashboard, memerlukan autentikasi
+Route::get('/dashboard', [DashboardController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
 
-Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-});
-
+// Grup rute yang memerlukan autentikasi, verifikasi email, dan role admin
 Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
-    Route::resource('jenis-sampah', JenisSampahController::class);
+    // CRUD Kelas
+    Route::resource('kelas', KelasController::class);
 
-    // Siswa Routes
-    Route::get('siswa/import', [SiswaController::class, 'showImportForm'])->name('siswa.import.form');
-    Route::post('siswa/import', [SiswaController::class, 'import'])->name('siswa.import');
-    Route::get('siswa/sample-export', [SiswaController::class, 'sampleExport'])->name('siswa.sample.export');
+    // CRUD Siswa
     Route::get('siswa/export', [SiswaController::class, 'export'])->name('siswa.export');
+    Route::get('siswa/sample-export', [SiswaController::class, 'sampleExport'])->name('siswa.sample.export');
+    Route::post('siswa/import', [SiswaController::class, 'import'])->name('siswa.import');
+    Route::get('siswa/import', [SiswaController::class, 'showImportForm'])->name('siswa.import.form');
     Route::resource('siswa', SiswaController::class);
 
-    // Setoran Routes (FIX: Specific routes moved before resource route)
-    Route::get('setoran/massal', [SetoranController::class, 'createMassal'])->name('setoran.create.massal');
-    Route::post('setoran/massal', [SetoranController::class, 'storeMassal'])->name('setoran.store.massal');
-    Route::get('setoran/import', [SetoranController::class, 'showImportForm'])->name('setoran.import.form');
-    Route::post('setoran/import', [SetoranController::class, 'import'])->name('setoran.import');
+    // CRUD Jenis Sampah
+    Route::resource('jenis-sampah', JenisSampahController::class);
+
+    // Transaksi Setoran
+    Route::get('setoran/export', [SetoranController::class, 'export'])->name('setoran.export');
     Route::get('setoran/sample-export', [SetoranController::class, 'sampleExport'])->name('setoran.sample.export');
-    Route::get('/setoran/get-siswa', [SetoranController::class, 'getSiswa'])->name('setoran.getSiswa');
-    Route::resource('setoran', SetoranController::class)->except(['show', 'edit', 'update', 'destroy']); // Optional: Menghapus route yang tidak dipakai
-// Route baru yang disarankan
-Route::get('setoran', [App\Http\Controllers\SetoranController::class, 'index'])->name('setoran.index');
-Route::get('setoran/massal', [App\Http\Controllers\SetoranController::class, 'createMassal'])->name('setoran.create.massal');
-Route::post('setoran/massal', [App\Http\Controllers\SetoranController::class, 'storeMassal'])->name('setoran.store.massal');
-Route::get('get-siswa-by-kelas', [App\Http\Controllers\SetoranController::class, 'getSiswaByKelas'])->name('get-siswa-by-kelas');
-    // Penarikan Routes
-    Route::get('penarikan/kelas', [PenarikanController::class, 'createKelas'])->name('penarikan.create.kelas');
-    Route::post('penarikan/kelas', [PenarikanController::class, 'storeKelas'])->name('penarikan.store.kelas');
+    Route::post('setoran/import', [SetoranController::class, 'import'])->name('setoran.import');
+    Route::get('setoran/import', [SetoranController::class, 'showImportForm'])->name('setoran.import.form');
+    Route::get('setoran/create-massal', [SetoranController::class, 'createMassal'])->name('setoran.create.massal');
+    Route::post('setoran/store-massal', [SetoranController::class, 'storeMassal'])->name('setoran.store.massal');
+    Route::resource('setoran', SetoranController::class);
+
+    // Transaksi Penarikan
+    // PERBAIKAN: Mengubah nama route agar konsisten menggunakan titik
+    Route::get('penarikan/create/kelas', [PenarikanController::class, 'createKelas'])->name('penarikan.create.kelas');
+    Route::post('penarikan/store/kelas', [PenarikanController::class, 'storeKelas'])->name('penarikan.store.kelas');
     Route::resource('penarikan', PenarikanController::class);
-    
-    // Other Admin Routes
-    Route::resource('kelas', KelasController::class);
+
+    // Laporan Buku Tabungan
+    Route::get('buku-tabungan', [BukuTabunganController::class, 'index'])->name('buku-tabungan.index');
+
+    // Penjualan
     Route::resource('penjualan', PenjualanController::class);
-    Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
-    Route::post('settings', [SettingController::class, 'update'])->name('settings.update');
-    Route::resource('buku-kas', BukuKasController::class);
+
+    // Buku Kas
+    Route::get('buku-kas', [BukuKasController::class, 'index'])->name('buku-kas.index');
+    Route::post('buku-kas', [BukuKasController::class, 'store'])->name('buku-kas.store');
+    Route::get('buku-kas/{bukuKas}/edit', [BukuKasController::class, 'edit'])->name('buku-kas.edit');
+    Route::put('buku-kas/{bukuKas}', [BukuKasController::class, 'update'])->name('buku-kas.update');
+    Route::delete('buku-kas/{bukuKas}', [BukuKasController::class, 'destroy'])->name('buku-kas.destroy');
+    Route::get('buku-kas/export/excel', [BukuKasController::class, 'exportExcel'])->name('buku-kas.export.excel');
+    Route::get('buku-kas/export/pdf', [BukuKasController::class, 'exportPdf'])->name('buku-kas.export.pdf');
+
+    // Kategori Transaksi
     Route::resource('kategori-transaksi', KategoriTransaksiController::class);
-    Route::get('laporan', [ReportController::class, 'index'])->name('laporan.index');
-    Route::get('laporan/export/transaksi', [ReportController::class, 'exportTransaksi'])->name('laporan.export.transaksi');
-    Route::get('laporan/export/penjualan', [ReportController::class, 'exportPenjualan'])->name('laporan.export.penjualan');
-    Route::get('laporan/export/buku-kas', [ReportController::class, 'exportBukuKas'])->name('laporan.export.buku-kas');
-    Route::get('laporan/export-pdf/transaksi', [ReportController::class, 'exportTransaksiPdf'])->name('laporan.export-pdf.transaksi');
-    Route::get('laporan/export-pdf/penjualan', [ReportController::class, 'exportPenjualanPdf'])->name('laporan.export-pdf.penjualan');
-    Route::get('laporan/export-pdf/laba-rugi', [ReportController::class, 'exportLabaRugiPdf'])->name('laporan.export-pdf.laba-rugi');
-    Route::get('laporan/export-pdf/buku-kas', [ReportController::class, 'exportBukuKasPdf'])->name('laporan.export-pdf.buku-kas');
+
+    // Pengaturan
+    Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
+    Route::post('settings', [SettingController::class, 'store'])->name('settings.store');
+
+    // Laporan
+    Route::get('/laporan', [ReportController::class, 'index'])->name('laporan.index');
+    Route::get('/laporan/penjualan/export/excel', [ReportController::class, 'exportPenjualanExcel'])->name('laporan.penjualan.export.excel');
+    Route::get('/laporan/penjualan/export/pdf', [ReportController::class, 'exportPenjualanPdf'])->name('laporan.penjualan.export.pdf');
+    Route::get('/laporan/transaksi/export/excel', [ReportController::class, 'exportTransaksiExcel'])->name('laporan.transaksi.export.excel');
+    Route::get('/laporan/transaksi/export/pdf', [ReportController::class, 'exportTransaksiPdf'])->name('laporan.transaksi.export.pdf');
+    Route::get('/laporan/laba-rugi/export/pdf', [ReportController::class, 'exportLabaRugiPdf'])->name('laporan.laba-rugi.export.pdf');
+
+    // Leaderboard
     Route::get('/leaderboard', [LeaderboardController::class, 'index'])->name('leaderboard.index');
 });
 
-// AJAX route for getting students by class
-Route::get('/kelas/{kelas}/siswa', [KelasController::class, 'getSiswaByKelas'])->middleware(['auth', 'role:admin'])->name('kelas.getSiswa');
-
-Route::middleware(['auth', 'verified', 'role:siswa'])->group(function () {
-    Route::get('buku-tabungan', [BukuTabunganController::class, 'index'])->name('buku-tabungan.index');
-});
-
+// Rute untuk profil pengguna
 require __DIR__.'/auth.php';
