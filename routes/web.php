@@ -81,10 +81,20 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::get('laporan', [ReportController::class, 'index'])->name('laporan.index');
     Route::post('laporan/export', [ReportController::class, 'export'])->name('laporan.export');
 
+
+    // Tambahkan 3 baris ini untuk Setoran
+    Route::get('setoran/import', [SetoranController::class, 'showImportForm'])->name('setoran.import.form');
+    Route::post('setoran/import', [SetoranController::class, 'import'])->name('setoran.import');
+    Route::get('setoran/sample-export', [SetoranController::class, 'sampleExport'])->name('setoran.sample.export');
     // ROUTE BARU UNTUK SETORAN
     Route::get('/setoran/get-siswa', [SetoranController::class, 'getSiswa'])->name('setoran.getSiswa');
     Route::resource('setoran', SetoranController::class);
 
+    // Route untuk Setoran Massal
+    Route::get('setoran/massal', [SetoranController::class, 'createMassal'])->name('setoran.create.massal');
+    Route::post('setoran/massal', [SetoranController::class, 'storeMassal'])->name('setoran.store.massal');
+// Route untuk AJAX
+Route::get('/kelas/{kelas}/siswa', [KelasController::class, 'getSiswaByKelas'])->middleware(['auth', 'role:admin'])->name('kelas.getSiswa');
 });
 
 

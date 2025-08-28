@@ -48,4 +48,17 @@ class KelasController extends Controller
         $kela->delete();
         return redirect()->route('kelas.index')->with('status', 'Data kelas berhasil dihapus!');
     }
+
+    // METHOD BARU UNTUK MENGAMBIL SISWA BERDASARKAN KELAS
+    public function getSiswaByKelas(Kelas $kelas)
+    {
+        $siswa = $kelas->siswa()->with('pengguna')->get()->map(function ($siswa) {
+            return [
+                'id' => $siswa->id,
+                'nama' => $siswa->pengguna->nama_lengkap ?? 'Nama tidak ada',
+            ];
+        });
+
+        return response()->json($siswa);
+    }
 }
