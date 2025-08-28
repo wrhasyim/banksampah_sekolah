@@ -1,20 +1,38 @@
-<div class="p-4 border rounded-lg">
-    <div class="flex justify-between mb-2">
-        <span class="font-semibold">Total Pemasukan:</span>
-        {{-- PERBAIKAN: Mengganti $pendapatan menjadi $pemasukan --}}
-        <span class="text-green-600">Rp {{ number_format($pemasukan, 0, ',', '.') }}</span>
+<div>
+    <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">
+            Laporan Laba Rugi Bulan: {{ \Carbon\Carbon::parse($selectedMonth)->format('F Y') }}
+        </h3>
+        {{-- PERBAIKAN: Mengganti $pemasukan menjadi $pendapatan --}}
+        <a href="{{ route('laporan.laba-rugi.export.pdf', ['bulan' => $selectedMonth]) }}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">
+            Export to PDF
+        </a>
     </div>
-    <div class="flex justify-between pb-2 mb-2 border-b">
-        <span class="font-semibold">Total Pengeluaran:</span>
-        <span class="text-red-600">Rp {{ number_format($pengeluaran, 0, ',', '.') }}</span>
-    </div>
-    <div class="flex justify-between font-bold">
-        <span>Laba Rugi:</span>
-        @php
-            $labaRugi = $pemasukan - $pengeluaran;
-        @endphp
-        <span class="{{ $labaRugi >= 0 ? 'text-green-600' : 'text-red-600' }}">
-            Rp {{ number_format($labaRugi, 0, ',', '.') }}
-        </span>
+
+    <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
+        <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+            <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                <tr>
+                    <th scope="col" class="px-6 py-3">Deskripsi</th>
+                    <th scope="col" class="px-6 py-3">Jumlah</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                    <td class="px-6 py-4 font-medium">Total Pendapatan (dari Penjualan)</td>
+                    <td class="px-6 py-4 text-green-600">Rp {{ number_format($pendapatan, 2, ',', '.') }}</td>
+                </tr>
+                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                    <td class="px-6 py-4 font-medium">Total Beban (dari Setoran ke Siswa)</td>
+                    <td class="px-6 py-4 text-red-600">- Rp {{ number_format($beban, 2, ',', '.') }}</td>
+                </tr>
+                <tr class="bg-white dark:bg-gray-800">
+                    <td class="px-6 py-4 text-lg font-bold">Laba / Rugi Bersih</td>
+                    <td class="px-6 py-4 text-lg font-bold {{ $labaRugi >= 0 ? 'text-green-600' : 'text-red-600' }}">
+                        Rp {{ number_format($labaRugi, 2, ',', '.') }}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </div>
 </div>

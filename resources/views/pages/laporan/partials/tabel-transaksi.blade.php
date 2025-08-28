@@ -1,42 +1,53 @@
-<div class="overflow-x-auto">
-    <table class="min-w-full divide-y divide-gray-200">
-        <thead class="bg-gray-50 dark:bg-gray-700">
-            <tr>
-                <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-400">Tanggal</th>
-                <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-400">Nama Siswa</th>
-                <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-400">Jenis Transaksi</th>
-                <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-400">Jumlah</th>
-            </tr>
-        </thead>
-        <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-800">
-            {{-- PERBAIKAN: Mengganti $setorans menjadi $setoran --}}
-            @forelse ($setoran as $item)
-                <tr>
-                    <td class="px-6 py-4 whitespace-nowrap">{{ \Carbon\Carbon::parse($item->tanggal_setor)->format('d/m/Y') }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">{{ $item->siswa->pengguna->name }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">Setoran</td>
-                    <td class="px-6 py-4 whitespace-nowrap">Rp. {{ number_format($item->total_harga) }}</td>
-                </tr>
-            @empty
-                {{-- No setoran data --}}
-            @endforelse
+<div>
+    <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">
+            Laporan Transaksi Bulan: {{ \Carbon\Carbon::parse($selectedMonth)->format('F Y') }}
+        </h3>
+        <a href="{{ route('laporan.transaksi.export.pdf', ['bulan' => $selectedMonth]) }}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">
+            Export to PDF
+        </a>
+    </div>
 
-            @forelse ($penarikan as $item)
-                <tr>
-                    <td class="px-6 py-4 whitespace-nowrap">{{ \Carbon\Carbon::parse($item->tanggal_penarikan)->format('d/m/Y') }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">{{ $item->siswa->pengguna->name }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">Penarikan</td>
-                    <td class="px-6 py-4 whitespace-nowrap">Rp. {{ number_format($item->jumlah) }}</td>
+    <h4 class="mb-2 font-semibold text-md dark:text-gray-200">Setoran</h4>
+    <div class="relative overflow-x-auto shadow-md sm:rounded-lg mb-6">
+        <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+            {{-- ... table header ... --}}
+            <tbody>
+                {{-- PERBAIKAN: Mengganti $setoran menjadi $setorans --}}
+                @forelse ($setorans as $item)
+                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                    <td class="px-6 py-4">{{ $item->created_at->format('d-m-Y') }}</td>
+                    <td class="px-6 py-4">{{ $item->siswa->nama }}</td>
+                    <td class="px-6 py-4">{{ $item->jenisSampah->nama }}</td>
+                    <td class="px-6 py-4">{{ $item->berat }} kg</td>
+                    <td class="px-6 py-4">Rp {{ number_format($item->total, 2, ',', '.') }}</td>
                 </tr>
-            @empty
-                {{-- No penarikan data --}}
-            @endforelse
+                @empty
+                <tr>
+                    <td colspan="5" class="px-6 py-4 text-center">Tidak ada data setoran untuk bulan ini.</td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
 
-            @if ($setoran->isEmpty() && $penarikan->isEmpty())
-                <tr>
-                    <td colspan="4" class="px-6 py-4 text-center">Tidak ada data transaksi untuk periode ini.</td>
+    <h4 class="mb-2 font-semibold text-md dark:text-gray-200">Penarikan</h4>
+    <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
+        <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+           {{-- ... table header ... --}}
+            <tbody>
+                @forelse ($penarikans as $item)
+                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                    <td class="px-6 py-4">{{ $item->created_at->format('d-m-Y') }}</td>
+                    <td class="px-6 py-4">{{ $item->siswa->nama }}</td>
+                    <td class="px-6 py-4">Rp {{ number_format($item->jumlah, 2, ',', '.') }}</td>
                 </tr>
-            @endif
-        </tbody>
-    </table>
+                @empty
+                <tr>
+                    <td colspan="3" class="px-6 py-4 text-center">Tidak ada data penarikan untuk bulan ini.</td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
 </div>
