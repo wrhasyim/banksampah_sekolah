@@ -10,87 +10,72 @@ use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
-use Maatwebsite\Excel\Concerns\Importable;
+use Maatwebsite\Excel\Concerns\WithValidation;
 use Illuminate\Support\Str;
 
 class SiswaImport implements ToModel, WithHeadingRow, WithChunkReading
 {
-    use Importable;
-
     private $kelasCollection;
 
     public function __construct()
     {
-        // Ambil semua data kelas sekali saja di awal
         $this->kelasCollection = Kelas::pluck('id', 'nama_kelas');
     }
 
-    /**
-    * @param array $row
-    *
-    * @return \Illuminate\Database\Eloquent\Model|null
-    */
     public function model(array $row)
     {
-        // PERBAIKAN: Secara eksplisit konversi data ke string sebelum digunakan.
-        // Ini mengatasi masalah Excel yang membaca NIS dan password sebagai angka.
-        $row['nama_lengkap'] = (string) ($row['nama_lengkap'] ?? '');
-        $row['username']     = (string) ($row['username'] ?? '');
-        $row['password']     = (string) ($row['password'] ?? Str::random(10));
-        $row['nis']          = (string) ($row['nis'] ?? null);
-        $row['nama_kelas']   = (string) ($row['nama_kelas'] ?? '');
-        
-        // Lakukan validasi manual di sini
-        if (empty($row['nama_lengkap']) || empty($row['username']) || empty($row['nama_kelas'])) {
-            return null; // Lewati baris yang tidak lengkap
+        $namaLengkap = (string) ($row['nama_lengkap'] ?? '');
+        $username = (string) ($row['username'] ?? '');
+        $password = (string) ($row['password'] ?? Str::random(10));
+        $nis = (string) ($row['nis'] ?? null);
+        $namaKelas = (string) ($row['nama_kelas'] ?? '');
+
+        if (empty($namaLengkap) || empty($username) || empty($namaKelas)) {
+            return null; // Lewati baris kosong
         }
 
-        $idKelas = $this->kelasCollection->get($row['nama_kelas']);
+        $idKelas = $this->kelasCollection->get($namaKelas);
 
-        // Jika kelas tidak ditemukan, lewati baris ini.
         if (is_null($idKelas)) {
-            return null;
+            return null; // Lewati jika kelas tidak ditemukan
         }
+        
+        DB::transaction(function () use ($namaLengkap, $username, $password, $nis, $idKelas) {
+            // Gunakan firstOrCreate untuk Pengguna berdasarkan username
+            $pengguna = Pengguna::firstOrCreate(
+                ['username' => $username],
+                [
+                    'nama_lengkap' => $namaLengkap,
+                    'password' => Hash::make($password),
+                    'role' => 'siswa',
+                ]
+            );
 
-        // Mulai transaksi database untuk setiap baris
-        DB::beginTransaction();
+            // Gunakan firstOrCreate untuk Siswa berdasarkan id_pengguna atau NIS
+            Siswa::firstOrCreate(
+                ['id_pengguna' => $pengguna->id],
+                [
+                    'nis' => $nis,
+                    'id_kelas' => $idKelas,
+                    'saldo' => 0,
+                ]
+            );
+        });
 
-        try {
-            // Cek apakah username sudah ada
-            $pengguna = Pengguna::firstOrNew(['username' => $row['username']]);
-            
-            // Jika pengguna baru, buat data pengguna
-            if (!$pengguna->exists) {
-                $pengguna->nama_lengkap = $row['nama_lengkap'];
-                $pengguna->password     = Hash::make($row['password']);
-                $pengguna->role         = 'siswa';
-                $pengguna->save();
-            }
-
-            // Cek apakah NIS sudah ada
-            $siswa = Siswa::firstOrNew(['nis' => $row['nis']]);
-            
-            // Jika NIS baru, buat data siswa
-            if (!$siswa->exists) {
-                $siswa->id_pengguna = $pengguna->id;
-                $siswa->id_kelas    = $idKelas;
-                $siswa->nis         = $row['nis'];
-                $siswa->saldo       = 0;
-                $siswa->save();
-            }
-            DB::commit();
-            return $siswa;
-
-        } catch (\Exception $e) {
-            DB::rollback();
-            // Lanjutkan impor tanpa menghentikan proses
-            return null;
-        }
+        return null;
     }
 
-    // `rules()` dan metode validasi lainnya dihapus karena validasi sekarang manual
     public function chunkSize(): int
     {
-        return 100;
+        return 100; // Proses 100 baris sekali jalan
+    }
+    
+    public function rules(): array
+    {
+        return [
+            '*.nama_lengkap' => 'required',
+            '*.username' => 'required',
+            '*.nama_kelas' => 'required',
+        ];
     }
 }

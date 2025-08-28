@@ -8,45 +8,28 @@ use App\Imports\SiswaImport;
 use App\Models\Kelas;
 use App\Models\Pengguna;
 use App\Models\Siswa;
-use Illuminate\Http\Request; // <-- Tambahkan ini
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Maatwebsite\Excel\Facades\Excel;
+use Exception;
 
 class SiswaController extends Controller
 {
-    public function showImportForm()
-    {
-        return view('pages.siswa.import');
-    }
-
-    public function import(Request $request)
-    {
-        $request->validate([
-            'file' => 'required|mimes:xls,xlsx'
-        ]);
-
-        Excel::import(new SiswaImport, $request->file('file'));
-
-        return redirect()->route('siswa.index')->with('success', 'Data siswa berhasil diimpor!');
-    }
-
-    public function sampleExport()
-    {
-        return Excel::download(new SiswaSampleExport, 'sample-siswa.xlsx');
-    }
-
-    public function export()
-    {
-        return Excel::download(new SiswaExport, 'siswa.xlsx');
-    }
-    
-    /**
-     * PERBAIKAN: Menggunakan paginasi.
-     */
     public function index(Request $request)
     {
         $perPage = $request->input('perPage', 10);
-        $siswa = Siswa::with('kelas', 'pengguna')->paginate($perPage);
+        $query = Siswa::with('kelas', 'pengguna');
+
+        if ($request->has('search')) {
+            $searchTerm = $request->search;
+            $query->whereHas('pengguna', function ($q) use ($searchTerm) {
+                $q->where('nama_lengkap', 'like', "%{$searchTerm}%")
+                  ->orWhere('username', 'like', "%{$searchTerm}%");
+            })->orWhere('nis', 'like', "%{$searchTerm}%");
+        }
+
+        $siswa = $query->paginate($perPage);
 
         return view('pages.siswa.index', [
             'siswa' => $siswa,
@@ -64,78 +47,107 @@ class SiswaController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nama' => 'required',
-            'email' => 'required|email|unique:pengguna,email',
-            'password' => 'required|min:8',
-            'nis' => 'required|unique:siswa,nis',
-            'id_kelas' => 'required',
-            'alamat' => 'required',
-            'telepon' => 'required',
+            'nama_lengkap' => 'required|string|max:255',
+            'username' => 'required|string|max:255|unique:pengguna,username',
+            'password' => 'required|string|min:8',
+            'nis' => 'nullable|string|max:20|unique:siswa,nis',
+            'id_kelas' => 'required|exists:kelas,id',
         ]);
 
-        $pengguna = Pengguna::create([
-            'name' => $request->nama,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role' => 'siswa',
-        ]);
+        DB::transaction(function () use ($request) {
+            $pengguna = Pengguna::create([
+                'nama_lengkap' => $request->nama_lengkap,
+                'username' => $request->username,
+                'password' => Hash::make($request->password),
+                'role' => 'siswa',
+            ]);
 
-        Siswa::create([
-            'nis' => $request->nis,
-            'id_kelas' => $request->id_kelas,
-            'alamat' => $request->alamat,
-            'telepon' => $request->telepon,
-            'id_pengguna' => $pengguna->id,
-        ]);
+            Siswa::create([
+                'id_pengguna' => $pengguna->id,
+                'nis' => $request->nis,
+                'id_kelas' => $request->id_kelas,
+                'saldo' => 0,
+            ]);
+        });
 
-        return redirect()->route('siswa.index')->with('success', 'Siswa berhasil ditambahkan');
+        return redirect()->route('siswa.index')->with('success', 'Siswa berhasil ditambahkan!');
     }
 
     public function edit(Siswa $siswa)
     {
         return view('pages.siswa.edit', [
-            'siswa' => $siswa,
+            'siswa' => $siswa->load('pengguna', 'kelas'),
             'kelas' => Kelas::all(),
         ]);
     }
 
     public function update(Request $request, Siswa $siswa)
     {
+        $pengguna = $siswa->pengguna;
+
         $request->validate([
-            'nama' => 'required',
-            'email' => 'required|email|unique:pengguna,email,' . $siswa->pengguna->id,
-            'nis' => 'required|unique:siswa,nis,' . $siswa->id,
-            'id_kelas' => 'required',
-            'alamat' => 'required',
-            'telepon' => 'required',
+            'nama_lengkap' => 'required|string|max:255',
+            'username' => 'required|string|max:255|unique:pengguna,username,' . $pengguna->id,
+            'password' => 'nullable|string|min:8',
+            'nis' => 'nullable|string|max:20|unique:siswa,nis,' . $siswa->id,
+            'id_kelas' => 'required|exists:kelas,id',
         ]);
 
-        $siswa->pengguna->update([
-            'name' => $request->nama,
-            'email' => $request->email,
-        ]);
-
-        if ($request->password) {
-            $siswa->pengguna->update([
-                'password' => Hash::make($request->password),
+        DB::transaction(function () use ($request, $siswa, $pengguna) {
+            $pengguna->update([
+                'nama_lengkap' => $request->nama_lengkap,
+                'username' => $request->username,
             ]);
-        }
 
-        $siswa->update([
-            'nis' => $request->nis,
-            'id_kelas' => $request->id_kelas,
-            'alamat' => $request->alamat,
-            'telepon' => $request->telepon,
-        ]);
+            if ($request->filled('password')) {
+                $pengguna->update(['password' => Hash::make($request->password)]);
+            }
 
-        return redirect()->route('siswa.index')->with('success', 'Siswa berhasil diupdate');
+            $siswa->update([
+                'nis' => $request->nis,
+                'id_kelas' => $request->id_kelas,
+            ]);
+        });
+        
+        return redirect()->route('siswa.index')->with('success', 'Data siswa berhasil diperbarui!');
     }
+
 
     public function destroy(Siswa $siswa)
     {
-        $siswa->pengguna->delete();
-        $siswa->delete();
+        DB::transaction(function () use ($siswa) {
+            $siswa->pengguna()->delete();
+            $siswa->delete();
+        });
 
-        return redirect()->route('siswa.index')->with('success', 'Siswa berhasil dihapus');
+        return redirect()->route('siswa.index')->with('success', 'Siswa berhasil dihapus!');
+    }
+
+    public function showImportForm()
+    {
+        return view('pages.siswa.import');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate(['file' => 'required|mimes:xls,xlsx']);
+
+        try {
+            Excel::import(new SiswaImport, $request->file('file'));
+        } catch (\Exception $e) {
+            return back()->with('error', 'Terjadi kesalahan saat mengimpor: ' . $e->getMessage());
+        }
+
+        return redirect()->route('siswa.index')->with('success', 'Data siswa berhasil diimpor!');
+    }
+
+    public function sampleExport()
+    {
+        return Excel::download(new SiswaSampleExport, 'sample-siswa.xlsx');
+    }
+
+    public function export()
+    {
+        return Excel::download(new SiswaExport, 'siswa.xlsx');
     }
 }
