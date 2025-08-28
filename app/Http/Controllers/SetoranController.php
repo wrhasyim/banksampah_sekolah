@@ -118,30 +118,33 @@ public function create()
     public function storeMassal(Request $request)
 {
     $request->validate([
-        'kelas_id' => 'required|exists:kelas,id',
-        'jenis_sampah_id' => 'required|exists:jenis_sampah,id',
-        'setoran' => 'required|array',
-        'setoran.*.siswa_id' => 'required|exists:siswa,id',
-        'setoran.*.jumlah' => 'nullable|numeric|min:0',
+        'id_kelas' => 'required|exists:kelas,id',
+        'id_jenis_sampah' => 'required|exists:jenis_sampah,id',
+        'id_siswa' => 'required|array',
+        'id_siswa.*' => 'required|exists:siswa,id',
+        'berat' => 'required|array',
+        'berat.*' => 'nullable|numeric|min:0',
     ]);
 
     DB::transaction(function () use ($request) {
-        $jenisSampah = JenisSampah::findOrFail($request->jenis_sampah_id);
-        $hargaPerKg = $jenisSampah->harga_per_kg;
+        $jenisSampah = JenisSampah::findOrFail($request->id_jenis_sampah);
+        // Perbaikan: Menggunakan harga_per_satuan yang ada di model
+        $hargaPerUnit = $jenisSampah->harga_per_satuan; 
 
-        foreach ($request->setoran as $data) {
-            if (!empty($data['jumlah']) && is_numeric($data['jumlah']) && $data['jumlah'] > 0) {
-                $totalHarga = $data['jumlah'] * $hargaPerKg;
+        foreach ($request->id_siswa as $key => $siswaId) {
+            $berat = $request->berat[$key];
+            
+            if ($berat > 0) {
+                $totalHarga = $berat * $hargaPerUnit;
 
                 Setoran::create([
-                    'siswa_id' => $data['siswa_id'],
-                    'jenis_sampah_id' => $request->jenis_sampah_id, // <-- TAMBAHKAN BARIS INI
-                    'jumlah' => $data['jumlah'],
+                    'siswa_id' => $siswaId,
+                    'jenis_sampah_id' => $jenisSampah->id,
+                    'jumlah' => $berat,
                     'total_harga' => $totalHarga,
                 ]);
 
-                // Update saldo siswa
-                $siswa = Siswa::findOrFail($data['siswa_id']);
+                $siswa = Siswa::findOrFail($siswaId);
                 $siswa->increment('saldo', $totalHarga);
             }
         }

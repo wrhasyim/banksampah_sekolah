@@ -18,7 +18,7 @@
                                 <select id="id_kelas" name="id_kelas" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" required>
                                     <option value="">-- Pilih Kelas --</option>
                                     @foreach($kelas as $item)
-                                        <option value="{{ $item->id }}">{{ $item->nama }}</option>
+                                        <option value="{{ $item->id }}">{{ $item->nama_kelas }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -27,7 +27,7 @@
                                 <select id="id_jenis_sampah" name="id_jenis_sampah" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" required>
                                     <option value="">-- Pilih Jenis Sampah --</option>
                                     @foreach($jenisSampah as $item)
-                                        <option value="{{ $item->id }}" data-harga="{{ $item->harga }}">{{ $item->nama }}</option>
+                                        <option value="{{ $item->id }}" data-harga="{{ $item->harga_per_satuan }}">{{ $item->nama_sampah }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -69,8 +69,7 @@
         document.getElementById('id_kelas').addEventListener('change', function () {
             var kelasId = this.value;
             var tableBody = document.getElementById('siswa-table-body');
-            
-            // PERBAIKAN: Menggunakan route() helper untuk URL yang dinamis dan aman
+
             var url = '{{ route("siswa.get-by-kelas", ["id_kelas" => ":id_kelas"]) }}';
             url = url.replace(':id_kelas', kelasId);
 

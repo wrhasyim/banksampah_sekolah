@@ -9,6 +9,7 @@ use App\Exports\SiswaExport;
 use App\Imports\SiswaImport;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\SiswaSampleExport;
+use Illuminate\Support\Facades\Log;
 
 class SiswaController extends Controller
 {
@@ -91,13 +92,15 @@ class SiswaController extends Controller
         return redirect()->route('siswa.index')->with('success', 'Data siswa berhasil diimpor.');
     }
 
-    public function getSiswaByKelas($id_kelas)
-    {
-        try {
-            $siswas = Siswa::where('id_kelas', $id_kelas)->get(['id', 'nama', 'nis']);
-            return response()->json($siswas);
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Gagal mengambil data siswa.'], 500);
-        }
+   public function getSiswaByKelas($id_kelas)
+{
+    try {
+        $siswas = Siswa::where('id_kelas', $id_kelas)->get(['id', 'nama', 'nis']);
+        return response()->json($siswas);
+    } catch (\Exception $e) {
+        // PERBAIKAN: Catat kesalahan ke log
+        Log::error('Error fetching students by class: ' . $e->getMessage()); 
+        return response()->json(['error' => 'Gagal memuat data siswa.'], 500);
     }
+}
 }
