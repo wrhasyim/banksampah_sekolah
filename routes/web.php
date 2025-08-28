@@ -70,9 +70,13 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
     Route::post('settings', [SettingController::class, 'update'])->name('settings.update');
     
-    // PERBAIKAN: Tambahkan route ini untuk mengekspor laporan transaksi
     Route::get('laporan/transaksi/export/excel', [ReportController::class, 'exportTransaksiExcel'])->name('laporan.transaksi.export.excel');
+    Route::get('laporan/transaksi/export/pdf', [ReportController::class, 'exportTransaksiPdf'])->name('laporan.transaksi.export.pdf');
+    Route::get('laporan/penjualan/export/excel', [ReportController::class, 'exportPenjualanExcel'])->name('laporan.penjualan.export.excel');
     
+    // PERBAIKAN: Tambahkan route ini untuk mengekspor laporan penjualan ke PDF
+    Route::get('laporan/penjualan/export/pdf', [ReportController::class, 'exportPenjualanPdf'])->name('laporan.penjualan.export.pdf');
+
     Route::get('laporan', [ReportController::class, 'index'])->name('laporan.index');
     Route::post('laporan/export', [ReportController::class, 'export'])->name('laporan.export');
 });
