@@ -77,7 +77,9 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     // Pengaturan
     Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
     Route::post('settings', [SettingController::class, 'store'])->name('settings.store');
-
+// Perbaikan: Tambahkan rute untuk pembaruan pengaturan
+     Route::post('settings', [SettingController::class, 'update'])->name('settings.update');
+    
     // Laporan
     Route::get('/laporan', [ReportController::class, 'index'])->name('laporan.index');
     Route::get('/laporan/penjualan/export/excel', [ReportController::class, 'exportPenjualanExcel'])->name('laporan.penjualan.export.excel');
@@ -88,6 +90,8 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
 
     // Leaderboard
     Route::get('/leaderboard', [LeaderboardController::class, 'index'])->name('leaderboard.index');
+
+     
 });
 
 // Rute untuk profil pengguna
