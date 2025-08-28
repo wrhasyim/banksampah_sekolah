@@ -46,7 +46,11 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::get('setoran/sample-export', [SetoranController::class, 'sampleExport'])->name('setoran.sample.export');
     Route::get('/setoran/get-siswa', [SetoranController::class, 'getSiswa'])->name('setoran.getSiswa');
     Route::resource('setoran', SetoranController::class)->except(['show', 'edit', 'update', 'destroy']); // Optional: Menghapus route yang tidak dipakai
-
+// Route baru yang disarankan
+Route::get('setoran', [App\Http\Controllers\SetoranController::class, 'index'])->name('setoran.index');
+Route::get('setoran/massal', [App\Http\Controllers\SetoranController::class, 'createMassal'])->name('setoran.create.massal');
+Route::post('setoran/massal', [App\Http\Controllers\SetoranController::class, 'storeMassal'])->name('setoran.store.massal');
+Route::get('get-siswa-by-kelas', [App\Http\Controllers\SetoranController::class, 'getSiswaByKelas'])->name('get-siswa-by-kelas');
     // Penarikan Routes
     Route::get('penarikan/kelas', [PenarikanController::class, 'createKelas'])->name('penarikan.create.kelas');
     Route::post('penarikan/kelas', [PenarikanController::class, 'storeKelas'])->name('penarikan.store.kelas');

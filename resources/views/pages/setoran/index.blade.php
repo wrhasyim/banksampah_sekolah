@@ -23,11 +23,7 @@
 
                     <div class="flex flex-col items-start justify-between gap-4 mb-6 md:flex-row md:items-center">
                         <div class="flex items-center space-x-2">
-                            <a href="{{ route('setoran.create') }}"
-                                class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-700 border border-transparent rounded-md hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                Tambah Setoran
-                            </a>
-                            {{-- TOMBOL BARU UNTUK INPUT MASSAL --}}
+                                                        {{-- TOMBOL BARU UNTUK INPUT MASSAL --}}
                             <a href="{{ route('setoran.create.massal') }}"
                                 class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-teal-600 border border-transparent rounded-md hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
                                 Input Massal

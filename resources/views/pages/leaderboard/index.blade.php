@@ -27,8 +27,7 @@
                                         <div class="flex items-center">
                                             <span class="text-lg font-bold text-gray-500 mr-4">{{ $index + 1 }}</span>
                                             <div>
-                                                <p class="font-medium text-gray-800">{{ $siswa->nama }}</p>
-                                                <p class="text-sm text-gray-600">{{ $siswa->kelas->nama_kelas }}</p>
+                                                <p class="font-medium text-gray-800">{{ $siswa->pengguna->nama_lengkap }}</p>
                                             </div>
                                         </div>
                                         <span class="font-semibold text-green-600">Rp {{ number_format($siswa->setoran_sum_total_harga, 0, ',', '.') }}</span>

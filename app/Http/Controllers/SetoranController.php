@@ -116,35 +116,37 @@ public function create()
     }
 
     public function storeMassal(Request $request)
-    {
-        $request->validate([
-            'id_kelas' => 'required|exists:kelas,id',
-            'jenis_sampah_id' => 'required|exists:jenis_sampah,id',
-            'siswa' => 'required|array|min:1',
-            'siswa.*.jumlah' => 'nullable|numeric|min:0',
-        ]);
+{
+    $request->validate([
+        'kelas_id' => 'required|exists:kelas,id',
+        'jenis_sampah_id' => 'required|exists:jenis_sampah,id',
+        'setoran' => 'required|array',
+        'setoran.*.siswa_id' => 'required|exists:siswa,id',
+        'setoran.*.jumlah' => 'nullable|numeric|min:0',
+    ]);
 
-        DB::transaction(function () use ($request) {
-            $jenisSampah = JenisSampah::find($request->jenis_sampah_id);
+    DB::transaction(function () use ($request) {
+        $jenisSampah = JenisSampah::findOrFail($request->jenis_sampah_id);
+        $hargaPerKg = $jenisSampah->harga_per_kg;
 
-            foreach ($request->siswa as $siswaId => $data) {
-                $jumlah = (float)($data['jumlah'] ?? 0);
-                if ($jumlah > 0) {
-                    $totalHarga = $jenisSampah->harga_per_satuan * $jumlah;
-                    Setoran::create([
-                        'siswa_id' => $siswaId,
-                        'jenis_sampah_id' => $request->jenis_sampah_id,
-                        'jumlah' => $jumlah,
-                        'total_harga' => $totalHarga,
-                    ]);
-                    $siswa = Siswa::find($siswaId);
-                    if ($siswa) {
-                        $siswa->increment('saldo', $totalHarga);
-                    }
-                }
+        foreach ($request->setoran as $data) {
+            if (!empty($data['jumlah']) && is_numeric($data['jumlah']) && $data['jumlah'] > 0) {
+                $totalHarga = $data['jumlah'] * $hargaPerKg;
+
+                Setoran::create([
+                    'siswa_id' => $data['siswa_id'],
+                    'jenis_sampah_id' => $request->jenis_sampah_id, // <-- TAMBAHKAN BARIS INI
+                    'jumlah' => $data['jumlah'],
+                    'total_harga' => $totalHarga,
+                ]);
+
+                // Update saldo siswa
+                $siswa = Siswa::findOrFail($data['siswa_id']);
+                $siswa->increment('saldo', $totalHarga);
             }
-        });
+        }
+    });
 
-        return redirect()->route('setoran.index')->with('success', 'Setoran massal berhasil disimpan.');
-    }
+    return redirect()->route('setoran.index')->with('success', 'Setoran massal berhasil ditambahkan.');
+}
 }

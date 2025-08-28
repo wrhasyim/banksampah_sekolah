@@ -16,7 +16,7 @@
 <select name="siswa_id" id="siswa_id" class="w-full mt-1 border-gray-300 rounded-md shadow-sm" required>
     <option value="">-- Pilih Siswa --</option>
     @foreach($siswa as $item)
-        <option value="{{ $item->id }}">{{ $item->nama }} - {{ $item->kelas->nama_kelas }}</option>
+        <option value="{{ $item->id }}">{{ $item->pengguna->nama_lengkap }} - {{ $item->kelas->nama_kelas }}</option>
     @endforeach
 </select>
                             @error('siswa_id')
