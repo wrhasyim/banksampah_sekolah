@@ -48,6 +48,7 @@ class JenisSampahController extends Controller
 
     public function destroy(JenisSampah $jenisSampah)
     {
+        
         if ($jenisSampah->stok > 0) {
             return redirect()->route('jenis-sampah.index')->with('toastr-error', 'Tidak dapat menghapus jenis sampah yang masih memiliki stok.');
         }
