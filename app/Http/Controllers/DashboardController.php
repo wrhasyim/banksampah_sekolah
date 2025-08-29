@@ -5,8 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Penjualan;
 use App\Models\Setoran;
 use App\Models\Siswa;
+use App\Models\Penarikan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Models\JenisSampah;
+use App\Models\Pengguna;
 
 class DashboardController extends Controller
 {
@@ -21,15 +24,11 @@ class DashboardController extends Controller
             // Data untuk Kartu Statistik
             $totalSiswa = Siswa::count();
             $totalSaldo = Siswa::sum('saldo');
-            
-            // Menghitung total nilai dalam Rupiah untuk kartu statistik
-            $totalSetoran = Setoran::sum('total_harga'); 
+            $totalSetoran = Setoran::sum('total_harga');
             $totalPenjualan = Penjualan::sum('total_harga');
-
-            // Menghitung stok sampah dalam kg (total berat setor - total berat jual)
             $stokSampah = Setoran::sum('jumlah') - DB::table('detail_penjualan')->sum('jumlah');
 
-            // Data untuk Grafik (berdasarkan nilai Rupiah)
+            // Data untuk Grafik
             $setoranBulanan = Setoran::select(
                 DB::raw('sum(total_harga) as total'),
                 DB::raw("DATE_FORMAT(created_at, '%Y-%m') as month")
@@ -45,10 +44,8 @@ class DashboardController extends Controller
             ->groupBy('month')
             ->orderBy('month', 'asc')
             ->get();
-            
-            // Menyatukan label bulan dari kedua sumber dan memastikan data selaras
+
             $labels = $setoranBulanan->pluck('month')->merge($penjualanBulanan->pluck('month'))->unique()->sort()->values();
-            
             $dataSetoran = [];
             $dataPenjualan = [];
 
@@ -60,7 +57,46 @@ class DashboardController extends Controller
                 $dataPenjualan[] = $penjualan ? $penjualan->total : 0;
             }
 
-            // Mengirim SEMUA variabel yang dibutuhkan ke view
+            // Ambil data total setor dan jual secara terpisah
+            $totalSetorPerJenis = Setoran::select('jenis_sampah_id', DB::raw('SUM(jumlah) as total_setor'))
+                ->groupBy('jenis_sampah_id')
+                ->pluck('total_setor', 'jenis_sampah_id');
+
+            $totalJualPerJenis = DB::table('detail_penjualan')->select('id_jenis_sampah', DB::raw('SUM(jumlah) as total_jual'))
+                ->groupBy('id_jenis_sampah')
+                ->pluck('total_jual', 'id_jenis_sampah');
+
+            // Ambil semua jenis sampah dan hitung stoknya di PHP
+            $semuaJenisSampah = JenisSampah::all();
+            $stokPerJenis = $semuaJenisSampah->map(function ($jenis) use ($totalSetorPerJenis, $totalJualPerJenis) {
+                $setor = $totalSetorPerJenis->get($jenis->id, 0);
+                $jual = $totalJualPerJenis->get($jenis->id, 0);
+                $stok = $setor - $jual;
+
+                return (object)[
+                    'nama' => $jenis->nama,
+                    'stok' => $stok,
+                ];
+            });
+            
+            // Logika Notifikasi menggunakan data yang sudah dihitung
+            $notifikasi = [];
+            $sampahMenipis = $stokPerJenis->where('stok', '<', 10);
+
+            if ($sampahMenipis->isNotEmpty()) {
+                $notifikasi[] = "Stok untuk " . $sampahMenipis->count() . " jenis sampah menipis. Segera lakukan pengecekan.";
+            }
+
+            // Aktivitas Terkini
+            $aktivitasTerakhir = [
+                'setoran' => Setoran::with('siswa.pengguna')->latest()->take(5)->get(),
+                'penjualan' => Penjualan::latest()->take(5)->get(),
+                'penarikan' => Penarikan::with('siswa.pengguna')->latest()->take(5)->get()
+            ];
+
+            // Leaderboard Siswa
+            $topSiswa = Siswa::with('pengguna')->orderBy('saldo', 'desc')->take(5)->get();
+
             return view('dashboard-admin', compact(
                 'totalSiswa',
                 'totalSaldo',
@@ -69,11 +105,14 @@ class DashboardController extends Controller
                 'totalPenjualan',
                 'labels',
                 'dataSetoran',
-                'dataPenjualan'
+                'dataPenjualan',
+                'stokPerJenis',
+                'aktivitasTerakhir',
+                'topSiswa',
+                'notifikasi'
             ));
 
         } elseif ($user->role === 'siswa') {
-            // Data untuk Siswa Dashboard
             $siswa = $user->siswa;
             $saldo = $siswa->saldo ?? 0;
             $totalSetoran = $siswa->setoran()->sum('total_harga');
@@ -83,7 +122,6 @@ class DashboardController extends Controller
             return view('dashboard-siswa', compact('saldo', 'totalSetoran', 'totalPenarikan', 'badges'));
         }
 
-        // Fallback default
         return view('dashboard');
     }
 }
