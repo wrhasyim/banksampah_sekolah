@@ -16,7 +16,7 @@
                             <select id="kelas_id" name="kelas_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                                 <option value="">-- Pilih Kelas --</option>
                                 @foreach($kelasList as $kelas)
-                                    <option value="{{ $kelas->id }}">{{ $kelas->nama }}</option>
+                                    <option value="{{ $kelas->id }}">{{ $kelas->nama_kelas }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -26,7 +26,7 @@
                             <select id="jenis_sampah_id" name="jenis_sampah_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" required>
                                 <option value="">-- Pilih Jenis Sampah --</option>
                                 @foreach($jenisSampahs as $jenis)
-                                    <option value="{{ $jenis->id }}">{{ $jenis->nama }} (Rp {{ number_format($jenis->harga_per_kg, 0, ',', '.') }}/{{$jenis->satuan}})</option>
+                                    <option value="{{ $jenis->id }}">{{ $jenis->nama_sampah }} (Rp {{ number_format($jenis->harga_per_satuan, 0, ',', '.') }}/{{$jenis->satuan}})</option>
                                 @endforeach
                             </select>
                         </div>
