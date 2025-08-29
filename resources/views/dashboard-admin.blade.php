@@ -23,23 +23,23 @@
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
 
-                    {{-- Statistik Utama --}}
+                    {{-- --- PENYESUAIAN: Statistik Utama --- --}}
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
                         <div class="p-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
-                            <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{{ $totalSiswa }}</h5>
-                            <p class="font-normal text-gray-700 dark:text-gray-400">Total Siswa</p>
+                            <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Rp. {{ number_format($kas, 0, ',', '.') }}</h5>
+                            <p class="font-normal text-gray-700 dark:text-gray-400">Total Kas</p>
                         </div>
                         <div class="p-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
                             <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{{ number_format($stokSampah, 2, ',', '.') }}</h5>
-                            <p class="font-normal text-gray-700 dark:text-gray-400">Stok Sampah (kg)</p>
+                            <p class="font-normal text-gray-700 dark:text-gray-400">Total Stok Sampah (Kg)</p>
                         </div>
                         <div class="p-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
                             <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Rp. {{ number_format($totalSetoran, 0, ',', '.') }}</h5>
                             <p class="font-normal text-gray-700 dark:text-gray-400">Total Setoran</p>
                         </div>
                         <div class="p-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
-                            <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Rp. {{ number_format($totalPenjualan, 0, ',', '.') }}</h5>
-                            <p class="font-normal text-gray-700 dark:text-gray-400">Total Penjualan</p>
+                            <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{{ $totalSiswa }}</h5>
+                            <p class="font-normal text-gray-700 dark:text-gray-400">Total Siswa</p>
                         </div>
                     </div>
 
@@ -55,33 +55,18 @@
             </div>
         </div>
         
-        {{-- Grid Baru untuk Elemen Tambahan --}}
+        {{-- --- PENYESUAIAN: Grid Baru untuk Elemen Tambahan --- --}}
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 mt-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-                {{-- Kolom 1: Top 5 Siswa --}}
-                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6">
-                    <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">🏆 Top 5 Siswa Penabung</h3>
-                    <ul class="divide-y divide-gray-200 dark:divide-gray-700">
-                        @forelse($topSiswa as $siswa)
-                        <li class="py-3 flex justify-between items-center text-gray-800 dark:text-gray-300">
-                            <span>{{ $loop->iteration }}. {{ $siswa->pengguna->name }}</span>
-                            <span class="font-bold text-green-600 dark:text-green-400">Rp{{ number_format($siswa->saldo, 0, ',', '.') }}</span>
-                        </li>
-                        @empty
-                        <li class="py-3 text-gray-500 dark:text-gray-400">Belum ada data siswa.</li>
-                        @endforelse
-                    </ul>
-                </div>
-
-                {{-- Kolom 2: Stok Sampah per Jenis --}}
+                {{-- Kolom 1: Stok Sampah per Jenis --}}
                 <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6">
                     <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">♻️ Stok Sampah per Jenis</h3>
                     <ul class="divide-y divide-gray-200 dark:divide-gray-700">
                         @forelse($stokPerJenis as $jenis)
                         <li class="py-3 flex justify-between items-center text-gray-800 dark:text-gray-300">
                             <span>{{ $jenis->nama }}</span>
-                            <span class="font-bold">{{ number_format($jenis->stok, 2, ',', '.') }} kg</span>
+                            <span class="font-bold">{{ number_format($jenis->stok, 2, ',', '.') }} {{ $jenis->satuan }}</span>
                         </li>
                         @empty
                         <li class="py-3 text-gray-500 dark:text-gray-400">Belum ada data stok.</li>
@@ -89,7 +74,7 @@
                     </ul>
                 </div>
 
-                {{-- Kolom 3: Aktivitas Terkini --}}
+                {{-- Kolom 2: Aktivitas Terkini --}}
                 <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6">
                     <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">🔔 Aktivitas Terkini</h3>
                     <div>

@@ -27,6 +27,10 @@ class DashboardController extends Controller
             $totalSetoran = Setoran::sum('total_harga');
             $totalPenjualan = Penjualan::sum('total_harga');
             $stokSampah = Setoran::sum('jumlah') - DB::table('detail_penjualan')->sum('jumlah');
+            
+            // --- ITEM BARU: Menghitung Kas ---
+            $totalPenarikanSiswa = Penarikan::sum('jumlah_penarikan');
+            $kas = $totalPenjualan - $totalPenarikanSiswa;
 
             // Data untuk Grafik
             $setoranBulanan = Setoran::select(
@@ -57,7 +61,7 @@ class DashboardController extends Controller
                 $dataPenjualan[] = $penjualan ? $penjualan->total : 0;
             }
 
-            // Ambil data total setor dan jual secara terpisah
+            // Ambil data total setor dan jual
             $totalSetorPerJenis = Setoran::select('jenis_sampah_id', DB::raw('SUM(jumlah) as total_setor'))
                 ->groupBy('jenis_sampah_id')
                 ->pluck('total_setor', 'jenis_sampah_id');
@@ -66,7 +70,7 @@ class DashboardController extends Controller
                 ->groupBy('id_jenis_sampah')
                 ->pluck('total_jual', 'id_jenis_sampah');
 
-            // Ambil semua jenis sampah dan hitung stoknya di PHP
+            // --- PENYESUAIAN: Ambil semua jenis sampah beserta satuannya ---
             $semuaJenisSampah = JenisSampah::all();
             $stokPerJenis = $semuaJenisSampah->map(function ($jenis) use ($totalSetorPerJenis, $totalJualPerJenis) {
                 $setor = $totalSetorPerJenis->get($jenis->id, 0);
@@ -76,10 +80,11 @@ class DashboardController extends Controller
                 return (object)[
                     'nama' => $jenis->nama,
                     'stok' => $stok,
+                    'satuan' => $jenis->satuan, // Mengambil satuan dari model
                 ];
             });
             
-            // Logika Notifikasi menggunakan data yang sudah dihitung
+            // Logika Notifikasi
             $notifikasi = [];
             $sampahMenipis = $stokPerJenis->where('stok', '<', 10);
 
@@ -94,21 +99,18 @@ class DashboardController extends Controller
                 'penarikan' => Penarikan::with('siswa.pengguna')->latest()->take(5)->get()
             ];
 
-            // Leaderboard Siswa
-            $topSiswa = Siswa::with('pengguna')->orderBy('saldo', 'desc')->take(5)->get();
-
             return view('dashboard-admin', compact(
                 'totalSiswa',
                 'totalSaldo',
                 'stokSampah',
                 'totalSetoran',
                 'totalPenjualan',
+                'kas', // Variabel baru
                 'labels',
                 'dataSetoran',
                 'dataPenjualan',
                 'stokPerJenis',
                 'aktivitasTerakhir',
-                'topSiswa',
                 'notifikasi'
             ));
 
