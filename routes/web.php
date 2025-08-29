@@ -97,7 +97,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
         // TAMBAHKAN BARIS DI BAWAH INI
         Route::post('/store-massal', [SetoranController::class, 'storeMassal'])->name('storeMassal');
     });
-    
+    Route::get('/get-siswa-by-kelas/{id_kelas}', [App\Http\Controllers\SiswaController::class, 'getSiswaByKelas'])->middleware('auth');
 });
 
 // Rute untuk profil pengguna

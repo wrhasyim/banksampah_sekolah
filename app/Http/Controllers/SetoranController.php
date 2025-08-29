@@ -132,10 +132,12 @@ public function create()
             foreach ($request->setoran as $data) {
                 // Hanya proses siswa yang jumlah setorannya lebih dari 0
                 if ($data['jumlah'] > 0) {
-                    $totalHarga = $data['jumlah'] * $jenisSampah->harga_per_kg;
+                    // PERBAIKAN 1: Menggunakan harga_per_satuan sesuai database
+                    $totalHarga = $data['jumlah'] * $jenisSampah->harga_per_satuan;
 
                     Setoran::create([
                         'siswa_id' => $data['siswa_id'],
+                        // PERBAIKAN 2: Menambahkan jenis_sampah_id yang hilang
                         'jenis_sampah_id' => $jenisSampah->id,
                         'jumlah' => $data['jumlah'],
                         'total_harga' => $totalHarga,
@@ -143,6 +145,12 @@ public function create()
 
                     $siswa = Siswa::find($data['siswa_id']);
                     $siswa->increment('saldo', $totalHarga);
+
+                    // Menambahkan poin
+                    $points = floor($totalHarga / 1000);
+                    if ($points > 0) {
+                        $siswa->increment('points', $points);
+                    }
                 }
             }
         });

@@ -91,16 +91,10 @@ class SiswaController extends Controller
 
         return redirect()->route('siswa.index')->with('success', 'Data siswa berhasil diimpor.');
     }
-
-   public function getSiswaByKelas($id_kelas)
-{
-    try {
-        $siswas = Siswa::where('id_kelas', $id_kelas)->get(['id', 'nama', 'nis']);
-        return response()->json($siswas);
-    } catch (\Exception $e) {
-        // PERBAIKAN: Catat kesalahan ke log
-        Log::error('Error fetching students by class: ' . $e->getMessage()); 
-        return response()->json(['error' => 'Gagal memuat data siswa.'], 500);
+public function getSiswaByKelas($id_kelas)
+    {
+        $siswa = Siswa::where('id_kelas', $id_kelas)->with('pengguna')->get();
+        return response()->json($siswa);
     }
-}
+  
 }
