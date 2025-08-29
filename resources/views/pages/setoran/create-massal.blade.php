@@ -98,7 +98,8 @@
                             tableBody.innerHTML = '<tr><td colspan="4" class="px-4 py-3 text-center">Tidak ada siswa di kelas ini.</td></tr>';
                         } else {
                             data.forEach(function(siswa, index) {
-                                // INI ADALAH BARIS YANG DIPERBAIKI
+                                // --- INI ADALAH FOKUS PERBAIKAN ---
+                                // Menggunakan `nama_lengkap` sesuai dengan struktur database Anda.
                                 var namaLengkap = siswa.pengguna ? siswa.pengguna.nama_lengkap : 'Data Pengguna Hilang';
                                 var row = `
                                     <tr class="border-b dark:border-gray-700">
