@@ -33,12 +33,11 @@
                                 @forelse ($siswas as $siswa)
                                 <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
                                     <td class="px-6 py-4">
-                                        {{-- PERBAIKAN: Mengganti nama kolom dan menambah fallback jika pengguna null --}}
-                                        {{ $siswa->pengguna->name ?? 'Data Pengguna Hilang' }}
+                                        {{-- PERBAIKAN: Memanggil pengguna->nama_lengkap --}}
+                                        {{ $siswa->pengguna->nama_lengkap ?? 'Data Pengguna Hilang' }}
                                     </td>
                                     <td class="px-6 py-4">{{ $siswa->nis }}</td>
                                     <td class="px-6 py-4">
-                                        {{-- PERBAIKAN: Menambah fallback jika kelas null --}}
                                         {{ $siswa->kelas->nama_kelas ?? 'Data Kelas Hilang' }}
                                     </td>
                                     <td class="px-6 py-4">Rp. {{ number_format($siswa->saldo, 0, ',', '.') }}</td>

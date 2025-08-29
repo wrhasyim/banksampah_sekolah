@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Kelas;
 use App\Models\Siswa;
-use App\Models\Badge; // Tambahkan ini jika belum ada
+use App\Models\Badge;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -15,8 +15,10 @@ class LeaderboardController extends Controller
         $filter = $request->input('filter', 'minggu_ini');
         $dateRange = $this->getDateRange($filter);
 
-        // PERBAIKAN: Tambahkan with('pengguna', 'kelas') untuk memuat relasi
-        $topSiswa = Siswa::with('pengguna', 'kelas')
+        // PERBAIKAN: Menambahkan has('pengguna') untuk memfilter siswa yang aktif
+        // dan with('pengguna', 'kelas') untuk memuat data relasi
+        $topSiswa = Siswa::has('pengguna')
+            ->with('pengguna', 'kelas')
             ->withSum(['setoran' => function ($query) use ($dateRange) {
                 $query->whereBetween('created_at', $dateRange);
             }], 'total_harga')
@@ -31,14 +33,13 @@ class LeaderboardController extends Controller
             ->take(10)
             ->get();
             
-        // Menambahkan Badges
         $badges = Badge::orderBy('min_points', 'asc')->get();
 
         return view('pages.leaderboard.index', [
             'topSiswa' => $topSiswa,
             'topKelas' => $topKelas,
             'filter' => $filter,
-            'badges' => $badges, // Kirim data badges ke view
+            'badges' => $badges,
         ]);
     }
 
