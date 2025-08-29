@@ -16,6 +16,7 @@
                             <select id="kelas_id" name="kelas_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                                 <option value="">-- Pilih Kelas --</option>
                                 @foreach($kelasList as $kelas)
+                                    {{-- PERBAIKAN 1: Menggunakan nama_kelas --}}
                                     <option value="{{ $kelas->id }}">{{ $kelas->nama_kelas }}</option>
                                 @endforeach
                             </select>
@@ -26,6 +27,7 @@
                             <select id="jenis_sampah_id" name="jenis_sampah_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" required>
                                 <option value="">-- Pilih Jenis Sampah --</option>
                                 @foreach($jenisSampahs as $jenis)
+                                    {{-- PERBAIKAN 2: Menggunakan nama_sampah dan harga_per_satuan --}}
                                     <option value="{{ $jenis->id }}">{{ $jenis->nama_sampah }} (Rp {{ number_format($jenis->harga_per_satuan, 0, ',', '.') }}/{{$jenis->satuan}})</option>
                                 @endforeach
                             </select>
@@ -79,14 +81,12 @@
             var loadingRow = document.getElementById('loading-row');
             var errorRow = document.getElementById('error-row');
 
-            // Reset table
             tableBody.innerHTML = '';
             if(initialRow) initialRow.style.display = 'none';
             loadingRow.style.display = 'table-row';
             errorRow.style.display = 'none';
 
             if (kelasId) {
-                // --- PERBAIKAN URL FETCH DI SINI ---
                 fetch(`/get-siswa-by-kelas/${kelasId}`)
                     .then(response => {
                         if (!response.ok) {
@@ -100,10 +100,12 @@
                             tableBody.innerHTML = '<tr><td colspan="4" class="px-4 py-3 text-center">Tidak ada siswa di kelas ini.</td></tr>';
                         } else {
                             data.forEach(function(siswa, index) {
+                                // PERBAIKAN 3: Menggunakan nama_lengkap
+                                var namaLengkap = siswa.pengguna ? siswa.pengguna.nama_lengkap : 'Data Pengguna Hilang';
                                 var row = `
                                     <tr class="border-b dark:border-gray-700">
                                         <td class="px-4 py-3">${index + 1}</td>
-                                        <td class="px-4 py-3">${siswa.pengguna.name}</td>
+                                        <td class="px-4 py-3">${namaLengkap}</td>
                                         <td class="px-4 py-3">${siswa.nis}</td>
                                         <td class="px-4 py-3">
                                             <input type="hidden" name="setoran[${index}][siswa_id]" value="${siswa.id}">
