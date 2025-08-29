@@ -91,7 +91,13 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     // Leaderboard
     Route::get('/leaderboard', [LeaderboardController::class, 'index'])->name('leaderboard.index');
 
-     
+      Route::prefix('setoran')->name('setoran.')->group(function () {
+        // ... route setoran lainnya
+        Route::get('/create-massal', [SetoranController::class, 'createMassal'])->name('create.massal');
+        // TAMBAHKAN BARIS DI BAWAH INI
+        Route::post('/store-massal', [SetoranController::class, 'storeMassal'])->name('storeMassal');
+    });
+    
 });
 
 // Rute untuk profil pengguna
