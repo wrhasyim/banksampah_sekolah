@@ -9,6 +9,7 @@ class JenisSampahController extends Controller
 {
     public function index()
     {
+       // $jenisSampah = JenisSampah::latest()->paginate(10);
         $jenisSampah = JenisSampah::all();
         return view('pages.jenis-sampah.index', compact('jenisSampah'));
     }
