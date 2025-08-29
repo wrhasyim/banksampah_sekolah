@@ -117,7 +117,7 @@ public function create()
         return view('pages.setoran.create-massal', compact('jenisSampahs', 'kelasList'));
     }
 
-    public function storeMassal(Request $request)
+      public function storeMassal(Request $request)
     {
         $request->validate([
             'jenis_sampah_id' => 'required|exists:jenis_sampah,id',
