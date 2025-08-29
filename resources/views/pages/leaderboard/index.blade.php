@@ -31,12 +31,10 @@
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <p class="text-sm font-semibold text-gray-900 truncate dark:text-white">
-                                        {{-- PERBAIKAN: Ganti ke 'name' dan tambah fallback --}}
-                                        {{ $siswa->pengguna->name ?? 'Siswa Telah Dihapus' }}
+                                        {{-- PERBAIKAN: Memanggil nama_lengkap dan menggunakan fallback --}}
+                                        {{ $siswa->pengguna->nama_lengkap ?? 'Siswa Telah Dihapus' }}
                                     </p>
-                                    <p class="text-xs text-gray-500 truncate dark:text-gray-400">
-                                        {{ $siswa->kelas->nama_kelas ?? 'Tanpa Kelas' }}
-                                    </p>
+                                    
                                 </div>
                                 <div class="inline-flex items-center text-base font-semibold text-gray-900 dark:text-white">
                                     Rp {{ number_format($siswa->setoran_sum_total_harga, 0, ',', '.') }}

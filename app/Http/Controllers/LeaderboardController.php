@@ -15,10 +15,11 @@ class LeaderboardController extends Controller
         $filter = $request->input('filter', 'minggu_ini');
         $dateRange = $this->getDateRange($filter);
 
-        // PERBAIKAN: Menambahkan has('pengguna') untuk memfilter siswa yang aktif
-        // dan with('pengguna', 'kelas') untuk memuat data relasi
-        $topSiswa = Siswa::has('pengguna')
-            ->with('pengguna', 'kelas')
+        // --- PERBAIKAN FINAL DI SINI ---
+        // 1. Menambahkan has('pengguna') untuk memfilter HANYA siswa yang masih aktif.
+        // 2. Menambahkan with('pengguna', 'kelas') untuk memuat data nama dan kelas.
+        $topSiswa = Siswa::has('pengguna') // <-- Filter utama
+            ->with('pengguna', 'kelas')   // <-- Memuat relasi
             ->withSum(['setoran' => function ($query) use ($dateRange) {
                 $query->whereBetween('created_at', $dateRange);
             }], 'total_harga')
