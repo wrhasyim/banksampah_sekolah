@@ -48,9 +48,9 @@ class MasterDataSeeder extends Seeder
         ]);
 
         JenisSampah::insert([
-            ['nama_sampah' => 'Botol Plastik', 'harga_per_satuan' => 35, 'stok' => 0],
-            ['nama_sampah' => 'Gelas Plastik', 'harga_per_satuan' => 20, 'stok' => 0],
-            ['nama_sampah' => 'Kardus', 'harga_per_satuan' => 2000, 'stok' => 0],
+            ['nama_sampah' => 'Botol Plastik', 'status' => 'aktif', 'satuan' => 'pcs', 'harga_per_satuan' => 35, 'stok' => 0, 'created_at' => now(), 'updated_at' => now()],
+            ['nama_sampah' => 'Gelas Plastik', 'status' => 'aktif', 'satuan' => 'pcs', 'harga_per_satuan' => 20, 'stok' => 0, 'created_at' => now(), 'updated_at' => now()],
+            ['nama_sampah' => 'Kardus', 'status' => 'aktif', 'satuan' => 'kg', 'harga_per_satuan' => 2000, 'stok' => 0, 'created_at' => now(), 'updated_at' => now()],
         ]);
     }
 }
