@@ -1,68 +1,66 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Buat Penarikan Baru') }}
+        <h2 class="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
+            {{ __('Buat Penarikan Baru (Per Siswa)') }}
         </h2>
     </x-slot>
 
     <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 bg-white border-b border-gray-200">
+        <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
+            <div class="overflow-hidden bg-white shadow-sm dark:bg-gray-800 sm:rounded-lg">
+                <div class="p-6 text-gray-900 dark:text-gray-100">
+
                     <form action="{{ route('penarikan.store') }}" method="POST">
                         @csrf
-                        
                         <div class="mb-4">
-                            <x-input-label for="id_siswa" value="Pilih Siswa (Ketik untuk mencari)" />
-                            <select name="id_siswa" id="id_siswa" class="select2 block mt-1 w-full" required>
-                                <option value="">-- Pilih Siswa --</option>
-                                @foreach($siswas as $item)
-    <option value="{{ $item->id }}" data-saldo="{{ $item->saldo }}">
-        {{ $item->pengguna->nama_lengkap }} (Saldo: Rp {{ number_format($item->saldo, 0, ',', '.') }})
-    </option>
-@endforeach
-
+                            <label for="id_siswa" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Pilih Siswa</label>
+                            <select id="id_siswa" name="id_siswa" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
+                                <option value="" disabled selected>-- Pilih Siswa --</option>
+                                @forelse($siswas as $siswa)
+                                    <option value="{{ $siswa->id }}" data-saldo="{{ $siswa->saldo }}">
+                                        {{ $siswa->pengguna->nama_lengkap }} (Saldo: Rp {{ number_format($siswa->saldo, 0, ',', '.') }})
+                                    </option>
+                                @empty
+                                    <option disabled>Tidak ada siswa dengan saldo yang bisa ditarik.</option>
+                                @endforelse
                             </select>
                         </div>
-
+                        
                         <div class="mb-4">
-                            <x-input-label for="jumlah_penarikan" value="Jumlah Penarikan (Rp)" />
-                            <x-text-input type="number" id="jumlah_penarikan" name="jumlah_penarikan" class="block mt-1 w-full" required />
-                            <small id="saldo-info" class="text-gray-500 mt-1 block"></small>
+                            <label for="jumlah_penarikan" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Jumlah Penarikan (Rp)</label>
+                            <input type="number" id="jumlah_penarikan" name="jumlah_penarikan" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
+                            <p id="saldo-helper" class="mt-2 text-sm text-gray-500 dark:text-gray-400" style="display: none;">
+                                Saldo tersedia: <span id="saldo-text" class="font-bold"></span>
+                            </p>
                         </div>
 
-                        <div class="flex justify-end">
-                            <x-primary-button>
-                                Simpan Transaksi
-                            </x-primary-button>
+                        <div class="flex items-center justify-end mt-4">
+                            <a href="{{ route('penarikan.index') }}" class="mr-4 text-sm font-medium text-gray-700 dark:text-gray-300 hover:underline">Batal</a>
+                            <button type="submit" class="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700">Tarik Saldo</button>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
     </div>
-
+    
     @push('scripts')
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
-        $(document).ready(function() {
-            // Inisialisasi Select2 pada elemen dengan class 'select2'
-            $('.select2').select2({
-                placeholder: 'Ketik nama siswa...',
-                width: '100%'
-            });
+        document.getElementById('id_siswa').addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const saldo = selectedOption.getAttribute('data-saldo');
+            const saldoHelper = document.getElementById('saldo-helper');
+            const saldoText = document.getElementById('saldo-text');
+            const jumlahInput = document.getElementById('jumlah_penarikan');
 
-            // Tampilkan sisa saldo siswa saat dipilih
-            $('#id_siswa').on('change', function() {
-                var saldo = $(this).find(':selected').data('saldo');
-                if (saldo) {
-                    $('#saldo-info').text('Saldo tersedia: Rp ' + new Intl.NumberFormat('id-ID').format(saldo));
-                } else {
-                    $('#saldo-info').text('');
-                }
-            });
+            if (saldo) {
+                saldoText.textContent = 'Rp ' + new Intl.NumberFormat('id-ID').format(saldo);
+                saldoHelper.style.display = 'block';
+                jumlahInput.max = saldo;
+            } else {
+                saldoHelper.style.display = 'none';
+                jumlahInput.removeAttribute('max');
+            }
         });
     </script>
     @endpush

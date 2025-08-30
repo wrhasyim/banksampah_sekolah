@@ -8,24 +8,29 @@ use Illuminate\Database\Eloquent\Model;
 class Penarikan extends Model
 {
     use HasFactory;
-    
     protected $table = 'penarikan';
-    // Tambahkan id_kelas
-    protected $fillable = ['id_siswa', 'id_kelas', 'jumlah_penarikan', 'id_admin'];
+
+    // --- PERBAIKAN FINAL DI SINI ---
+    protected $fillable = [
+        'siswa_id',
+        'id_kelas',
+        'jumlah_penarikan',
+        'tanggal_penarikan',
+    ];
 
     public function siswa()
     {
-        return $this->belongsTo(Siswa::class, 'id_siswa');
+        return $this->belongsTo(Siswa::class, 'siswa_id');
     }
-    
-    // Tambahkan relasi ke kelas
+
     public function kelas()
     {
         return $this->belongsTo(Kelas::class, 'id_kelas');
     }
 
-    public function admin()
-    {
-        return $this->belongsTo(Pengguna::class, 'id_admin');
-    }
+    // Relasi ke admin bisa kita hapus karena tidak ada kolomnya
+    // public function admin()
+    // {
+    //     return $this->belongsTo(Pengguna::class, 'id_admin');
+    // }
 }
