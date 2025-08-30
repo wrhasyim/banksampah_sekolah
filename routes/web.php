@@ -74,7 +74,8 @@ Route::get('/dashboard/chart-data', [App\Http\Controllers\DashboardController::c
 Route::resource('pengguna', App\Http\Controllers\PenggunaController::class)->except(['show']);
     // Kategori Transaksi
     Route::resource('kategori-transaksi', KategoriTransaksiController::class);
-
+Route::get('/nota', [App\Http\Controllers\NotaController::class, 'index'])->name('nota.index');
+Route::post('/nota/cetak', [App\Http\Controllers\NotaController::class, 'cetak'])->name('nota.cetak');
     // Pengaturan
     Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
     Route::post('settings', [SettingController::class, 'store'])->name('settings.store');
