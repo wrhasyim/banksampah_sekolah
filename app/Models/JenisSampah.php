@@ -10,8 +10,9 @@ class JenisSampah extends Model
     use HasFactory;
     
     protected $table = 'jenis_sampah';
-    protected $fillable = ['nama_sampah', 'satuan', 'harga_per_satuan', 'stok'];
+    protected $fillable = ['nama_sampah', 'satuan', 'harga_per_satuan', 'stok', 'status'];
 
+    
     /**
      * Relasi ke DetailPenjualan: Satu Jenis Sampah bisa ada di banyak detail penjualan.
      */
@@ -25,6 +26,6 @@ class JenisSampah extends Model
      */
     public function setoran()
     {
-        return $this->hasMany(Setoran::class, 'id_jenis_sampah');
+         return $this->hasMany(Setoran::class, 'jenis_sampah_id');
     }
 }

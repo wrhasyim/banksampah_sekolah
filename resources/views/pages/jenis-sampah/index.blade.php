@@ -5,12 +5,9 @@
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                @if (session('status'))
-                    <div class="mb-4 bg-green-100 border-green-400 text-green-700 px-4 py-3 rounded">{{ session('status') }}</div>
-                @endif
-                @if (session('error'))
-                    <div class="mb-4 bg-red-100 border-red-400 text-red-700 px-4 py-3 rounded">{{ session('error') }}</div>
-                @endif
+                
+                {{-- PERBAIKAN: Kode ini tidak lagi diperlukan karena kita pakai Toastr --}}
+
                 <a href="{{ route('jenis-sampah.create') }}" class="inline-flex items-center px-4 py-2 bg-gray-800 text-white rounded-md text-xs uppercase font-semibold mb-4">Tambah Jenis Sampah</a>
                 <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
                     <table class="w-full text-sm text-left text-gray-500">
@@ -26,24 +23,27 @@
                         <tbody>
                             @forelse ($jenisSampah as $item)
                             <tr class="bg-white border-b hover:bg-gray-50">
-                                <th class="px-6 py-4">{{ $loop->iteration }}</th>
+                                <th class="px-6 py-4">{{ $loop->iteration + $jenisSampah->firstItem() - 1 }}</th>
                                 <td class="px-6 py-4">{{ $item->nama_sampah }}</td>
                                 <td class="px-6 py-4">Rp {{ number_format($item->harga_per_satuan, 0, ',', '.') }} / {{ $item->satuan }}</td>
                                 <td class="px-6 py-4 font-bold">{{ $item->stok }} {{ $item->satuan }}</td>
-                                <td class="px-6 py-4 flex items-center">
+                                <td class="px-6 py-4 flex items-center space-x-2">
                                     <a href="{{ route('jenis-sampah.edit', $item->id) }}" class="font-medium text-blue-600 hover:underline">Edit</a>
-                                    <form action="{{ route('jenis-sampah.destroy', $item->id) }}" method="POST" class="inline" onsubmit="return confirm('Anda yakin?')">
+                                    <form action="{{ route('jenis-sampah.destroy', $item->id) }}" method="POST" class="inline" onsubmit="return confirm('Anda yakin ingin menghapus data ini?')">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="font-medium text-red-600 hover:underline ml-4">Hapus</button>
+                                        <button type="submit" class="font-medium text-red-600 hover:underline">Hapus</button>
                                     </form>
                                 </td>
                             </tr>
                             @empty
-                                <tr><td colspan="5" class="px-6 py-12 text-center">...</td></tr>
+                                <tr><td colspan="5" class="px-6 py-12 text-center">Tidak ada data jenis sampah.</td></tr>
                             @endforelse
                         </tbody>
                     </table>
+                </div>
+                <div class="mt-4">
+                    {{ $jenisSampah->links() }}
                 </div>
             </div>
         </div>

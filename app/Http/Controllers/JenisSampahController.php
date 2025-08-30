@@ -9,8 +9,6 @@ class JenisSampahController extends Controller
 {
     public function index()
     {
-        // PERBAIKAN 1: Ambil jenis sampah yang statusnya 'aktif' saja.
-        // Menggunakan paginate lebih baik untuk performa.
         $jenisSampah = JenisSampah::where('status', 'aktif')->latest()->paginate(10);
         return view('pages.jenis-sampah.index', compact('jenisSampah'));
     }
@@ -23,18 +21,12 @@ class JenisSampahController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            // Saya sesuaikan validasi berdasarkan controller Anda
             'nama_sampah' => 'required|string|max:50',
             'satuan' => 'required|in:pcs,kg',
             'harga_per_satuan' => 'required|numeric',
         ]);
 
-        // Menggunakan request()->all() bisa berisiko, lebih aman seperti ini:
-        JenisSampah::create([
-            'nama_sampah' => $request->nama_sampah,
-            'satuan' => $request->satuan,
-            'harga_per_satuan' => $request->harga_per_satuan,
-        ]);
+        JenisSampah::create($request->only(['nama_sampah', 'satuan', 'harga_per_satuan']));
         
         return redirect()->route('jenis-sampah.index')->with('toastr-success', 'Jenis sampah berhasil ditambahkan!');
     }
@@ -57,14 +49,12 @@ class JenisSampahController extends Controller
 
     public function destroy(JenisSampah $jenisSampah)
     {
+        // HANYA CEK STOK: Jika stok > 0, kirim pesan error.
         if ($jenisSampah->stok > 0) {
             return redirect()->route('jenis-sampah.index')->with('toastr-error', 'Tidak dapat menghapus jenis sampah yang masih memiliki stok.');
         }
-        if ($jenisSampah->detailPenjualan()->exists() || $jenisSampah->setoran()->exists()) {
-            return redirect()->route('jenis-sampah.index')->with('toastr-error', 'Tidak dapat menghapus, jenis sampah ini memiliki riwayat transaksi.');
-        }
 
-        // PERBAIKAN 2: Ubah status menjadi 'tidak aktif' (soft delete), bukan menghapus permanen.
+        // Jika stok 0, ubah status dan kirim pesan sukses.
         $jenisSampah->update(['status' => 'tidak aktif']);
 
         return redirect()->route('jenis-sampah.index')->with('toastr-success', 'Jenis sampah berhasil dihapus!');
