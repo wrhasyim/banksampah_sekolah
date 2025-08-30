@@ -7,88 +7,63 @@ use App\Models\Siswa;
 use App\Models\Setoran;
 use App\Models\Penarikan;
 use App\Models\Penjualan;
+use App\Models\BukuKas; // Import model BukuKas
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon; // Pastikan Carbon diimpor
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        // 1. Ambil semua data jenis sampah yang aktif. Ini akan menjadi sumber data utama kita.
+        // Statistik Sampah & Siswa (Tidak berubah)
         $semuaJenisSampah = JenisSampah::where('status', 'aktif')->orderBy('nama_sampah', 'asc')->get();
-
-        // 2. Kirim koleksi ini langsung ke view untuk ditampilkan di daftar "Stok Sampah per Jenis".
-        // Variabelnya kita samakan dengan yang ada di view, yaitu 'stokPerJenis'.
         $stokPerJenis = $semuaJenisSampah;
-
-        // 3. Hitung total stok terpisah (kg dan pcs) dari koleksi yang sudah kita ambil.
         $totalStokKg = $semuaJenisSampah->where('satuan', 'kg')->sum('stok');
         $totalStokPcs = $semuaJenisSampah->where('satuan', 'pcs')->sum('stok');
-        
-        // 4. Hitung statistik lainnya (tidak perlu diubah)
         $totalSiswa = Siswa::count();
         $totalSetoran = Setoran::sum('total_harga');
-        $kas = Penjualan::sum('total_harga');
 
-        // --- PENAMBAHAN: Ringkasan Keuangan Bulanan ---
+        // --- PENYESUAIAN: Perhitungan Keuangan dari Buku Kas ---
+        $totalPemasukan = BukuKas::where('tipe', 'pemasukan')->sum('jumlah');
+        $totalPengeluaran = BukuKas::where('tipe', 'pengeluaran')->sum('jumlah');
+        $kas = $totalPemasukan - $totalPengeluaran; // Ini adalah saldo kas yang sebenarnya
+
+        // Ringkasan Keuangan Bulanan
         $bulanIni = now()->month;
         $tahunIni = now()->year;
-
-        // Pemasukan = total penjualan bulan ini
-        $pemasukanBulanIni = Penjualan::whereYear('created_at', $tahunIni)->whereMonth('created_at', $bulanIni)->sum('total_harga');
-        
-        // Pengeluaran = total penarikan saldo oleh siswa bulan ini
-        $pengeluaranBulanIni = Penarikan::whereYear('created_at', $tahunIni)->whereMonth('created_at', $bulanIni)->sum('jumlah_penarikan');
-
-        // Laba Bersih = Pemasukan - Pengeluaran
+        $pemasukanBulanIni = BukuKas::whereYear('tanggal', $tahunIni)->whereMonth('tanggal', $bulanIni)->where('tipe', 'pemasukan')->sum('jumlah');
+        $pengeluaranBulanIni = BukuKas::whereYear('tanggal', $tahunIni)->whereMonth('tanggal', $bulanIni)->where('tipe', 'pengeluaran')->sum('jumlah');
         $labaBersihBulanIni = $pemasukanBulanIni - $pengeluaranBulanIni;
         
-        // Data untuk chart (tidak perlu diubah)
-        $labels = [];
-        $dataSetoran = [];
-        $dataPenjualan = [];
-        for ($i = 6; $i >= 0; $i--) {
-            $date = now()->subMonths($i);
-            $month = $date->format('M');
-            $year = $date->format('Y');
-            $labels[] = "$month $year";
-            $dataSetoran[] = Setoran::whereYear('created_at', $year)->whereMonth('created_at', $date->month)->sum('total_harga');
-            $dataPenjualan[] = Penjualan::whereYear('created_at', $year)->whereMonth('created_at', $date->month)->sum('total_harga');
-        }
-
-        // Data untuk aktivitas terkini (tidak perlu diubah)
+        // Aktivitas Terkini (Tidak berubah)
         $aktivitasTerakhir = [
             'setoran' => Setoran::with('siswa.pengguna')->latest()->take(3)->get(),
             'penarikan' => Penarikan::with('siswa.pengguna')->latest()->take(3)->get(),
         ];
 
-        // Variabel notifikasi (tidak perlu diubah)
+        // Notifikasi (Tidak berubah)
         $notifikasi = [];
         $sampahHampirHabis = $semuaJenisSampah->where('stok', '<', 10);
         if ($sampahHampirHabis->isNotEmpty()) {
             $notifikasi[] = "Stok untuk beberapa jenis sampah hampir habis. Mohon segera diperiksa.";
         }
         
-        // 5. Kirim semua data yang sudah benar ke view
         return view('dashboard-admin', compact(
             'totalStokKg', 
             'totalStokPcs', 
             'totalSiswa', 
             'totalSetoran',
-            'kas',
+            'kas', // Variabel $kas yang sudah diperbaiki
             'stokPerJenis',
-            'labels',
-            'dataSetoran',
-            'dataPenjualan',
             'aktivitasTerakhir',
             'notifikasi',
-            'pemasukanBulanIni',      // Variabel baru
-            'pengeluaranBulanIni',   // Variabel baru
-            'labaBersihBulanIni'     // Variabel baru
+            'pemasukanBulanIni',
+            'pengeluaranBulanIni',
+            'labaBersihBulanIni'
         ));
     }
-     // --- METHOD BARU UNTUK DATA CHART ---
+
+    // Method getChartData() tidak perlu diubah, biarkan seperti yang sudah ada
     public function getChartData(Request $request)
     {
         $period = $request->input('period', 'monthly');
@@ -111,7 +86,7 @@ class DashboardController extends Controller
 
             for ($i = $days; $i >= 0; $i--) {
                 $date = now()->subDays($i);
-                $labels[] = $date->format('d M'); // Format: 25 Aug
+                $labels[] = $date->format('d M');
                 $dataSetoran[] = Setoran::whereDate('created_at', $date)->sum('total_harga');
                 $dataPenjualan[] = Penjualan::whereDate('created_at', $date)->sum('total_harga');
             }

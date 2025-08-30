@@ -9,12 +9,16 @@ class Penjualan extends Model
 {
     use HasFactory;
     protected $table = 'penjualan';
-    protected $fillable = ['id_admin', 'nama_pengepul', 'total_harga'];
+    
+    // --- PERBAIKAN DI SINI ---
+    protected $fillable = [
+        'id_admin', 
+        'nama_pengepul', 
+        'tanggal_penjualan', // Tambahkan ini
+        'total_harga'
+    ];
 
-    /**
-     * Mengubah nama metode menjadi bentuk plural agar sesuai konvensi.
-     */
-    public function detailPenjualans()
+    public function detailPenjualan() // Mengubah nama metode agar sesuai dengan relasi
     {
         return $this->hasMany(DetailPenjualan::class, 'id_penjualan');
     }
