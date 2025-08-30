@@ -1,5 +1,6 @@
 <?php
 
+// --- PERBAIKAN DI SINI ---
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -9,16 +10,19 @@ class Penjualan extends Model
 {
     use HasFactory;
     protected $table = 'penjualan';
-    
-    // --- PERBAIKAN DI SINI ---
+
     protected $fillable = [
         'id_admin', 
         'nama_pengepul', 
-        'tanggal_penjualan', // Tambahkan ini
+        'tanggal_penjualan',
         'total_harga'
     ];
 
-    public function detailPenjualan() // Mengubah nama metode agar sesuai dengan relasi
+    protected $casts = [
+        'tanggal_penjualan' => 'datetime',
+    ];
+
+    public function detailPenjualan()
     {
         return $this->hasMany(DetailPenjualan::class, 'id_penjualan');
     }
