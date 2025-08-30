@@ -27,7 +27,9 @@ class DashboardController extends Controller
             $totalSetoran = Setoran::sum('total_harga');
             $totalPenjualan = Penjualan::sum('total_harga');
             $stokSampah = Setoran::sum('jumlah') - DB::table('detail_penjualan')->sum('jumlah');
-            
+             $totalStokKg = JenisSampah::where('satuan', 'kg')->sum('stok');
+            $totalStokPcs = JenisSampah::where('satuan', 'pcs')->sum('stok');
+            $jenisSampah = JenisSampah::count();
             // --- ITEM BARU: Menghitung Kas ---
             $totalPenarikanSiswa = Penarikan::sum('jumlah_penarikan');
             $kas = $totalPenjualan - $totalPenarikanSiswa;
@@ -98,6 +100,8 @@ class DashboardController extends Controller
                 'penjualan' => Penjualan::latest()->take(5)->get(),
                 'penarikan' => Penarikan::with('siswa.pengguna')->latest()->take(5)->get()
             ];
+            // PERBAIKAN: Hitung total stok secara terpisah berdasarkan satuan
+       
 
             return view('dashboard-admin', compact(
                 'totalSiswa',
@@ -111,7 +115,9 @@ class DashboardController extends Controller
                 'dataPenjualan',
                 'stokPerJenis',
                 'aktivitasTerakhir',
-                'notifikasi'
+                'notifikasi',
+                'totalStokKg', 
+                'totalStokPcs'
             ));
 
         } elseif ($user->role === 'siswa') {

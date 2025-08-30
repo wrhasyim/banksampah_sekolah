@@ -30,7 +30,11 @@
                             <p class="font-normal text-gray-700 dark:text-gray-400">Total Kas</p>
                         </div>
                         <div class="p-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
-                            <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{{ number_format($stokSampah, 2, ',', '.') }}</h5>
+                            <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{{ number_format($totalStokPcs, 2, ',', '.') }}</h5>
+                            <p class="font-normal text-gray-700 dark:text-gray-400">Total Stok Sampah (pcs)</p>
+                        </div>
+                        <div class="p-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
+                            <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{{ number_format($totalStokKg, 0, ',', '.') }}</h5>
                             <p class="font-normal text-gray-700 dark:text-gray-400">Total Stok Sampah (Kg)</p>
                         </div>
                         <div class="p-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
