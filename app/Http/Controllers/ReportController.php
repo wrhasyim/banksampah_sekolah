@@ -6,42 +6,44 @@ use Illuminate\Http\Request;
 use App\Models\Setoran;
 use App\Models\Penarikan;
 use App\Models\Penjualan;
+use App\Models\BukuKas; // Import model BukuKas
 use App\Exports\LaporanTransaksiExport;
 use App\Exports\LaporanPenjualanExport;
 use Maatwebsite\Excel\Facades\Excel;
-use Barryvdh\DomPDF\Facade\Pdf;
+use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Carbon\Carbon;
-
 
 class ReportController extends Controller
 {
     public function index(Request $request)
     {
+        // Logika untuk filter bulan (tetap sama)
         $selectedMonth = $request->input('bulan', date('Y-m'));
         $startDate = Carbon::createFromFormat('Y-m', $selectedMonth)->startOfMonth();
         $endDate = Carbon::createFromFormat('Y-m', $selectedMonth)->endOfMonth();
 
-        // PERBAIKAN: Mengganti 'tanggal_setor' menjadi 'created_at'
-        $setorans = Setoran::whereBetween('created_at', [$startDate, $endDate])
-                           ->orderBy('created_at', 'desc')
-                           ->get();
+        // Mengambil data transaksi untuk tab lain (tetap sama)
+        $setorans = Setoran::with('siswa.pengguna')->whereBetween('created_at', [$startDate, $endDate])->orderBy('created_at', 'desc')->get();
+        $penarikans = Penarikan::with('siswa.pengguna', 'kelas')->whereBetween('tanggal_penarikan', [$startDate, $endDate])->orderBy('tanggal_penarikan', 'desc')->get();
+        $penjualans = Penjualan::whereBetween('tanggal_penjualan', [$startDate, $endDate])->orderBy('tanggal_penjualan', 'desc')->get();
         
-        // PERBAIKAN: Mengganti 'tanggal_penarikan' menjadi 'created_at'
-        $penarikans = Penarikan::whereBetween('created_at', [$startDate, $endDate])
-                               ->orderBy('created_at', 'desc')
-                               ->get();
-
-        $penjualans = Penjualan::whereBetween('tanggal_penjualan', [$startDate, $endDate])
-                               ->orderBy('tanggal_penjualan', 'desc')
-                               ->get();
-
-        $totalSetoran = $setorans->sum('total');
-        $totalPenarikan = $penarikans->sum('jumlah');
+        $totalSetoran = $setorans->sum('total_harga');
+        $totalPenarikan = $penarikans->sum('jumlah_penarikan');
         $totalPenjualan = $penjualans->sum('total_harga');
 
-        // Laba Rugi
-        $pendapatan = $totalPenjualan;
-        $beban = $totalSetoran; // Asumsi beban adalah total setoran
+        // --- PERBAIKAN LOGIKA LABA RUGI ---
+        
+        // 1. Pendapatan adalah semua pemasukan di Buku Kas pada periode yang dipilih
+        $pendapatan = BukuKas::whereBetween('tanggal', [$startDate, $endDate])
+                            ->where('tipe', 'pemasukan')
+                            ->sum('jumlah');
+
+        // 2. Beban adalah semua pengeluaran di Buku Kas pada periode yang dipilih
+        $beban = BukuKas::whereBetween('tanggal', [$startDate, $endDate])
+                       ->where('tipe', 'pengeluaran')
+                       ->sum('jumlah');
+        
+        // 3. Laba Rugi adalah selisihnya
         $labaRugi = $pendapatan - $beban;
 
         return view('pages.laporan.index', compact(
@@ -51,6 +53,8 @@ class ReportController extends Controller
         ));
     }
 
+    // ... (method export lainnya tetap sama) ...
+    
     public function exportTransaksiExcel(Request $request)
     {
         $bulan = $request->input('bulan', date('Y-m'));
@@ -58,28 +62,17 @@ class ReportController extends Controller
     }
 
     public function exportTransaksiPdf(Request $request)
-{
-    $selectedMonth = $request->input('bulan', date('Y-m'));
-    $startDate = Carbon::createFromFormat('Y-m', $selectedMonth)->startOfMonth();
-    $endDate = Carbon::createFromFormat('Y-m', $selectedMonth)->endOfMonth();
-
-    // PERBAIKAN: Mengganti 'tanggal_setor' menjadi 'created_at'
-    $setorans = Setoran::whereBetween('created_at', [$startDate, $endDate])
-                       ->orderBy('created_at', 'desc')
-                       ->get();
-
-    // PERBAIKAN: Mengganti 'tanggal_penarikan' menjadi 'created_at'
-    $penarikans = Penarikan::whereBetween('created_at', [$startDate, $endDate])
-                           ->orderBy('created_at', 'desc')
-                           ->get();
-    
-    $totalSetoran = $setorans->sum('total');
-    $totalPenarikan = $penarikans->sum('jumlah');
-
-    // PERBAIKAN: Menambahkan 'startDate' dan 'endDate' ke compact
-    $pdf = PDF::loadView('pages.laporan.pdf.laporan-transaksi-pdf', compact('setorans', 'penarikans', 'selectedMonth', 'totalSetoran', 'totalPenarikan', 'startDate', 'endDate'));
-    return $pdf->download('laporan-transaksi-'.$selectedMonth.'.pdf');
-}
+    {
+        $selectedMonth = $request->input('bulan', date('Y-m'));
+        $startDate = Carbon::createFromFormat('Y-m', $selectedMonth)->startOfMonth();
+        $endDate = Carbon::createFromFormat('Y-m', $selectedMonth)->endOfMonth();
+        $setorans = Setoran::whereBetween('created_at', [$startDate, $endDate])->orderBy('created_at', 'desc')->get();
+        $penarikans = Penarikan::whereBetween('tanggal_penarikan', [$startDate, $endDate])->orderBy('tanggal_penarikan', 'desc')->get();
+        $totalSetoran = $setorans->sum('total_harga');
+        $totalPenarikan = $penarikans->sum('jumlah_penarikan');
+        $pdf = PDF::loadView('pages.laporan.pdf.laporan-transaksi-pdf', compact('setorans', 'penarikans', 'selectedMonth', 'totalSetoran', 'totalPenarikan', 'startDate', 'endDate'));
+        return $pdf->download('laporan-transaksi-'.$selectedMonth.'.pdf');
+    }
 
     public function exportPenjualanExcel(Request $request)
     {
@@ -92,13 +85,8 @@ class ReportController extends Controller
         $selectedMonth = $request->input('bulan', date('Y-m'));
         $startDate = Carbon::createFromFormat('Y-m', $selectedMonth)->startOfMonth();
         $endDate = Carbon::createFromFormat('Y-m', $selectedMonth)->endOfMonth();
-
-        $penjualans = Penjualan::whereBetween('tanggal_penjualan', [$startDate, $endDate])
-                               ->orderBy('tanggal_penjualan', 'desc')
-                               ->get();
-        
+        $penjualans = Penjualan::whereBetween('tanggal_penjualan', [$startDate, $endDate])->orderBy('tanggal_penjualan', 'desc')->get();
         $totalPenjualan = $penjualans->sum('total_harga');
-
         $pdf = PDF::loadView('pages.laporan.pdf.laporan-penjualan-pdf', compact('penjualans', 'selectedMonth', 'totalPenjualan'));
         return $pdf->download('laporan-penjualan-'.$selectedMonth.'.pdf');
     }
@@ -109,16 +97,11 @@ class ReportController extends Controller
         $startDate = Carbon::createFromFormat('Y-m', $selectedMonth)->startOfMonth();
         $endDate = Carbon::createFromFormat('Y-m', $selectedMonth)->endOfMonth();
 
-        // PERBAIKAN: Mengganti 'tanggal_setor' menjadi 'created_at'
-        $totalSetoran = Setoran::whereBetween('created_at', [$startDate, $endDate])->sum('total');
-        $totalPenjualan = Penjualan::whereBetween('tanggal_penjualan', [$startDate, $endDate])->sum('total_harga');
-        
-        $pendapatan = $totalPenjualan;
-        $beban = $totalSetoran;
+        $pendapatan = BukuKas::whereBetween('tanggal', [$startDate, $endDate])->where('tipe', 'pemasukan')->sum('jumlah');
+        $beban = BukuKas::whereBetween('tanggal', [$startDate, $endDate])->where('tipe', 'pengeluaran')->sum('jumlah');
         $labaRugi = $pendapatan - $beban;
 
         $pdf = PDF::loadView('pages.laporan.pdf.laporan-laba-rugi-pdf', compact('pendapatan', 'beban', 'labaRugi', 'selectedMonth'));
         return $pdf->download('laporan-laba-rugi-'.$selectedMonth.'.pdf');
     }
-    
 }

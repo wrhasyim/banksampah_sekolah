@@ -27,7 +27,7 @@
             <th>Beban Operasional</th>
             <td>Rp {{ number_format($beban, 0, ',', '.') }}</td>
         </tr>
-        <tr class="total">
+        <tr class="total_harga">
             <th>Laba / Rugi Bersih</th>
             <td class="{{ $labaRugi >= 0 ? 'laba' : 'rugi' }}">
                 Rp {{ number_format($labaRugi, 0, ',', '.') }}

@@ -1,9 +1,8 @@
 <div>
     <div class="flex items-center justify-between mb-4">
         <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">
-            Laporan Laba Rugi Bulan: {{ \Carbon\Carbon::parse($selectedMonth)->format('F Y') }}
+            Laporan Laba Rugi Bulan: {{ \Carbon\Carbon::parse($selectedMonth)->isoFormat('MMMM YYYY') }}
         </h3>
-        {{-- PERBAIKAN: Mengganti variabel agar sesuai dengan controller --}}
         <a href="{{ route('laporan.laba-rugi.export.pdf', ['bulan' => $selectedMonth]) }}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">
             Export to PDF
         </a>
@@ -20,11 +19,11 @@
             <tbody>
                 <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
                     <td class="px-6 py-4 font-medium">Total Pendapatan (dari Penjualan)</td>
-                    {{-- PERBAIKAN: Mengganti variabel agar sesuai dengan controller --}}
                     <td class="px-6 py-4 text-green-600">Rp {{ number_format($pendapatan, 2, ',', '.') }}</td>
                 </tr>
                 <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                    <td class="px-6 py-4 font-medium">Total Beban (dari Setoran ke Siswa)</td>
+                    {{-- --- PERBAIKAN LABEL DI SINI --- --}}
+                    <td class="px-6 py-4 font-medium">Total Beban (Penarikan, Honor, dll)</td>
                     <td class="px-6 py-4 text-red-600">- Rp {{ number_format($beban, 2, ',', '.') }}</td>
                 </tr>
                 <tr class="bg-white dark:bg-gray-800">
