@@ -62,7 +62,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
 
     // Laporan Buku Tabungan
     Route::get('buku-tabungan', [BukuTabunganController::class, 'index'])->name('buku-tabungan.index');
-
+Route::get('/insentif', [App\Http\Controllers\InsentifController::class, 'index'])->name('insentif.index');
     // Penjualan
     Route::resource('penjualan', PenjualanController::class);
 // Tambahkan baris ini di dalam grup middleware 'auth' atau di tempat yang sesuai

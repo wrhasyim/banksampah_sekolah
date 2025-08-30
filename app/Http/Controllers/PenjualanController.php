@@ -6,6 +6,9 @@ use App\Models\JenisSampah;
 use App\Models\Penjualan;
 use App\Models\Setting;
 use App\Models\BukuKas;
+use App\Models\Setoran;
+use App\Models\Kelas;
+use App\Models\Insentif;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -68,7 +71,7 @@ class PenjualanController extends Controller
 
                 $penjualan->update(['total_harga' => $totalHarga]);
 
-                // --- PENYESUAIAN: Mencatat Pemasukan dan Pengeluaran Honor ---
+                // --- LOGIKA BARU: PENCATATAN PEMASUKAN DAN INSENTIF ---
 
                 // 1. Catat total penjualan sebagai PEMASUKAN di Buku Kas
                 BukuKas::create([
@@ -85,7 +88,7 @@ class PenjualanController extends Controller
                 $persentaseWaliKelas = $settings['persentase_wali_kelas'] ?? 0;
                 $persentaseSekolah = $settings['persentase_sekolah'] ?? 0;
 
-                // 3. Hitung dan catat honor sebagai PENGELUARAN
+                // 3. Hitung dan catat honor untuk Pengelola (tetap)
                 $honorPengelola = $totalHarga * ($persentasePengelola / 100);
                 if ($honorPengelola > 0) {
                     BukuKas::create([
@@ -97,17 +100,7 @@ class PenjualanController extends Controller
                     ]);
                 }
 
-                $honorWaliKelas = $totalHarga * ($persentaseWaliKelas / 100);
-                if ($honorWaliKelas > 0) {
-                    BukuKas::create([
-                        'tanggal' => now(),
-                        'deskripsi' => 'Honor Wali Kelas dari Penjualan #' . $penjualan->id,
-                        'tipe' => 'pengeluaran',
-                        'jumlah' => $honorWaliKelas,
-                        'id_admin' => Auth::id(),
-                    ]);
-                }
-
+                // 4. Hitung dan catat honor untuk Sekolah (tetap)
                 $honorSekolah = $totalHarga * ($persentaseSekolah / 100);
                 if ($honorSekolah > 0) {
                     BukuKas::create([
@@ -118,6 +111,50 @@ class PenjualanController extends Controller
                         'id_admin' => Auth::id(),
                     ]);
                 }
+
+                // 5. Logika Baru: Bagikan honor Wali Kelas secara proporsional
+                $totalHonorWaliKelas = $totalHarga * ($persentaseWaliKelas / 100);
+                if ($totalHonorWaliKelas > 0) {
+                    
+                    // Hitung total setoran dari setiap kelas
+                    $setoranPerKelas = Setoran::select(
+                            'siswa.id_kelas', 
+                            DB::raw('SUM(setoran.total_harga) as total_setoran')
+                        )
+                        ->join('siswa', 'setoran.siswa_id', '=', 'siswa.id')
+                        ->groupBy('siswa.id_kelas')
+                        ->pluck('total_setoran', 'id_kelas');
+
+                    $totalSemuaSetoran = $setoranPerKelas->sum();
+
+                    if ($totalSemuaSetoran > 0) {
+                        foreach ($setoranPerKelas as $kelasId => $totalSetoranKelas) {
+                            // Hitung porsi insentif untuk kelas ini
+                            $proporsi = $totalSetoranKelas / $totalSemuaSetoran;
+                            $insentifKelas = $totalHonorWaliKelas * $proporsi;
+
+                            if ($insentifKelas > 0) {
+                                // Catat ke tabel riwayat insentif
+                                Insentif::create([
+                                    'penjualan_id' => $penjualan->id,
+                                    'kelas_id' => $kelasId,
+                                    'jumlah_insentif' => $insentifKelas,
+                                ]);
+
+                                // Catat sebagai pengeluaran di Buku Kas
+                                $kelas = Kelas::find($kelasId);
+                                BukuKas::create([
+                                    'tanggal' => now(),
+                                    'deskripsi' => 'Insentif Wali Kelas: ' . ($kelas->nama_kelas ?? 'Kelas Dihapus') . ' (dari Penjualan #' . $penjualan->id . ')',
+                                    'tipe' => 'pengeluaran',
+                                    'jumlah' => $insentifKelas,
+                                    'id_admin' => Auth::id(),
+                                ]);
+                            }
+                        }
+                    }
+                }
+
             });
         } catch (ValidationException $e) {
             return redirect()->back()->withErrors($e->errors())->withInput();
@@ -125,7 +162,7 @@ class PenjualanController extends Controller
             return redirect()->back()->with('toastr-error', 'Terjadi kesalahan: ' . $e->getMessage())->withInput();
         }
 
-        return redirect()->route('penjualan.index')->with('toastr-success', 'Transaksi penjualan berhasil disimpan dan honor telah dicatat!');
+        return redirect()->route('penjualan.index')->with('toastr-success', 'Transaksi penjualan berhasil disimpan dan insentif telah dibagikan!');
     }
     
     public function show(Penjualan $penjualan)
