@@ -22,7 +22,7 @@ class Setoran extends Model
 
     public function jenisSampah()
     {
-        return $this->belongsTo(JenisSampah::class, 'id_jenis_sampah');
+        return $this->belongsTo(JenisSampah::class, 'jenis_sampah_id');
     }
 
     public function admin()
