@@ -49,22 +49,25 @@ class SetoranController extends Controller
         ]);
 
         DB::transaction(function () use ($request) {
-            $totalHargaKeseluruhan = 0;
-            foreach ($request->sampah as $item) {
-                $jenisSampah = JenisSampah::find($item['jenis_sampah_id']);
-                $totalHarga = $jenisSampah->harga_per_satuan * $item['jumlah'];
-                $totalHargaKeseluruhan += $totalHarga;
+    $totalHargaKeseluruhan = 0;
+    foreach ($request->sampah as $item) {
+        $jenisSampah = JenisSampah::find($item['jenis_sampah_id']);
+        $totalHarga = $jenisSampah->harga_per_satuan * $item['jumlah'];
+        $totalHargaKeseluruhan += $totalHarga;
 
-                Setoran::create([
-                    'siswa_id' => $request->siswa_id,
-                    'jenis_sampah_id' => $item['jenis_sampah_id'],
-                    'jumlah' => $item['jumlah'],
-                    'total_harga' => $totalHarga,
-                ]);
-            }
-            $siswa = Siswa::find($request->siswa_id);
-            $siswa->increment('saldo', $totalHargaKeseluruhan);
-        });
+        Setoran::create([
+            'siswa_id' => $request->siswa_id,
+            'jenis_sampah_id' => $item['jenis_sampah_id'],
+            'jumlah' => $item['jumlah'],
+            'total_harga' => $totalHarga,
+        ]);
+
+        // TAMBAHKAN BARIS INI JUGA
+        $jenisSampah->increment('stok', $item['jumlah']);
+    }
+    $siswa = Siswa::find($request->siswa_id);
+    $siswa->increment('saldo', $totalHargaKeseluruhan);
+});
 
         return redirect()->route('setoran.index')->with('success', 'Setoran berhasil ditambahkan.');
     }
@@ -129,27 +132,30 @@ class SetoranController extends Controller
         $jenisSampah = JenisSampah::find($request->jenis_sampah_id);
         
         DB::transaction(function () use ($request, $jenisSampah) {
-            foreach ($request->setoran as $data) {
-                if (!empty($data['jumlah']) && $data['jumlah'] > 0) {
-                    $totalHarga = $data['jumlah'] * $jenisSampah->harga_per_satuan;
+    foreach ($request->setoran as $data) {
+        if (!empty($data['jumlah']) && $data['jumlah'] > 0) {
+            $totalHarga = $data['jumlah'] * $jenisSampah->harga_per_satuan;
 
-                    Setoran::create([
-                        'siswa_id' => $data['siswa_id'],
-                        'jenis_sampah_id' => $jenisSampah->id,
-                        'jumlah' => $data['jumlah'],
-                        'total_harga' => $totalHarga,
-                    ]);
+            Setoran::create([
+                'siswa_id' => $data['siswa_id'],
+                'jenis_sampah_id' => $jenisSampah->id,
+                'jumlah' => $data['jumlah'],
+                'total_harga' => $totalHarga,
+            ]);
 
-                    $siswa = Siswa::find($data['siswa_id']);
-                    $siswa->increment('saldo', $totalHarga);
+            // TAMBAHKAN BARIS INI UNTUK MENAIKKAN STOK
+            $jenisSampah->increment('stok', $data['jumlah']);
 
-                    $points = floor($totalHarga / 1000);
-                    if ($points > 0) {
-                        $siswa->increment('points', $points);
-                    }
-                }
+            $siswa = Siswa::find($data['siswa_id']);
+            $siswa->increment('saldo', $totalHarga);
+
+            $points = floor($totalHarga / 1000);
+            if ($points > 0) {
+                $siswa->increment('points', $points);
             }
-        });
+        }
+    }
+});
 
         return redirect()->route('setoran.index')->with('success', 'Setoran massal berhasil disimpan.');
     }

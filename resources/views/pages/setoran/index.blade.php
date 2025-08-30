@@ -39,8 +39,12 @@
                                         {{ $item->siswa->pengguna->nama_lengkap ?? 'Siswa Telah Dihapus' }}
                                     </td>
                                     <td class="px-6 py-4">
-                                        {{-- PERBAIKAN 1: Memanggil nama_sampah dari relasi --}}
-                                        {{ $item->jenisSampah->nama_sampah ?? 'Jenis Sampah Dihapus' }}
+                                        {{-- Tambahkan pengecekan ini --}}
+    @if ($item->jenisSampah)
+        {{ $item->jenisSampah->nama_sampah }}
+    @else
+        <span class="text-red-500">(Data Sampah Telah Dihapus)</span>
+    @endif
                                     </td>
                                     <td class="px-6 py-4">
                                         {{-- PERBAIKAN 2: Menampilkan jumlah & satuan dinamis dari relasi --}}
