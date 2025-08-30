@@ -3,20 +3,19 @@
 namespace App\Http\Controllers;
 
 use App\Models\Insentif;
-use App\Models\BukuKas; // Import model BukuKas
+use App\Models\BukuKas;
 use Illuminate\Http\Request;
-use Carbon\Carbon; // Import Carbon
+use Carbon\Carbon;
 
 class InsentifController extends Controller
 {
-    // Halaman untuk insentif Wali Kelas (tidak berubah)
     public function index()
     {
-        $insentifs = Insentif::with('penjualan', 'kelas.waliKelas')->latest()->get();
+        // Mengurutkan dari yang terbaru dan menambahkan paginasi
+        $insentifs = Insentif::with('penjualan', 'kelas.waliKelas')->latest()->paginate(15);
         return view('pages.insentif.index', compact('insentifs'));
     }
 
-    // --- METHOD BARU UNTUK REKAP PENGELOLA & SEKOLAH ---
     public function rekap(Request $request)
     {
         $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->toDateString());
@@ -25,19 +24,19 @@ class InsentifController extends Controller
         $start = Carbon::parse($startDate)->startOfDay();
         $end = Carbon::parse($endDate)->endOfDay();
 
-        // Ambil data honor Pengelola dari Buku Kas
+        // --- PERBAIKAN DI SINI: Menggunakan latest() untuk mengurutkan ---
         $insentifPengelola = BukuKas::where('deskripsi', 'like', 'Honor Pengelola%')
                                     ->whereBetween('tanggal', [$start, $end])
-                                    ->get();
+                                    ->latest('tanggal') // Mengurutkan dari tanggal terbaru
+                                    ->paginate(5, ['*'], 'pengelola_page');
 
-        // Ambil data honor Sekolah dari Buku Kas
         $insentifSekolah = BukuKas::where('deskripsi', 'like', 'Honor Sekolah%')
                                   ->whereBetween('tanggal', [$start, $end])
-                                  ->get();
+                                  ->latest('tanggal') // Mengurutkan dari tanggal terbaru
+                                  ->paginate(5, ['*'], 'sekolah_page');
         
-        // Hitung total untuk ditampilkan di ringkasan
-        $totalPengelola = $insentifPengelola->sum('jumlah');
-        $totalSekolah = $insentifSekolah->sum('jumlah');
+        $totalPengelola = BukuKas::where('deskripsi', 'like', 'Honor Pengelola%')->whereBetween('tanggal', [$start, $end])->sum('jumlah');
+        $totalSekolah = BukuKas::where('deskripsi', 'like', 'Honor Sekolah%')->whereBetween('tanggal', [$start, $end])->sum('jumlah');
 
         return view('pages.insentif.rekap', compact('insentifPengelola', 'insentifSekolah', 'totalPengelola', 'totalSekolah', 'startDate', 'endDate'));
     }

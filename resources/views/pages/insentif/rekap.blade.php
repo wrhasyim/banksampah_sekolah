@@ -4,7 +4,6 @@
             <div class="p-6 overflow-hidden bg-white shadow-sm dark:bg-gray-800 sm:rounded-lg">
                 <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-6">Rekap Insentif Pengelola & Sekolah</h3>
 
-                {{-- Form Filter Tanggal --}}
                 <form action="{{ route('insentif.rekap') }}" method="GET" class="mb-6 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                         <div>
@@ -26,6 +25,7 @@
                     <h4 class="text-md font-semibold mb-4">Insentif Pengelola</h4>
                     <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
                         <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                            {{-- ... (thead tetap sama) ... --}}
                             <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                                 <tr>
                                     <th scope="col" class="px-6 py-3">Tanggal</th>
@@ -48,11 +48,15 @@
                             </tbody>
                             <tfoot class="font-semibold bg-gray-100 dark:bg-gray-700">
                                 <tr>
-                                    <td colspan="2" class="px-6 py-3 text-right">Total Insentif Pengelola:</td>
+                                    <td colspan="2" class="px-6 py-3 text-right">Total Insentif Pengelola (Periode ini):</td>
                                     <td class="px-6 py-3">Rp {{ number_format($totalPengelola, 0, ',', '.') }}</td>
                                 </tr>
                             </tfoot>
                         </table>
+                    </div>
+                    {{-- --- TAMBAHAN LINK PAGINASI --- --}}
+                    <div class="mt-4">
+                        {{ $insentifPengelola->withQueryString()->links() }}
                     </div>
                 </div>
 
@@ -61,7 +65,8 @@
                     <h4 class="text-md font-semibold mb-4">Insentif Sekolah</h4>
                     <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
                         <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                            <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                            {{-- ... (thead tetap sama) ... --}}
+                             <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                                 <tr>
                                     <th scope="col" class="px-6 py-3">Tanggal</th>
                                     <th scope="col" class="px-6 py-3">Keterangan</th>
@@ -83,11 +88,15 @@
                             </tbody>
                              <tfoot class="font-semibold bg-gray-100 dark:bg-gray-700">
                                 <tr>
-                                    <td colspan="2" class="px-6 py-3 text-right">Total Insentif Sekolah:</td>
+                                    <td colspan="2" class="px-6 py-3 text-right">Total Insentif Sekolah (Periode ini):</td>
                                     <td class="px-6 py-3">Rp {{ number_format($totalSekolah, 0, ',', '.') }}</td>
                                 </tr>
                             </tfoot>
                         </table>
+                    </div>
+                     {{-- --- TAMBAHAN LINK PAGINASI --- --}}
+                    <div class="mt-4">
+                        {{ $insentifSekolah->withQueryString()->links() }}
                     </div>
                 </div>
             </div>
