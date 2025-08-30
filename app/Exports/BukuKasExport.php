@@ -3,63 +3,48 @@
 namespace App\Exports;
 
 use App\Models\BukuKas;
+use Carbon\Carbon;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
-use Carbon\Carbon;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 
-class BukuKasExport implements FromCollection, WithHeadings, WithMapping
+class BukuKasExport implements FromCollection, WithHeadings, WithMapping, ShouldAutoSize
 {
-    protected $startDate;
-    protected $endDate;
+    protected $bulan;
 
-    public function __construct($startDate, $endDate)
+    // --- PERBAIKAN DI SINI ---
+    // Hapus parameter $saldoAkhir yang tidak digunakan
+    public function __construct($bulan)
     {
-        $this->startDate = $startDate;
-        $this->endDate = $endDate;
+        $this->bulan = $bulan;
     }
 
-    /**
-    * @return \Illuminate\Support\Collection
-    */
     public function collection()
     {
-        $query = BukuKas::with('kategori')->latest('tanggal');
+        $startDate = Carbon::createFromFormat('Y-m', $this->bulan)->startOfMonth();
+        $endDate = Carbon::createFromFormat('Y-m', $this->bulan)->endOfMonth();
 
-        if ($this->startDate && $this->endDate) {
-            $query->whereBetween('tanggal', [$this->startDate, $this->endDate]);
-        }
-
-        return $query->get();
+        return BukuKas::whereBetween('tanggal', [$startDate, $endDate])
+            ->orderBy('tanggal', 'asc')
+            ->get();
     }
 
-    /**
-     * @return array
-     */
     public function headings(): array
     {
         return [
             'Tanggal',
-            'Deskripsi',
-            'Kategori',
-            'Tipe',
-            'Pemasukan (Rp)',
-            'Pengeluaran (Rp)',
+            'Keterangan',
+            'Pemasukan',
+            'Pengeluaran',
         ];
     }
 
-    /**
-     * @param mixed $transaksi
-     *
-     * @return array
-     */
     public function map($transaksi): array
     {
         return [
             Carbon::parse($transaksi->tanggal)->format('d-m-Y'),
             $transaksi->deskripsi,
-            $transaksi->kategori->nama_kategori ?? '-',
-            ucfirst($transaksi->tipe),
             $transaksi->tipe == 'pemasukan' ? $transaksi->jumlah : 0,
             $transaksi->tipe == 'pengeluaran' ? $transaksi->jumlah : 0,
         ];
