@@ -7,7 +7,7 @@
 
     <div class="py-12">
 
-        {{-- Notifikasi Penting --}}
+        {{-- Notifikasi Penting (Tidak berubah) --}}
         @if(!empty($notifikasi))
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 mb-6">
                 @foreach($notifikasi as $pesan)
@@ -23,9 +23,9 @@
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
 
-                    {{-- --- PENYESUAIAN: Statistik Utama --- --}}
+                    {{-- Statistik Utama (Tidak berubah) --}}
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-                        {{-- Kartu Pemasukan Bulan Ini --}}
+                         {{-- Kartu Pemasukan Bulan Ini --}}
                         <div class="p-6 bg-green-50 dark:bg-green-900/50 border border-green-200 dark:border-green-700 rounded-lg shadow-sm">
                             <h5 class="mb-2 text-2xl font-bold tracking-tight text-green-800 dark:text-green-300">Rp. {{ number_format($pemasukanBulanIni, 0, ',', '.') }}</h5>
                             <p class="font-normal text-gray-700 dark:text-gray-400">Pemasukan Bulan Ini</p>
@@ -65,19 +65,30 @@
                         </div>
                     </div>
 
-                    {{-- Chart --}}
+                    {{-- --- PENAMBAHAN: Chart dengan Filter --- --}}
                     <div class="w-full p-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm sm:p-6 mb-6">
-                        <h5 class="mb-3 text-base font-semibold text-gray-900 md:text-xl dark:text-white">
-                            Grafik Setoran dan Penjualan per Bulan
-                        </h5>
-                        <canvas id="myChart"></canvas>
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
+                            <h5 class="mb-3 sm:mb-0 text-base font-semibold text-gray-900 md:text-xl dark:text-white">
+                                Grafik Transaksi
+                            </h5>
+                            {{-- Tombol Filter --}}
+                            <div class="flex items-center space-x-2">
+                                <button data-period="today" class="chart-filter-btn px-3 py-1 text-sm font-medium text-gray-500 bg-gray-100 rounded-md hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">Hari Ini</button>
+                                <button data-period="7d" class="chart-filter-btn px-3 py-1 text-sm font-medium text-gray-500 bg-gray-100 rounded-md hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">7 Hari</button>
+                                <button data-period="30d" class="chart-filter-btn px-3 py-1 text-sm font-medium text-gray-500 bg-gray-100 rounded-md hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">30 Hari</button>
+                                <button data-period="monthly" class="chart-filter-btn px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-md">Bulanan</button>
+                            </div>
+                        </div>
+                        <div class="h-96">
+                             <canvas id="myChart"></canvas>
+                        </div>
                     </div>
 
                 </div>
             </div>
         </div>
         
-        {{-- --- Grid Baru untuk Elemen Tambahan --- --}}
+        {{-- Grid Tambahan (Tidak berubah) --}}
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 mt-6">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
@@ -130,36 +141,92 @@
 
     </div>
 
+    {{-- --- PENYESUAIAN: Skrip Chart.js --- --}}
+    @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
     <script>
-        const ctx = document.getElementById('myChart');
+        document.addEventListener('DOMContentLoaded', function () {
+            const ctx = document.getElementById('myChart');
+            let myChart;
 
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: @json($labels),
-                datasets: [{
-                    label: 'Setoran',
-                    data: @json($dataSetoran),
-                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 1
-                }, {
-                    label: 'Penjualan',
-                    data: @json($dataPenjualan),
-                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                    borderColor: 'rgba(255, 99, 132, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
+            const defaultButtonClasses = 'px-3 py-1 text-sm font-medium text-gray-500 bg-gray-100 rounded-md hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600';
+            const activeButtonClasses = 'px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-md';
+            
+            const filterButtons = document.querySelectorAll('.chart-filter-btn');
+
+            const renderChart = (data, type) => {
+                if (myChart) {
+                    myChart.destroy();
                 }
-            }
+
+                myChart = new Chart(ctx, {
+                    type: type, // Tipe chart dinamis: 'bar' atau 'line'
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            label: 'Setoran',
+                            data: data.dataSetoran,
+                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 1,
+                            tension: 0.1 // Untuk line chart
+                        }, {
+                            label: 'Penjualan',
+                            data: data.dataPenjualan,
+                            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            borderWidth: 1,
+                            tension: 0.1 // Untuk line chart
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value, index, values) {
+                                        return 'Rp ' + new Intl.NumberFormat('id-ID').format(value);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            };
+
+            const fetchChartData = async (period) => {
+                try {
+                    // Tampilkan loading atau spinner di sini jika perlu
+                    const response = await axios.get(`{{ route('dashboard.chart') }}?period=${period}`);
+                    
+                    // Tentukan tipe chart berdasarkan periode
+                    const chartType = (period === 'monthly') ? 'bar' : 'line';
+                    
+                    renderChart(response.data, chartType);
+                } catch (error) {
+                    console.error('Gagal memuat data chart:', error);
+                    // Tampilkan pesan error di sini jika perlu
+                }
+            };
+            
+            filterButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Update tampilan tombol
+                    filterButtons.forEach(btn => btn.className = defaultButtonClasses);
+                    this.className = activeButtonClasses;
+                    
+                    const period = this.getAttribute('data-period');
+                    fetchChartData(period);
+                });
+            });
+
+            // Muat data chart default (bulanan) saat halaman pertama kali dibuka
+            fetchChartData('monthly');
         });
     </script>
+    @endpush
 </x-app-layout>

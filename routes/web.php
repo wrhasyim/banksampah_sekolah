@@ -65,7 +65,8 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
 
     // Penjualan
     Route::resource('penjualan', PenjualanController::class);
-
+// Tambahkan baris ini di dalam grup middleware 'auth' atau di tempat yang sesuai
+Route::get('/dashboard/chart-data', [App\Http\Controllers\DashboardController::class, 'getChartData'])->name('dashboard.chart');
     // Buku Kas
     Route::resource('buku-kas', BukuKasController::class)->except(['create', 'show']);
     Route::get('buku-kas/export/excel', [BukuKasController::class, 'exportExcel'])->name('buku-kas.export.excel');

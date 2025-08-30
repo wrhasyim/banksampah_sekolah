@@ -9,6 +9,7 @@ use App\Models\Penarikan;
 use App\Models\Penjualan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon; // Pastikan Carbon diimpor
 
 class DashboardController extends Controller
 {
@@ -86,5 +87,36 @@ class DashboardController extends Controller
             'pengeluaranBulanIni',   // Variabel baru
             'labaBersihBulanIni'     // Variabel baru
         ));
+    }
+     // --- METHOD BARU UNTUK DATA CHART ---
+    public function getChartData(Request $request)
+    {
+        $period = $request->input('period', 'monthly');
+        $labels = [];
+        $dataSetoran = [];
+        $dataPenjualan = [];
+
+        if ($period == 'monthly') {
+            for ($i = 6; $i >= 0; $i--) {
+                $date = now()->subMonths($i);
+                $labels[] = $date->format('M Y');
+                $dataSetoran[] = Setoran::whereYear('created_at', $date->year)->whereMonth('created_at', $date->month)->sum('total_harga');
+                $dataPenjualan[] = Penjualan::whereYear('created_at', $date->year)->whereMonth('created_at', $date->month)->sum('total_harga');
+            }
+        } else {
+            $days = 0;
+            if ($period == 'today') $days = 0;
+            if ($period == '7d') $days = 6;
+            if ($period == '30d') $days = 29;
+
+            for ($i = $days; $i >= 0; $i--) {
+                $date = now()->subDays($i);
+                $labels[] = $date->format('d M'); // Format: 25 Aug
+                $dataSetoran[] = Setoran::whereDate('created_at', $date)->sum('total_harga');
+                $dataPenjualan[] = Penjualan::whereDate('created_at', $date)->sum('total_harga');
+            }
+        }
+
+        return response()->json(compact('labels', 'dataSetoran', 'dataPenjualan'));
     }
 }
