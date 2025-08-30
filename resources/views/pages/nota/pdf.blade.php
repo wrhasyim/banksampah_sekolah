@@ -51,7 +51,6 @@
                     <tr>
                         <td>{{ $loop->iteration }}</td>
                         <td>{{ $rincian->jenisSampah->nama_sampah ?? 'Data Sampah Hilang' }}</td>
-                        {{-- --- PERBAIKAN DI SINI --- --}}
                         <td class="text-right">{{ number_format($rincian->total_jumlah, 2, ',', '.') }} {{ $rincian->jenisSampah->satuan ?? '' }}</td>
                         <td class="text-right">Rp {{ number_format($rincian->total_harga, 0, ',', '.') }}</td>
                     </tr>
@@ -63,8 +62,13 @@
             </tbody>
             <tfoot>
                 <tr class="total-row">
-                    <td colspan="3" class="text-right"><strong>TOTAL KESELURUHAN</strong></td>
+                    <td colspan="3" class="text-right"><strong>TOTAL SETORAN</strong></td>
                     <td class="text-right"><strong>Rp {{ number_format($totalKeseluruhan, 0, ',', '.') }}</strong></td>
+                </tr>
+                {{-- --- TAMBAHAN BARIS INSENTIF --- --}}
+                <tr>
+                    <td colspan="3" class="text-right" style="border-bottom: none; border-left: none;">Insentif Wali Kelas ({{ $persentaseWaliKelas }}%)</td>
+                    <td class="text-right" style="font-weight: bold; color: green;">Rp {{ number_format($insentifWaliKelas, 0, ',', '.') }}</td>
                 </tr>
             </tfoot>
         </table>

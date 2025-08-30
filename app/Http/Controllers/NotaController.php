@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Kelas;
 use App\Models\Setoran;
+use App\Models\Setting; // Import model Setting
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Carbon\Carbon;
@@ -38,8 +39,7 @@ class NotaController extends Controller
             ->with('jenisSampah')
             ->select(
                 'jenis_sampah_id',
-                // --- PERBAIKAN DI SINI ---
-                DB::raw('SUM(jumlah) as total_jumlah'), // Diubah dari 'berat'
+                DB::raw('SUM(jumlah) as total_jumlah'),
                 DB::raw('SUM(total_harga) as total_harga')
             )
             ->groupBy('jenis_sampah_id')
@@ -51,8 +51,12 @@ class NotaController extends Controller
             return back()->with('toastr-error', 'Tidak ada data setoran untuk kelas dan rentang tanggal yang dipilih.');
         }
 
-        // Kita juga perlu memperbaiki file PDF view agar menggunakan 'total_jumlah'
-        $pdf = PDF::loadView('pages.nota.pdf', compact('kelas', 'startDate', 'endDate', 'rincianSetoran', 'totalKeseluruhan'));
+        // --- TAMBAHAN: Menghitung Insentif Wali Kelas ---
+        $settings = Setting::pluck('value', 'key');
+        $persentaseWaliKelas = $settings['persentase_wali_kelas'] ?? 0;
+        $insentifWaliKelas = $totalKeseluruhan * ($persentaseWaliKelas / 100);
+
+        $pdf = PDF::loadView('pages.nota.pdf', compact('kelas', 'startDate', 'endDate', 'rincianSetoran', 'totalKeseluruhan', 'insentifWaliKelas', 'persentaseWaliKelas'));
         
         $namaFile = 'nota-' . $kelas->nama_kelas . '-' . $startDate->format('Y-m-d') . '_sd_' . $endDate->format('Y-m-d') . '.pdf';
 
