@@ -71,7 +71,7 @@ Route::get('/dashboard/chart-data', [App\Http\Controllers\DashboardController::c
     Route::resource('buku-kas', BukuKasController::class)->except(['create', 'show']);
     Route::get('buku-kas/export/excel', [BukuKasController::class, 'exportExcel'])->name('buku-kas.export.excel');
     Route::get('buku-kas/export/pdf', [BukuKasController::class, 'exportPdf'])->name('buku-kas.export.pdf');
-
+Route::resource('pengguna', App\Http\Controllers\PenggunaController::class)->except(['show']);
     // Kategori Transaksi
     Route::resource('kategori-transaksi', KategoriTransaksiController::class);
 

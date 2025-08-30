@@ -87,6 +87,10 @@
                                     <x-dropdown-link :href="route('kategori-transaksi.index')">
                                         {{ __('Kategori Transaksi') }}
                                     </x-dropdown-link>
+                                    {{-- --- TAMBAHKAN LINK INI --- --}}
+    <x-dropdown-link :href="route('pengguna.index')">
+        {{ __('Manajemen Pengguna') }}
+    </x-dropdown-link>
                                 </x-slot>
                             </x-dropdown>
                         </div>
