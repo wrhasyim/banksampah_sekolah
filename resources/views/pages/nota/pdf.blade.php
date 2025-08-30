@@ -22,9 +22,7 @@
             <h1>NOTA SETORAN SAMPAH</h1>
             <p><strong>Bank Sampah Sekolah</strong></p>
         </div>
-
         <hr>
-
         <table>
             <tr>
                 <td style="border: none; padding: 2px;"><strong>Kelas</strong></td>
@@ -36,17 +34,15 @@
             </tr>
              <tr>
                 <td style="border: none; padding: 2px;"><strong>Periode</strong></td>
-                {{-- --- PERBAIKAN DI SINI --- --}}
                 <td style="border: none; padding: 2px;">: {{ $startDate->isoFormat('D MMMM YYYY') }} - {{ $endDate->isoFormat('D MMMM YYYY') }}</td>
             </tr>
         </table>
-        
         <table>
             <thead>
                 <tr>
                     <th>No.</th>
                     <th>Jenis Sampah</th>
-                    <th class="text-right">Total Berat</th>
+                    <th class="text-right">Total Jumlah</th>
                     <th class="text-right">Total Harga</th>
                 </tr>
             </thead>
@@ -55,7 +51,8 @@
                     <tr>
                         <td>{{ $loop->iteration }}</td>
                         <td>{{ $rincian->jenisSampah->nama_sampah ?? 'Data Sampah Hilang' }}</td>
-                        <td class="text-right">{{ number_format($rincian->total_berat, 2, ',', '.') }} {{ $rincian->jenisSampah->satuan ?? '' }}</td>
+                        {{-- --- PERBAIKAN DI SINI --- --}}
+                        <td class="text-right">{{ number_format($rincian->total_jumlah, 2, ',', '.') }} {{ $rincian->jenisSampah->satuan ?? '' }}</td>
                         <td class="text-right">Rp {{ number_format($rincian->total_harga, 0, ',', '.') }}</td>
                     </tr>
                 @empty
@@ -71,7 +68,6 @@
                 </tr>
             </tfoot>
         </table>
-
         <div class="footer">
             <p>Dicetak pada: {{ now()->isoFormat('D MMMM YYYY, HH:mm') }}</p>
         </div>

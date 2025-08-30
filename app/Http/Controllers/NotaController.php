@@ -11,18 +11,12 @@ use Illuminate\Support\Facades\DB;
 
 class NotaController extends Controller
 {
-    /**
-     * Menampilkan halaman form untuk memilih rentang tanggal dan kelas.
-     */
     public function index()
     {
         $kelas = Kelas::orderBy('nama_kelas', 'asc')->get();
         return view('pages.nota.index', compact('kelas'));
     }
 
-    /**
-     * Membuat dan mencetak nota dalam format PDF berdasarkan rentang tanggal.
-     */
     public function cetak(Request $request)
     {
         $request->validate([
@@ -43,11 +37,12 @@ class NotaController extends Controller
             ->whereBetween('created_at', [$startDate, $endDate])
             ->with('jenisSampah')
             ->select(
-                'id_jenis_sampah',
-                DB::raw('SUM(berat) as total_berat'),
+                'jenis_sampah_id',
+                // --- PERBAIKAN DI SINI ---
+                DB::raw('SUM(jumlah) as total_jumlah'), // Diubah dari 'berat'
                 DB::raw('SUM(total_harga) as total_harga')
             )
-            ->groupBy('id_jenis_sampah')
+            ->groupBy('jenis_sampah_id')
             ->get();
         
         $totalKeseluruhan = $rincianSetoran->sum('total_harga');
@@ -56,6 +51,7 @@ class NotaController extends Controller
             return back()->with('toastr-error', 'Tidak ada data setoran untuk kelas dan rentang tanggal yang dipilih.');
         }
 
+        // Kita juga perlu memperbaiki file PDF view agar menggunakan 'total_jumlah'
         $pdf = PDF::loadView('pages.nota.pdf', compact('kelas', 'startDate', 'endDate', 'rincianSetoran', 'totalKeseluruhan'));
         
         $namaFile = 'nota-' . $kelas->nama_kelas . '-' . $startDate->format('Y-m-d') . '_sd_' . $endDate->format('Y-m-d') . '.pdf';
