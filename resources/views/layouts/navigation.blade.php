@@ -64,6 +64,10 @@
     <x-dropdown-link :href="route('insentif.index')">
         {{ __('Riwayat Insentif') }}
     </x-dropdown-link>
+     {{-- --- TAMBAHKAN LINK INI --- --}}
+    <x-dropdown-link :href="route('insentif.rekap')">
+        {{ __('Rekap Insentif') }}
+    </x-dropdown-link>
                                 </x-slot>
                             </x-dropdown>
                         </div>

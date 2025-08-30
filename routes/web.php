@@ -76,6 +76,7 @@ Route::resource('pengguna', App\Http\Controllers\PenggunaController::class)->exc
     Route::resource('kategori-transaksi', KategoriTransaksiController::class);
 Route::get('/nota', [App\Http\Controllers\NotaController::class, 'index'])->name('nota.index');
 Route::post('/nota/cetak', [App\Http\Controllers\NotaController::class, 'cetak'])->name('nota.cetak');
+Route::get('/insentif/rekap', [App\Http\Controllers\InsentifController::class, 'rekap'])->name('insentif.rekap');
     // Pengaturan
     Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
     Route::post('settings', [SettingController::class, 'store'])->name('settings.store');
