@@ -20,12 +20,11 @@ class BukuKasController extends Controller
         $startDate = Carbon::createFromFormat('Y-m', $selectedMonth)->startOfMonth();
         $endDate = Carbon::createFromFormat('Y-m', $selectedMonth)->endOfMonth();
 
-        // --- PERBAIKAN DI SINI: Menggunakan paginate() ---
+        // --- PERBAIKAN DI SINI: Mengurutkan dari yang terbaru ---
         $bukuKas = BukuKas::whereBetween('tanggal', [$startDate, $endDate])
-            ->orderBy('tanggal', 'asc')
-            ->paginate(5); // Menampilkan 15 data per halaman
+            ->latest('tanggal') // Mengganti orderBy('tanggal', 'asc')
+            ->paginate(5);
 
-        // Perhitungan total tetap sama (menghitung keseluruhan, bukan per halaman)
         $totalPemasukan = BukuKas::where('tipe', 'pemasukan')->sum('jumlah');
         $totalPengeluaran = BukuKas::where('tipe', 'pengeluaran')->sum('jumlah');
         $saldoAkhir = $totalPemasukan - $totalPengeluaran;
@@ -105,7 +104,7 @@ class BukuKasController extends Controller
         $endDate = Carbon::createFromFormat('Y-m', $selectedMonth)->endOfMonth();
 
         $bukuKas = BukuKas::whereBetween('tanggal', [$startDate, $endDate])
-            ->orderBy('tanggal', 'asc')
+            ->latest('tanggal') // Menyesuaikan urutan untuk PDF juga
             ->get();
             
         $totalPemasukan = BukuKas::where('tipe', 'pemasukan')->sum('jumlah');
