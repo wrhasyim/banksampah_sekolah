@@ -14,24 +14,28 @@ use Illuminate\Support\Facades\DB;
 
 class BukuKasController extends Controller
 {
-    // ... (method index, store, edit, update, destroy, exportExcel tidak perlu diubah) ...
     public function index(Request $request)
     {
         $selectedMonth = $request->input('bulan', date('Y-m'));
         $startDate = Carbon::createFromFormat('Y-m', $selectedMonth)->startOfMonth();
         $endDate = Carbon::createFromFormat('Y-m', $selectedMonth)->endOfMonth();
 
+        // --- PERBAIKAN DI SINI: Menggunakan paginate() ---
         $bukuKas = BukuKas::whereBetween('tanggal', [$startDate, $endDate])
             ->orderBy('tanggal', 'asc')
-            ->get();
+            ->paginate(5); // Menampilkan 15 data per halaman
 
+        // Perhitungan total tetap sama (menghitung keseluruhan, bukan per halaman)
         $totalPemasukan = BukuKas::where('tipe', 'pemasukan')->sum('jumlah');
         $totalPengeluaran = BukuKas::where('tipe', 'pengeluaran')->sum('jumlah');
         $saldoAkhir = $totalPemasukan - $totalPengeluaran;
+        
         $kategori = KategoriTransaksi::all();
 
         return view('pages.buku-kas.index', compact('bukuKas', 'selectedMonth', 'totalPemasukan', 'totalPengeluaran', 'saldoAkhir', 'kategori'));
     }
+
+    // ... (method lainnya tidak perlu diubah) ...
 
     public function store(Request $request)
     {
@@ -108,7 +112,6 @@ class BukuKasController extends Controller
         $totalPengeluaran = BukuKas::where('tipe', 'pengeluaran')->sum('jumlah');
         $saldoAkhir = $totalPemasukan - $totalPengeluaran;
 
-        // --- PERBAIKAN DI SINI ---
         $pdf = PDF::loadView('pages.buku-kas.buku-kas-pdf', compact('bukuKas', 'selectedMonth', 'totalPemasukan', 'totalPengeluaran', 'saldoAkhir', 'startDate', 'endDate'));
         return $pdf->download('buku-kas-'.$selectedMonth.'.pdf');
     }

@@ -9,7 +9,6 @@
         <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
             <div class="p-6 overflow-hidden bg-white shadow-sm dark:bg-gray-800 sm:rounded-lg">
 
-                {{-- PERBAIKAN: Menggabungkan filter dan tombol export dalam satu form --}}
                 <form action="{{ route('buku-kas.index') }}" method="GET" class="mb-6">
                     <div class="flex flex-col md:flex-row md:items-center md:space-x-4">
                         <div class="flex-1">
@@ -28,12 +27,18 @@
                     <button @click="open = !open" class="mb-4 inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-gray-700 border border-transparent rounded-md hover:bg-gray-800">
                         Tambah Transaksi
                     </button>
-                    <div x-show="open" @click.away="open = false" class="p-4 mb-6 bg-gray-100 rounded-lg dark:bg-gray-700">
+                    <div x-show="open" @click.away="open = false" class="p-4 mb-6 bg-gray-100 rounded-lg dark:bg-gray-700" style="display: none;">
                         @include('pages.buku-kas.partials.create-form')
                     </div>
                 </div>
 
                 @include('pages.buku-kas.partials.table')
+                
+                {{-- --- TAMBAHAN DI SINI: Menampilkan Link Paginasi --- --}}
+                <div class="mt-6">
+                    {{ $bukuKas->links() }}
+                </div>
+
             </div>
         </div>
     </div>
