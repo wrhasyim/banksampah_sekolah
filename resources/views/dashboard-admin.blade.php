@@ -25,10 +25,28 @@
 
                     {{-- --- PENYESUAIAN: Statistik Utama --- --}}
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                        {{-- Kartu Pemasukan Bulan Ini --}}
+                        <div class="p-6 bg-green-50 dark:bg-green-900/50 border border-green-200 dark:border-green-700 rounded-lg shadow-sm">
+                            <h5 class="mb-2 text-2xl font-bold tracking-tight text-green-800 dark:text-green-300">Rp. {{ number_format($pemasukanBulanIni, 0, ',', '.') }}</h5>
+                            <p class="font-normal text-gray-700 dark:text-gray-400">Pemasukan Bulan Ini</p>
+                        </div>
+                        {{-- Kartu Pengeluaran Bulan Ini --}}
+                        <div class="p-6 bg-red-50 dark:bg-red-900/50 border border-red-200 dark:border-red-700 rounded-lg shadow-sm">
+                            <h5 class="mb-2 text-2xl font-bold tracking-tight text-red-800 dark:text-red-300">Rp. {{ number_format($pengeluaranBulanIni, 0, ',', '.') }}</h5>
+                            <p class="font-normal text-gray-700 dark:text-gray-400">Pengeluaran Bulan Ini</p>
+                        </div>
+                        {{-- Kartu Laba Bersih Bulan Ini --}}
+                        <div class="p-6 bg-blue-50 dark:bg-blue-900/50 border border-blue-200 dark:border-blue-700 rounded-lg shadow-sm">
+                            <h5 class="mb-2 text-2xl font-bold tracking-tight text-blue-800 dark:text-blue-300">Rp. {{ number_format($labaBersihBulanIni, 0, ',', '.') }}</h5>
+                            <p class="font-normal text-gray-700 dark:text-gray-400">Laba Bersih Bulan Ini</p>
+                        </div>
+                        {{-- Kartu Total Kas --}}
                         <div class="p-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
                             <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Rp. {{ number_format($kas, 0, ',', '.') }}</h5>
-                            <p class="font-normal text-gray-700 dark:text-gray-400">Total Kas</p>
+                            <p class="font-normal text-gray-700 dark:text-gray-400">Total Kas (dari Penjualan)</p>
                         </div>
+
+                        {{-- Statistik Lainnya --}}
                         <div class="p-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
                             <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{{ number_format($totalStokPcs, 2, ',', '.') }}</h5>
                             <p class="font-normal text-gray-700 dark:text-gray-400">Total Stok Sampah (pcs)</p>
@@ -39,7 +57,7 @@
                         </div>
                         <div class="p-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
                             <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Rp. {{ number_format($totalSetoran, 0, ',', '.') }}</h5>
-                            <p class="font-normal text-gray-700 dark:text-gray-400">Total Setoran</p>
+                            <p class="font-normal text-gray-700 dark:text-gray-400">Total Setoran Siswa</p>
                         </div>
                         <div class="p-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
                             <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{{ $totalSiswa }}</h5>
@@ -59,7 +77,7 @@
             </div>
         </div>
         
-        {{-- --- PENYESUAIAN: Grid Baru untuk Elemen Tambahan --- --}}
+        {{-- --- Grid Baru untuk Elemen Tambahan --- --}}
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 mt-6">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 

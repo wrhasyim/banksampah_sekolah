@@ -29,6 +29,19 @@ class DashboardController extends Controller
         $totalSiswa = Siswa::count();
         $totalSetoran = Setoran::sum('total_harga');
         $kas = Penjualan::sum('total_harga');
+
+        // --- PENAMBAHAN: Ringkasan Keuangan Bulanan ---
+        $bulanIni = now()->month;
+        $tahunIni = now()->year;
+
+        // Pemasukan = total penjualan bulan ini
+        $pemasukanBulanIni = Penjualan::whereYear('created_at', $tahunIni)->whereMonth('created_at', $bulanIni)->sum('total_harga');
+        
+        // Pengeluaran = total penarikan saldo oleh siswa bulan ini
+        $pengeluaranBulanIni = Penarikan::whereYear('created_at', $tahunIni)->whereMonth('created_at', $bulanIni)->sum('jumlah_penarikan');
+
+        // Laba Bersih = Pemasukan - Pengeluaran
+        $labaBersihBulanIni = $pemasukanBulanIni - $pengeluaranBulanIni;
         
         // Data untuk chart (tidak perlu diubah)
         $labels = [];
@@ -68,7 +81,10 @@ class DashboardController extends Controller
             'dataSetoran',
             'dataPenjualan',
             'aktivitasTerakhir',
-            'notifikasi'
+            'notifikasi',
+            'pemasukanBulanIni',      // Variabel baru
+            'pengeluaranBulanIni',   // Variabel baru
+            'labaBersihBulanIni'     // Variabel baru
         ));
     }
 }
