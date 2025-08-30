@@ -6,7 +6,7 @@ use App\Models\BukuKas;
 use Illuminate\Http\Request;
 use App\Exports\BukuKasExport;
 use Maatwebsite\Excel\Facades\Excel;
-use PDF; // <-- PERBAIKAN DI SINI, ganti dari Barryvdh\DomPDF\Facade\Pdf
+use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Carbon\Carbon;
 use App\Models\KategoriTransaksi;
 use Illuminate\Support\Facades\Auth;
@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 
 class BukuKasController extends Controller
 {
+    // ... (method index, store, edit, update, destroy, exportExcel tidak perlu diubah) ...
     public function index(Request $request)
     {
         $selectedMonth = $request->input('bulan', date('Y-m'));
@@ -107,7 +108,8 @@ class BukuKasController extends Controller
         $totalPengeluaran = BukuKas::where('tipe', 'pengeluaran')->sum('jumlah');
         $saldoAkhir = $totalPemasukan - $totalPengeluaran;
 
-        $pdf = PDF::loadView('pages.buku-kas.buku-kas-pdf', compact('bukuKas', 'selectedMonth', 'totalPemasukan', 'totalPengeluaran', 'saldoAkhir'));
+        // --- PERBAIKAN DI SINI ---
+        $pdf = PDF::loadView('pages.buku-kas.buku-kas-pdf', compact('bukuKas', 'selectedMonth', 'totalPemasukan', 'totalPengeluaran', 'saldoAkhir', 'startDate', 'endDate'));
         return $pdf->download('buku-kas-'.$selectedMonth.'.pdf');
     }
 }

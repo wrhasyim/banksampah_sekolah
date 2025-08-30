@@ -3,74 +3,66 @@
 <head>
     <title>Laporan Buku Kas</title>
     <style>
-        body { font-family: sans-serif; font-size: 12px; }
+        body { font-family: sans-serif; }
         table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
         th { background-color: #f2f2f2; }
-        h2 { text-align: center; }
-        .total-section { margin-top: 20px; float: right; width: 40%; }
-        .total-section table { width: 100%; }
-        .total-section td { border: none; padding: 5px; }
-        .total-section .label { font-weight: bold; }
-        .total-section .saldo-akhir { font-weight: bold; border-top: 1px solid #000; }
+        h1, h2 { text-align: center; }
+        .total { font-weight: bold; }
         .pemasukan { color: green; }
         .pengeluaran { color: red; }
-        .header-info { margin-bottom: 20px; }
     </style>
 </head>
 <body>
-    <h2>Laporan Buku Kas</h2>
-    <div class="header-info">
-        @if ($startDate && $endDate)
-            <p>Periode: {{ \Carbon\Carbon::parse($startDate)->format('d M Y') }} - {{ \Carbon\Carbon::parse($endDate)->format('d M Y') }}</p>
-        @else
-            <p>Periode: Semua Transaksi</p>
-        @endif
-    </div>
-
+    <h1>Laporan Buku Kas</h1>
+    <h2>Periode: {{ \Carbon\Carbon::parse($selectedMonth)->isoFormat('MMMM YYYY') }}</h2>
+    
     <table>
         <thead>
             <tr>
+                <th>No</th>
                 <th>Tanggal</th>
-                <th>Deskripsi</th>
-                <th>Kategori</th>
-                <th style="text-align: right;">Pemasukan (Rp)</th>
-                <th style="text-align: right;">Pengeluaran (Rp)</th>
+                <th>Keterangan</th>
+                <th>Pemasukan</th>
+                <th>Pengeluaran</th>
             </tr>
         </thead>
         <tbody>
-            @forelse ($transaksi as $trx)
-                <tr>
-                    <td>{{ \Carbon\Carbon::parse($trx->tanggal)->format('d M Y') }}</td>
-                    <td>{{ $trx->deskripsi }}</td>
-                    <td>{{ $trx->kategori->nama_kategori ?? '-' }}</td>
-                    <td class="pemasukan" style="text-align: right;">{{ $trx->tipe == 'pemasukan' ? number_format($trx->jumlah, 0, ',', '.') : '-' }}</td>
-                    <td class="pengeluaran" style="text-align: right;">{{ $trx->tipe == 'pengeluaran' ? number_format($trx->jumlah, 0, ',', '.') : '-' }}</td>
-                </tr>
+            {{-- --- PERBAIKAN DI SINI --- --}}
+            @forelse ($bukuKas as $item)
+            <tr>
+                <td>{{ $loop->iteration }}</td>
+                <td>{{ \Carbon\Carbon::parse($item->tanggal)->format('d-m-Y') }}</td>
+                <td>{{ $item->deskripsi }}</td>
+                @if ($item->tipe == 'pemasukan')
+                    <td class="pemasukan">Rp {{ number_format($item->jumlah, 0, ',', '.') }}</td>
+                    <td>-</td>
+                @else
+                    <td>-</td>
+                    <td class="pengeluaran">Rp {{ number_format($item->jumlah, 0, ',', '.') }}</td>
+                @endif
+            </tr>
             @empty
-                <tr>
-                    <td colspan="5" style="text-align: center;">Tidak ada transaksi pada periode ini.</td>
-                </tr>
+            <tr>
+                <td colspan="5" style="text-align: center;">Tidak ada data untuk periode ini.</td>
+            </tr>
             @endforelse
         </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="3" class="total">Total Pemasukan</td>
+                <td class-="total pemasukan">Rp {{ number_format($totalPemasukan, 0, ',', '.') }}</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td colspan="4" class="total">Total Pengeluaran</td>
+                <td class="total pengeluaran">Rp {{ number_format($totalPengeluaran, 0, ',', '.') }}</td>
+            </tr>
+            <tr>
+                <td colspan="3" class="total" style="font-size: 1.2em;">Saldo Akhir</td>
+                <td colspan="2" class="total" style="font-size: 1.2em;">Rp {{ number_format($saldoAkhir, 0, ',', '.') }}</td>
+            </tr>
+        </tfoot>
     </table>
-
-    <div class="total-section">
-        <table>
-            <tr>
-                <td class="label">Total Pemasukan</td>
-                <td class="pemasukan" style="text-align: right;">Rp {{ number_format($totalPemasukan, 0, ',', '.') }}</td>
-            </tr>
-            <tr>
-                <td class="label">Total Pengeluaran</td>
-                <td class="pengeluaran" style="text-align: right;">Rp {{ number_format($totalPengeluaran, 0, ',', '.') }}</td>
-            </tr>
-            <tr>
-                <td class="label saldo-akhir">Saldo Akhir</td>
-                <td class="saldo-akhir" style="text-align: right;">Rp {{ number_format($saldoAkhir, 0, ',', '.') }}</td>
-            </tr>
-        </table>
-    </div>
-
 </body>
 </html>
