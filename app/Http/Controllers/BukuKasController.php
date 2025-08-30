@@ -6,10 +6,10 @@ use App\Models\BukuKas;
 use Illuminate\Http\Request;
 use App\Exports\BukuKasExport;
 use Maatwebsite\Excel\Facades\Excel;
-use Barryvdh\DomPDF\Facade\Pdf;
+use PDF; // <-- PERBAIKAN DI SINI, ganti dari Barryvdh\DomPDF\Facade\Pdf
 use Carbon\Carbon;
 use App\Models\KategoriTransaksi;
-use Illuminate\Support\Facades\Auth; // <-- Pastikan ini di-import
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class BukuKasController extends Controller
@@ -20,16 +20,13 @@ class BukuKasController extends Controller
         $startDate = Carbon::createFromFormat('Y-m', $selectedMonth)->startOfMonth();
         $endDate = Carbon::createFromFormat('Y-m', $selectedMonth)->endOfMonth();
 
-        // Mengambil data berdasarkan rentang tanggal yang dipilih
         $bukuKas = BukuKas::whereBetween('tanggal', [$startDate, $endDate])
             ->orderBy('tanggal', 'asc')
             ->get();
 
-        // Menghitung saldo akhir berdasarkan SEMUA transaksi, bukan hanya bulan yang difilter
         $totalPemasukan = BukuKas::where('tipe', 'pemasukan')->sum('jumlah');
         $totalPengeluaran = BukuKas::where('tipe', 'pengeluaran')->sum('jumlah');
         $saldoAkhir = $totalPemasukan - $totalPengeluaran;
-        
         $kategori = KategoriTransaksi::all();
 
         return view('pages.buku-kas.index', compact('bukuKas', 'selectedMonth', 'totalPemasukan', 'totalPengeluaran', 'saldoAkhir', 'kategori'));
@@ -37,10 +34,9 @@ class BukuKasController extends Controller
 
     public function store(Request $request)
     {
-        // --- PERBAIKAN DI SINI ---
         $request->validate([
             'tanggal' => 'required|date',
-            'deskripsi' => 'required|string|max:255', // Diubah dari 'keterangan'
+            'deskripsi' => 'required|string|max:255',
             'jumlah' => 'required|numeric|min:0',
             'tipe' => 'required|in:pemasukan,pengeluaran',
             'id_kategori' => 'nullable|exists:kategori_transaksi,id',
@@ -48,11 +44,11 @@ class BukuKasController extends Controller
 
         BukuKas::create([
             'tanggal' => $request->tanggal,
-            'deskripsi' => $request->deskripsi, // Diubah dari 'keterangan'
+            'deskripsi' => $request->deskripsi,
             'jumlah' => $request->jumlah,
             'tipe' => $request->tipe,
             'id_kategori' => $request->id_kategori,
-            'id_admin' => Auth::id(), // Menambahkan id_admin saat membuat manual
+            'id_admin' => Auth::id(),
         ]);
 
         return redirect()->route('buku-kas.index')->with('toastr-success', 'Transaksi berhasil ditambahkan.');
@@ -66,19 +62,17 @@ class BukuKasController extends Controller
 
     public function update(Request $request, BukuKas $bukuKa)
     {
-        // --- PERBAIKAN DI SINI ---
         $request->validate([
             'tanggal' => 'required|date',
-            'deskripsi' => 'required|string|max:255', // Diubah dari 'keterangan'
+            'deskripsi' => 'required|string|max:255',
             'jumlah' => 'required|numeric|min:0',
             'tipe' => 'required|in:pemasukan,pengeluaran',
             'id_kategori' => 'nullable|exists:kategori_transaksi,id',
         ]);
         
-        // Menggunakan array untuk memastikan hanya field yang benar yang diupdate
         $bukuKa->update([
             'tanggal' => $request->tanggal,
-            'deskripsi' => $request->deskripsi, // Diubah dari 'keterangan'
+            'deskripsi' => $request->deskripsi,
             'jumlah' => $request->jumlah,
             'tipe' => $request->tipe,
             'id_kategori' => $request->id_kategori,
@@ -93,7 +87,6 @@ class BukuKasController extends Controller
         return redirect()->route('buku-kas.index')->with('toastr-success', 'Transaksi berhasil dihapus.');
     }
 
-    // Fungsi export tidak perlu diubah
     public function exportExcel(Request $request)
     {
         $bulan = $request->input('bulan', date('Y-m'));
