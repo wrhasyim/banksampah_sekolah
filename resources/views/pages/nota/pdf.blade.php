@@ -36,7 +36,8 @@
             </tr>
              <tr>
                 <td style="border: none; padding: 2px;"><strong>Periode</strong></td>
-                <td style="border: none; padding: 2px;">: {{ \Carbon\Carbon::parse($selectedMonth)->isoFormat('MMMM YYYY') }}</td>
+                {{-- --- PERBAIKAN DI SINI --- --}}
+                <td style="border: none; padding: 2px;">: {{ $startDate->isoFormat('D MMMM YYYY') }} - {{ $endDate->isoFormat('D MMMM YYYY') }}</td>
             </tr>
         </table>
         

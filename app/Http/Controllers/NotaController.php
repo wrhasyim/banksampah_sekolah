@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
 class NotaController extends Controller
 {
     /**
-     * Menampilkan halaman form untuk memilih bulan dan kelas.
+     * Menampilkan halaman form untuk memilih rentang tanggal dan kelas.
      */
     public function index()
     {
@@ -21,24 +21,22 @@ class NotaController extends Controller
     }
 
     /**
-     * Membuat dan mencetak nota dalam format PDF.
+     * Membuat dan mencetak nota dalam format PDF berdasarkan rentang tanggal.
      */
     public function cetak(Request $request)
     {
         $request->validate([
-            'bulan' => 'required|date_format:Y-m',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
             'id_kelas' => 'required|exists:kelas,id',
         ]);
 
-        $selectedMonth = $request->input('bulan');
+        $startDate = Carbon::parse($request->input('start_date'))->startOfDay();
+        $endDate = Carbon::parse($request->input('end_date'))->endOfDay();
         $id_kelas = $request->input('id_kelas');
-
-        $startDate = Carbon::createFromFormat('Y-m', $selectedMonth)->startOfMonth();
-        $endDate = Carbon::createFromFormat('Y-m', $selectedMonth)->endOfMonth();
 
         $kelas = Kelas::with('waliKelas')->findOrFail($id_kelas);
 
-        // Mengambil data setoran, dikelompokkan per jenis sampah
         $rincianSetoran = Setoran::whereHas('siswa', function ($query) use ($id_kelas) {
                 $query->where('id_kelas', $id_kelas);
             })
@@ -55,13 +53,12 @@ class NotaController extends Controller
         $totalKeseluruhan = $rincianSetoran->sum('total_harga');
 
         if ($rincianSetoran->isEmpty()) {
-            return back()->with('toastr-error', 'Tidak ada data setoran untuk kelas dan bulan yang dipilih.');
+            return back()->with('toastr-error', 'Tidak ada data setoran untuk kelas dan rentang tanggal yang dipilih.');
         }
 
-        $pdf = PDF::loadView('pages.nota.pdf', compact('kelas', 'selectedMonth', 'rincianSetoran', 'totalKeseluruhan'));
+        $pdf = PDF::loadView('pages.nota.pdf', compact('kelas', 'startDate', 'endDate', 'rincianSetoran', 'totalKeseluruhan'));
         
-        // Membuat nama file yang deskriptif
-        $namaFile = 'nota-' . $kelas->nama_kelas . '-' . $selectedMonth . '.pdf';
+        $namaFile = 'nota-' . $kelas->nama_kelas . '-' . $startDate->format('Y-m-d') . '_sd_' . $endDate->format('Y-m-d') . '.pdf';
 
         return $pdf->stream($namaFile);
     }
