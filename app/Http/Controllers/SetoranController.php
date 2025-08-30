@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Setoran;
 use App\Models\Siswa;
 use App\Models\JenisSampah;
-use App\Models\Kelas; // FIX: Menambahkan import untuk model Kelas
+use App\Models\Kelas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Imports\SetoranImport;
@@ -31,13 +31,13 @@ class SetoranController extends Controller
         return view('pages.setoran.index', compact('setoran', 'perPage'));
     }
 
-    // Ubah method create() menjadi seperti ini
-public function create()
-{
-    $jenisSampah = JenisSampah::all();
-    $siswa = Siswa::with('kelas')->get(); // Ambil data siswa beserta relasi kelas
-    return view('pages.setoran.create', compact('jenisSampah', 'siswa'));
-}
+    public function create()
+    {
+        // PERBAIKAN 1: Filter jenis sampah yang aktif saja
+        $jenisSampah = JenisSampah::where('status', 'aktif')->get();
+        $siswa = Siswa::with('kelas')->get();
+        return view('pages.setoran.create', compact('jenisSampah', 'siswa'));
+    }
 
     public function store(Request $request)
     {
@@ -75,7 +75,7 @@ public function create()
         $siswa = Siswa::with('pengguna', 'kelas')
             ->whereHas('pengguna', function ($query) use ($search) {
                 $query->where('nama_lengkap', 'LIKE', "%{$search}%")
-                      ->orWhere('username', 'LIKE', "%{$search}%");
+                    ->orWhere('username', 'LIKE', "%{$search}%");
             })
             ->limit(10)
             ->get();
@@ -110,20 +110,19 @@ public function create()
 
     public function createMassal()
     {
-        $jenisSampahs = JenisSampah::all();
-        $kelasList = Kelas::orderBy('nama_kelas', 'asc')->get(); // Mengambil data kelas
+        // PERBAIKAN 2: Filter jenis sampah yang aktif saja
+        $jenisSampahs = JenisSampah::where('status', 'aktif')->get();
+        $kelasList = Kelas::orderBy('nama_kelas', 'asc')->get();
         
-        // Memastikan variabel $kelasList dan $jenisSampahs dikirim ke view
         return view('pages.setoran.create-massal', compact('jenisSampahs', 'kelasList'));
     }
 
-     public function storeMassal(Request $request)
+    public function storeMassal(Request $request)
     {
         $request->validate([
             'jenis_sampah_id' => 'required|exists:jenis_sampah,id',
             'setoran' => 'required|array',
             'setoran.*.siswa_id' => 'required|exists:siswa,id',
-            // PERBAIKAN: Validasi jumlah tidak wajib required, tapi harus numerik
             'setoran.*.jumlah' => 'nullable|numeric|min:0',
         ]);
 
@@ -131,7 +130,6 @@ public function create()
         
         DB::transaction(function () use ($request, $jenisSampah) {
             foreach ($request->setoran as $data) {
-                // PERBAIKAN: Hanya proses siswa yang jumlah setorannya diisi dan lebih dari 0
                 if (!empty($data['jumlah']) && $data['jumlah'] > 0) {
                     $totalHarga = $data['jumlah'] * $jenisSampah->harga_per_satuan;
 
