@@ -69,7 +69,7 @@
                     <ul class="divide-y divide-gray-200 dark:divide-gray-700">
                         @forelse($stokPerJenis as $jenis)
                         <li class="py-3 flex justify-between items-center text-gray-800 dark:text-gray-300">
-                            <span>{{ $jenis->nama }}</span>
+                            <span>{{ $jenis->nama_sampah }}</span>
                             <span class="font-bold">{{ number_format($jenis->stok, 2, ',', '.') }} {{ $jenis->satuan }}</span>
                         </li>
                         @empty
@@ -86,7 +86,7 @@
                         <ul class="text-sm text-gray-600 dark:text-gray-400 mt-2 space-y-2">
                             @forelse($aktivitasTerakhir['setoran'] as $setoran)
                             <li>
-                                <strong>{{ $setoran->siswa->pengguna->name }}</strong> menyetor sampah
+                                <strong>{{ $setoran->siswa->pengguna->nama_lengkap }}</strong> menyetor sampah
                                 senilai Rp{{ number_format($setoran->total_harga, 0, ',', '.') }}
                             </li>
                             @empty
@@ -97,7 +97,7 @@
                         <ul class="text-sm text-gray-600 dark:text-gray-400 mt-2 space-y-2">
                             @forelse($aktivitasTerakhir['penarikan'] as $penarikan)
                             <li>
-                                <strong>{{ $penarikan->siswa->pengguna->name }}</strong> melakukan penarikan
+                                <strong>{{ $penarikan->siswa->pengguna->nama_lengkap }}</strong> melakukan penarikan
                                 senilai Rp{{ number_format($penarikan->jumlah_penarikan, 0, ',', '.') }}
                             </li>
                             @empty

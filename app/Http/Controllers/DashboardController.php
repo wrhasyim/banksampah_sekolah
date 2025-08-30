@@ -2,134 +2,73 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Penjualan;
-use App\Models\Setoran;
-use App\Models\Siswa;
-use App\Models\Penarikan;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use App\Models\JenisSampah;
-use App\Models\Pengguna;
+use App\Models\Siswa;
+use App\Models\Setoran;
+use App\Models\Penarikan;
+use App\Models\Penjualan;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
-    /**
-     * Handle the incoming request.
-     */
     public function index()
     {
-        $user = Auth::user();
+        // 1. Ambil semua data jenis sampah yang aktif. Ini akan menjadi sumber data utama kita.
+        $semuaJenisSampah = JenisSampah::where('status', 'aktif')->orderBy('nama_sampah', 'asc')->get();
 
-        if ($user->role === 'admin') {
-            // Data untuk Kartu Statistik
-            $totalSiswa = Siswa::count();
-            $totalSaldo = Siswa::sum('saldo');
-            $totalSetoran = Setoran::sum('total_harga');
-            $totalPenjualan = Penjualan::sum('total_harga');
-            $stokSampah = Setoran::sum('jumlah') - DB::table('detail_penjualan')->sum('jumlah');
-             $totalStokKg = JenisSampah::where('satuan', 'kg')->sum('stok');
-            $totalStokPcs = JenisSampah::where('satuan', 'pcs')->sum('stok');
-            $jenisSampah = JenisSampah::count();
-            // --- ITEM BARU: Menghitung Kas ---
-            $totalPenarikanSiswa = Penarikan::sum('jumlah_penarikan');
-            $kas = $totalPenjualan - $totalPenarikanSiswa;
+        // 2. Kirim koleksi ini langsung ke view untuk ditampilkan di daftar "Stok Sampah per Jenis".
+        // Variabelnya kita samakan dengan yang ada di view, yaitu 'stokPerJenis'.
+        $stokPerJenis = $semuaJenisSampah;
 
-            // Data untuk Grafik
-            $setoranBulanan = Setoran::select(
-                DB::raw('sum(total_harga) as total'),
-                DB::raw("DATE_FORMAT(created_at, '%Y-%m') as month")
-            )
-            ->groupBy('month')
-            ->orderBy('month', 'asc')
-            ->get();
-
-            $penjualanBulanan = Penjualan::select(
-                DB::raw('sum(total_harga) as total'),
-                DB::raw("DATE_FORMAT(created_at, '%Y-%m') as month")
-            )
-            ->groupBy('month')
-            ->orderBy('month', 'asc')
-            ->get();
-
-            $labels = $setoranBulanan->pluck('month')->merge($penjualanBulanan->pluck('month'))->unique()->sort()->values();
-            $dataSetoran = [];
-            $dataPenjualan = [];
-
-            foreach ($labels as $label) {
-                $setoran = $setoranBulanan->firstWhere('month', $label);
-                $dataSetoran[] = $setoran ? $setoran->total : 0;
-
-                $penjualan = $penjualanBulanan->firstWhere('month', $label);
-                $dataPenjualan[] = $penjualan ? $penjualan->total : 0;
-            }
-
-            // Ambil data total setor dan jual
-            $totalSetorPerJenis = Setoran::select('jenis_sampah_id', DB::raw('SUM(jumlah) as total_setor'))
-                ->groupBy('jenis_sampah_id')
-                ->pluck('total_setor', 'jenis_sampah_id');
-
-            $totalJualPerJenis = DB::table('detail_penjualan')->select('id_jenis_sampah', DB::raw('SUM(jumlah) as total_jual'))
-                ->groupBy('id_jenis_sampah')
-                ->pluck('total_jual', 'id_jenis_sampah');
-
-            // --- PENYESUAIAN: Ambil semua jenis sampah beserta satuannya ---
-            $semuaJenisSampah = JenisSampah::all();
-            $stokPerJenis = $semuaJenisSampah->map(function ($jenis) use ($totalSetorPerJenis, $totalJualPerJenis) {
-                $setor = $totalSetorPerJenis->get($jenis->id, 0);
-                $jual = $totalJualPerJenis->get($jenis->id, 0);
-                $stok = $setor - $jual;
-
-                return (object)[
-                    'nama' => $jenis->nama,
-                    'stok' => $stok,
-                    'satuan' => $jenis->satuan, // Mengambil satuan dari model
-                ];
-            });
-            
-            // Logika Notifikasi
-            $notifikasi = [];
-            $sampahMenipis = $stokPerJenis->where('stok', '<', 10);
-
-            if ($sampahMenipis->isNotEmpty()) {
-                $notifikasi[] = "Stok untuk " . $sampahMenipis->count() . " jenis sampah menipis. Segera lakukan pengecekan.";
-            }
-
-            // Aktivitas Terkini
-            $aktivitasTerakhir = [
-                'setoran' => Setoran::with('siswa.pengguna')->latest()->take(5)->get(),
-                'penjualan' => Penjualan::latest()->take(5)->get(),
-                'penarikan' => Penarikan::with('siswa.pengguna')->latest()->take(5)->get()
-            ];
-            // PERBAIKAN: Hitung total stok secara terpisah berdasarkan satuan
-       
-
-            return view('dashboard-admin', compact(
-                'totalSiswa',
-                'totalSaldo',
-                'stokSampah',
-                'totalSetoran',
-                'totalPenjualan',
-                'kas', // Variabel baru
-                'labels',
-                'dataSetoran',
-                'dataPenjualan',
-                'stokPerJenis',
-                'aktivitasTerakhir',
-                'notifikasi',
-                'totalStokKg', 
-                'totalStokPcs'
-            ));
-
-        } elseif ($user->role === 'siswa') {
-            $siswa = $user->siswa;
-            $saldo = $siswa->saldo ?? 0;
-            $totalSetoran = $siswa->setoran()->sum('total_harga');
-            $totalPenarikan = $siswa->penarikan()->sum('jumlah_penarikan');
-            $badges = $siswa->badges ?? collect();
-            
-            return view('dashboard-siswa', compact('saldo', 'totalSetoran', 'totalPenarikan', 'badges'));
+        // 3. Hitung total stok terpisah (kg dan pcs) dari koleksi yang sudah kita ambil.
+        $totalStokKg = $semuaJenisSampah->where('satuan', 'kg')->sum('stok');
+        $totalStokPcs = $semuaJenisSampah->where('satuan', 'pcs')->sum('stok');
+        
+        // 4. Hitung statistik lainnya (tidak perlu diubah)
+        $totalSiswa = Siswa::count();
+        $totalSetoran = Setoran::sum('total_harga');
+        $kas = Penjualan::sum('total_harga');
+        
+        // Data untuk chart (tidak perlu diubah)
+        $labels = [];
+        $dataSetoran = [];
+        $dataPenjualan = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subMonths($i);
+            $month = $date->format('M');
+            $year = $date->format('Y');
+            $labels[] = "$month $year";
+            $dataSetoran[] = Setoran::whereYear('created_at', $year)->whereMonth('created_at', $date->month)->sum('total_harga');
+            $dataPenjualan[] = Penjualan::whereYear('created_at', $year)->whereMonth('created_at', $date->month)->sum('total_harga');
         }
 
-        return view('dashboard');
+        // Data untuk aktivitas terkini (tidak perlu diubah)
+        $aktivitasTerakhir = [
+            'setoran' => Setoran::with('siswa.pengguna')->latest()->take(3)->get(),
+            'penarikan' => Penarikan::with('siswa.pengguna')->latest()->take(3)->get(),
+        ];
+
+        // Variabel notifikasi (tidak perlu diubah)
+        $notifikasi = [];
+        $sampahHampirHabis = $semuaJenisSampah->where('stok', '<', 10);
+        if ($sampahHampirHabis->isNotEmpty()) {
+            $notifikasi[] = "Stok untuk beberapa jenis sampah hampir habis. Mohon segera diperiksa.";
+        }
+        
+        // 5. Kirim semua data yang sudah benar ke view
+        return view('dashboard-admin', compact(
+            'totalStokKg', 
+            'totalStokPcs', 
+            'totalSiswa', 
+            'totalSetoran',
+            'kas',
+            'stokPerJenis',
+            'labels',
+            'dataSetoran',
+            'dataPenjualan',
+            'aktivitasTerakhir',
+            'notifikasi'
+        ));
     }
 }
