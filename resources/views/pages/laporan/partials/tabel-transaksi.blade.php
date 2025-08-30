@@ -1,53 +1,60 @@
-<div>
-    <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">
-            Laporan Transaksi Bulan: {{ \Carbon\Carbon::parse($selectedMonth)->format('F Y') }}
-        </h3>
-        <a href="{{ route('laporan.transaksi.export.pdf', ['bulan' => $selectedMonth]) }}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">
-            Export to PDF
-        </a>
-    </div>
-
-    <h4 class="mb-2 font-semibold text-md dark:text-gray-200">Setoran</h4>
-    <div class="relative overflow-x-auto shadow-md sm:rounded-lg mb-6">
-        <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-            {{-- ... table header ... --}}
-            <tbody>
-                {{-- PERBAIKAN: Mengganti $setoran menjadi $setorans --}}
-                @forelse ($setorans as $item)
+<div class="relative overflow-x-auto shadow-md sm:rounded-lg">
+    <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+        <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+            <tr>
+                <th scope="col" class="px-6 py-3">Tanggal</th>
+                <th scope="col" class="px-6 py-3">Nama</th>
+                <th scope="col" class="px-6 py-3">Keterangan</th>
+                <th scope="col" class="px-6 py-3">Debit (Setoran)</th>
+                <th scope="col" class="px-6 py-3">Kredit (Penarikan)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{-- Menampilkan Data Setoran --}}
+            @foreach ($setorans as $setoran)
                 <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                    <td class="px-6 py-4">{{ $item->created_at->format('d-m-Y') }}</td>
-                    <td class="px-6 py-4">{{ $item->siswa->nama }}</td>
-                    <td class="px-6 py-4">{{ $item->jenisSampah->nama }}</td>
-                    <td class="px-6 py-4">{{ $item->berat }} kg</td>
-                    <td class="px-6 py-4">Rp {{ number_format($item->total, 2, ',', '.') }}</td>
+                    <td class="px-6 py-4">{{ \Carbon\Carbon::parse($setoran->created_at)->format('d/m/Y') }}</td>
+                    <td class="px-6 py-4">{{ $setoran->siswa->pengguna->nama_lengkap ?? 'Siswa Dihapus' }}</td>
+                    <td class="px-6 py-4">Setoran Sampah</td>
+                    <td class="px-6 py-4 text-green-600">Rp {{ number_format($setoran->total_harga, 0, ',', '.') }}</td>
+                    <td class="px-6 py-4">-</td>
                 </tr>
-                @empty
-                <tr>
-                    <td colspan="5" class="px-6 py-4 text-center">Tidak ada data setoran untuk bulan ini.</td>
-                </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
+            @endforeach
 
-    <h4 class="mb-2 font-semibold text-md dark:text-gray-200">Penarikan</h4>
-    <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
-        <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-           {{-- ... table header ... --}}
-            <tbody>
-                @forelse ($penarikans as $item)
+            {{-- Menampilkan Data Penarikan --}}
+            @foreach ($penarikans as $penarikan)
                 <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                    <td class="px-6 py-4">{{ $item->created_at->format('d-m-Y') }}</td>
-                    <td class="px-6 py-4">{{ $item->siswa->nama }}</td>
-                    <td class="px-6 py-4">Rp {{ number_format($item->jumlah, 2, ',', '.') }}</td>
+                    <td class="px-6 py-4">{{ \Carbon\Carbon::parse($penarikan->tanggal_penarikan)->format('d/m/Y') }}</td>
+                    
+                    {{-- --- PERBAIKAN DI SINI --- --}}
+                    <td class="px-6 py-4">
+                        @if ($penarikan->siswa)
+                            {{ $penarikan->siswa->pengguna->nama_lengkap ?? 'Siswa Dihapus' }}
+                        @elseif ($penarikan->kelas)
+                            <span class="font-bold">Kelas:</span> {{ $penarikan->kelas->nama_kelas ?? 'Kelas Dihapus' }}
+                        @else
+                            -
+                        @endif
+                    </td>
+                    
+                    <td class="px-6 py-4">Penarikan Saldo</td>
+                    <td class="px-6 py-4">-</td>
+                    <td class="px-6 py-4 text-red-600">Rp {{ number_format($penarikan->jumlah_penarikan, 0, ',', '.') }}</td>
                 </tr>
-                @empty
+            @endforeach
+
+            @if ($setorans->isEmpty() && $penarikans->isEmpty())
                 <tr>
-                    <td colspan="3" class="px-6 py-4 text-center">Tidak ada data penarikan untuk bulan ini.</td>
+                    <td colspan="5" class="px-6 py-4 text-center">Tidak ada transaksi setoran atau penarikan pada periode ini.</td>
                 </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
+            @endif
+        </tbody>
+        <tfoot class="bg-gray-50 dark:bg-gray-700">
+            <tr class="font-semibold text-gray-900 dark:text-white">
+                <td colspan="3" class="px-6 py-3 text-right">Total</td>
+                <td class="px-6 py-3 text-green-600">Rp {{ number_format($totalSetoran, 0, ',', '.') }}</td>
+                <td class="px-6 py-3 text-red-600">Rp {{ number_format($totalPenarikan, 0, ',', '.') }}</td>
+            </tr>
+        </tfoot>
+    </table>
 </div>
