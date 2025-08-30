@@ -1,26 +1,39 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Edit Data Kelas') }}
+        <h2 class="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
+            {{ __('Edit Kelas') }}
         </h2>
     </x-slot>
 
     <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    <form action="{{ route('kelas.update', $item->id) }}" method="POST">
+        <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
+            <div class="overflow-hidden bg-white shadow-sm dark:bg-gray-800 sm:rounded-lg">
+                <div class="p-6 text-gray-900 dark:text-gray-100">
+
+                    <form action="{{ route('kelas.update', $kela->id) }}" method="POST">
                         @csrf
-                        @method('PUT') <div>
-                            <x-input-label for="nama_kelas" :value="__('Nama Sampah')" />
-                            <x-text-input id="nama_kelas" class="block mt-1 w-full" type="text" name="nama_kelas" :value="old('nama_kelas', $item->nama_kelas)" required autofocus />
-                            <x-input-error :messages="$errors->get('nama_kelas')" class="mt-2" />
-                        </div>                  
+                        @method('PUT')
+                        <div class="mb-4">
+                            <label for="nama_kelas" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Nama Kelas</label>
+                            <input type="text" id="nama_kelas" name="nama_kelas" value="{{ old('nama_kelas', $kela->nama_kelas) }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
+                            @error('nama_kelas') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
+                        </div>
+
+                        {{-- --- TAMBAHAN DROPDOWN WALI KELAS --- --}}
+                        <div class="mb-4">
+                            <label for="id_wali_kelas" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Wali Kelas (Opsional)</label>
+                            <select id="id_wali_kelas" name="id_wali_kelas" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                <option value="">-- Tidak Ada --</option>
+                                @foreach ($waliKelasOptions as $wali)
+                                    <option value="{{ $wali->id }}" {{ old('id_wali_kelas', $kela->id_wali_kelas) == $wali->id ? 'selected' : '' }}>{{ $wali->nama_lengkap }}</option>
+                                @endforeach
+                            </select>
+                            @error('id_wali_kelas') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
+                        </div>
 
                         <div class="flex items-center justify-end mt-4">
-                            <x-primary-button class="ms-4">
-                                {{ __('Update') }}
-                            </x-primary-button>
+                            <a href="{{ route('kelas.index') }}" class="mr-4 text-sm font-medium text-gray-700 dark:text-gray-300 hover:underline">Batal</a>
+                            <button type="submit" class="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700">Perbarui</button>
                         </div>
                     </form>
                 </div>

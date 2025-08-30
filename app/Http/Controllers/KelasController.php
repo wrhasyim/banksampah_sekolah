@@ -3,62 +3,65 @@
 namespace App\Http\Controllers;
 
 use App\Models\Kelas;
+use App\Models\Pengguna; // Import model Pengguna
 use Illuminate\Http\Request;
 
 class KelasController extends Controller
 {
     public function index()
     {
-        $kelas = Kelas::all();
-    // Variabel yang dikirim ke view adalah 'kelas'
-    return view('pages.kelas.index', compact('kelas'));
+        // Eager load relasi waliKelas untuk efisiensi query
+        $kelas = Kelas::with('waliKelas')->latest()->get();
+        return view('pages.kelas.index', compact('kelas'));
     }
 
     public function create()
     {
-        return view('pages.kelas.create');
+        // Ambil semua pengguna dengan role 'wali' untuk ditampilkan di dropdown
+        $waliKelasOptions = Pengguna::where('role', 'wali')->get();
+        return view('pages.kelas.create', compact('waliKelasOptions'));
     }
 
     public function store(Request $request)
     {
-        $request->validate(['nama_kelas' => 'required|string|max:50']);
-        Kelas::create($request->all());
-        return redirect()->route('kelas.index')->with('status', 'Data kelas berhasil ditambahkan!');
-    }
+        $request->validate([
+            'nama_kelas' => 'required|string|max:255|unique:kelas,nama_kelas',
+            'id_wali_kelas' => 'nullable|exists:pengguna,id', // Validasi wali kelas
+        ]);
 
-    public function show(Kelas $kela)
-    {
-        // Tidak kita gunakan untuk sekarang
+        Kelas::create($request->all());
+
+        return redirect()->route('kelas.index')->with('toastr-success', 'Kelas berhasil ditambahkan.');
     }
 
     public function edit(Kelas $kela)
     {
-        return view('pages.kelas.edit', ['item' => $kela]);
+        // Ambil semua pengguna dengan role 'wali' untuk ditampilkan di dropdown
+        $waliKelasOptions = Pengguna::where('role', 'wali')->get();
+        return view('pages.kelas.edit', compact('kela', 'waliKelasOptions'));
     }
 
     public function update(Request $request, Kelas $kela)
     {
-        $request->validate(['nama_kelas' => 'required|string|max:50']);
+        $request->validate([
+            'nama_kelas' => 'required|string|max:255|unique:kelas,nama_kelas,' . $kela->id,
+            'id_wali_kelas' => 'nullable|exists:pengguna,id', // Validasi wali kelas
+        ]);
+
         $kela->update($request->all());
-        return redirect()->route('kelas.index')->with('status', 'Data kelas berhasil diperbarui!');
+
+        return redirect()->route('kelas.index')->with('toastr-success', 'Kelas berhasil diperbarui.');
     }
 
     public function destroy(Kelas $kela)
     {
+        // Tambahkan pengecekan jika kelas masih memiliki siswa
+        if ($kela->siswa()->count() > 0) {
+            return redirect()->route('kelas.index')->with('toastr-error', 'Kelas tidak dapat dihapus karena masih memiliki siswa.');
+        }
+
         $kela->delete();
-        return redirect()->route('kelas.index')->with('status', 'Data kelas berhasil dihapus!');
-    }
 
-    // METHOD BARU UNTUK MENGAMBIL SISWA BERDASARKAN KELAS
-    public function getSiswaByKelas(Kelas $kelas)
-    {
-        $siswa = $kelas->siswa()->with('pengguna')->get()->map(function ($siswa) {
-            return [
-                'id' => $siswa->id,
-                'nama' => $siswa->pengguna->nama_lengkap ?? 'Nama tidak ada',
-            ];
-        });
-
-        return response()->json($siswa);
+        return redirect()->route('kelas.index')->with('toastr-success', 'Kelas berhasil dihapus.');
     }
 }
