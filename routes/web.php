@@ -83,7 +83,9 @@ Route::get('/insentif/rekap', [App\Http\Controllers\InsentifController::class, '
     Route::post('settings', [SettingController::class, 'store'])->name('settings.store');
 // Perbaikan: Tambahkan rute untuk pembaruan pengaturan
      Route::post('settings', [SettingController::class, 'update'])->name('settings.update');
-    
+     // === PINDAHKAN RUTE PEMBAYARAN INSENTIF KE SINI ===
+    Route::get('/insentif/pembayaran', [PembayaranInsentifController::class, 'index'])->name('insentif.pembayaran');
+    Route::post('/insentif/bayar', [PembayaranInsentifController::class, 'store'])->name('insentif.bayar');
     // Laporan
     Route::get('/laporan', [ReportController::class, 'index'])->name('laporan.index');
     Route::get('/laporan/penjualan/export/excel', [ReportController::class, 'exportPenjualanExcel'])->name('laporan.penjualan.export.excel');
