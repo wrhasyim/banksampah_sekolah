@@ -12,10 +12,12 @@ class InsentifController extends Controller
     public function index()
     {
         // Mengurutkan dari yang terbaru dan menambahkan paginasi
-        $insentifs = Insentif::with('penjualan', 'kelas.waliKelas')->latest()->paginate(15);
+        // Ganti 'penjualan' menjadi 'setoran.siswa.pengguna'
+        $insentifs = Insentif::with(['setoran.siswa.pengguna', 'kelas.waliKelas'])->latest()->paginate(15);
         return view('pages.insentif.index', compact('insentifs'));
     }
 
+    // ... (method rekap tidak berubah) ...
     public function rekap(Request $request)
     {
         $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->toDateString());

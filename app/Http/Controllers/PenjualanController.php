@@ -2,20 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\JenisSampah;
-use App\Models\Penjualan;
+// ... (use statements) ...
 use App\Models\Setting;
 use App\Models\BukuKas;
-use App\Models\Setoran;
-use App\Models\Kelas;
-use App\Models\Insentif;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class PenjualanController extends Controller
 {
+    // ... (method index dan create) ...
     public function index()
     {
         $penjualan = Penjualan::with('admin')->latest('tanggal_penjualan')->get();
@@ -27,7 +23,6 @@ class PenjualanController extends Controller
         $jenisSampah = JenisSampah::where('stok', '>', 0)->get();
         return view('pages.penjualan.create', compact('jenisSampah'));
     }
-
     public function store(Request $request)
     {
         $request->validate([
@@ -40,7 +35,8 @@ class PenjualanController extends Controller
 
         try {
             DB::transaction(function () use ($request) {
-                $totalHarga = 0;
+                // ... (logika pembuatan penjualan dan detail penjualan) ...
+                 $totalHarga = 0;
 
                 $penjualan = Penjualan::create([
                     'id_admin' => Auth::id(),
@@ -71,7 +67,6 @@ class PenjualanController extends Controller
 
                 $penjualan->update(['total_harga' => $totalHarga]);
 
-                // --- LOGIKA BARU: PENCATATAN PEMASUKAN DAN INSENTIF ---
 
                 // 1. Catat total penjualan sebagai PEMASUKAN di Buku Kas
                 BukuKas::create([
@@ -85,10 +80,9 @@ class PenjualanController extends Controller
                 // 2. Ambil persentase honor dari settings
                 $settings = Setting::pluck('value', 'key');
                 $persentasePengelola = $settings['persentase_pengelola'] ?? 0;
-                $persentaseWaliKelas = $settings['persentase_wali_kelas'] ?? 0;
                 $persentaseSekolah = $settings['persentase_sekolah'] ?? 0;
 
-                // 3. Hitung dan catat honor untuk Pengelola (tetap)
+                // 3. Hitung dan catat honor untuk Pengelola
                 $honorPengelola = $totalHarga * ($persentasePengelola / 100);
                 if ($honorPengelola > 0) {
                     BukuKas::create([
@@ -100,7 +94,7 @@ class PenjualanController extends Controller
                     ]);
                 }
 
-                // 4. Hitung dan catat honor untuk Sekolah (tetap)
+                // 4. Hitung dan catat honor untuk Sekolah
                 $honorSekolah = $totalHarga * ($persentaseSekolah / 100);
                 if ($honorSekolah > 0) {
                     BukuKas::create([
@@ -112,48 +106,14 @@ class PenjualanController extends Controller
                     ]);
                 }
 
-                // 5. Logika Baru: Bagikan honor Wali Kelas secara proporsional
+                // 5. HAPUS BAGIAN INI: Logika insentif wali kelas telah dipindahkan
+                /*
+                $persentaseWaliKelas = $settings['persentase_wali_kelas'] ?? 0;
                 $totalHonorWaliKelas = $totalHarga * ($persentaseWaliKelas / 100);
                 if ($totalHonorWaliKelas > 0) {
-                    
-                    // Hitung total setoran dari setiap kelas
-                    $setoranPerKelas = Setoran::select(
-                            'siswa.id_kelas', 
-                            DB::raw('SUM(setoran.total_harga) as total_setoran')
-                        )
-                        ->join('siswa', 'setoran.siswa_id', '=', 'siswa.id')
-                        ->groupBy('siswa.id_kelas')
-                        ->pluck('total_setoran', 'id_kelas');
-
-                    $totalSemuaSetoran = $setoranPerKelas->sum();
-
-                    if ($totalSemuaSetoran > 0) {
-                        foreach ($setoranPerKelas as $kelasId => $totalSetoranKelas) {
-                            // Hitung porsi insentif untuk kelas ini
-                            $proporsi = $totalSetoranKelas / $totalSemuaSetoran;
-                            $insentifKelas = $totalHonorWaliKelas * $proporsi;
-
-                            if ($insentifKelas > 0) {
-                                // Catat ke tabel riwayat insentif
-                                Insentif::create([
-                                    'penjualan_id' => $penjualan->id,
-                                    'kelas_id' => $kelasId,
-                                    'jumlah_insentif' => $insentifKelas,
-                                ]);
-
-                                // Catat sebagai pengeluaran di Buku Kas
-                                $kelas = Kelas::find($kelasId);
-                                BukuKas::create([
-                                    'tanggal' => now(),
-                                    'deskripsi' => 'Insentif Wali Kelas: ' . ($kelas->nama_kelas ?? 'Kelas Dihapus') . ' (dari Penjualan #' . $penjualan->id . ')',
-                                    'tipe' => 'pengeluaran',
-                                    'jumlah' => $insentifKelas,
-                                    'id_admin' => Auth::id(),
-                                ]);
-                            }
-                        }
-                    }
+                    // ... (kode lama yang menghitung proporsi) ...
                 }
+                */
 
             });
         } catch (ValidationException $e) {
@@ -162,9 +122,9 @@ class PenjualanController extends Controller
             return redirect()->back()->with('toastr-error', 'Terjadi kesalahan: ' . $e->getMessage())->withInput();
         }
 
-        return redirect()->route('penjualan.index')->with('toastr-success', 'Transaksi penjualan berhasil disimpan dan insentif telah dibagikan!');
+        return redirect()->route('penjualan.index')->with('toastr-success', 'Transaksi penjualan berhasil disimpan!');
     }
-    
+    // ... (method show) ...
     public function show(Penjualan $penjualan)
     {
         $penjualan->load('detailPenjualan.jenisSampah', 'admin');

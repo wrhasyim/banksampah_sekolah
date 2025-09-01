@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-            {{ __('Riwayat Insentif') }}
+            {{ __('Riwayat Insentif Wali Kelas') }}
         </h2>
     </x-slot>
 
@@ -9,36 +9,47 @@
         <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
             <div class="overflow-hidden bg-white shadow-sm dark:bg-gray-800 sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
-                    <h3 class="text-lg font-semibold mb-6">Daftar Pembagian Insentif</h3>
+                    <h3 class="mb-6 text-lg font-semibold">Daftar Pembagian Insentif</h3>
 
                     <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
                         <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                             <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                                 <tr>
-                                    <th scope="col" class="px-6 py-3">Tanggal Penjualan</th>
+                                    {{-- Kolom diubah untuk menampilkan data dari setoran --}}
+                                    <th scope="col" class="px-6 py-3">Tanggal Insentif</th>
+                                    <th scope="col" class="px-6 py-3">Asal Setoran (Siswa)</th>
                                     <th scope="col" class="px-6 py-3">Penerima (Kelas)</th>
                                     <th scope="col" class="px-6 py-3">Wali Kelas</th>
-                                    <th scope="col" class="px-6 py-3">Total Penjualan</th>
+                                    <th scope="col" class="px-6 py-3">Total Setoran</th>
                                     <th scope="col" class="px-6 py-3">Jumlah Insentif</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse ($insentifs as $insentif)
                                 <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                                    <td class="px-6 py-4">{{ $insentif->penjualan->tanggal_penjualan->format('d M Y') }}</td>
+                                    {{-- Menggunakan relasi 'setoran' dan 'kelas' yang sudah diperbarui --}}
+                                    <td class="px-6 py-4">{{ $insentif->created_at->format('d M Y, H:i') }}</td>
+                                    <td class="px-6 py-4">{{ $insentif->setoran->siswa->pengguna->nama_lengkap ?? 'Siswa Dihapus' }}</td>
                                     <td class="px-6 py-4">{{ $insentif->kelas->nama_kelas ?? 'Kelas Dihapus' }}</td>
                                     <td class="px-6 py-4">{{ $insentif->kelas->waliKelas->nama_lengkap ?? 'Belum Diatur' }}</td>
-                                    <td class="px-6 py-4">Rp {{ number_format($insentif->penjualan->total_harga, 0, ',', '.') }}</td>
+                                    <td class="px-6 py-4">Rp {{ number_format($insentif->setoran->total_harga, 0, ',', '.') }}</td>
                                     <td class="px-6 py-4 font-medium text-green-600">Rp {{ number_format($insentif->jumlah_insentif, 0, ',', '.') }}</td>
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="5" class="px-6 py-4 text-center">Belum ada data insentif.</td>
+                                    {{-- Colspan disesuaikan dengan jumlah kolom baru --}}
+                                    <td colspan="6" class="px-6 py-4 text-center">Belum ada data insentif.</td>
                                 </tr>
                                 @endforelse
                             </tbody>
                         </table>
                     </div>
+
+                    {{-- Menambahkan Paginasi --}}
+                    <div class="mt-4">
+                        {{ $insentifs->links() }}
+                    </div>
+
                 </div>
             </div>
         </div>

@@ -10,14 +10,15 @@ class Insentif extends Model
     use HasFactory;
 
     protected $fillable = [
-        'penjualan_id',
+        'setoran_id', // <-- Perubahan di sini
         'kelas_id',
         'jumlah_insentif',
     ];
 
-    public function penjualan()
+    // Relasi ke Setoran
+    public function setoran()
     {
-        return $this->belongsTo(Penjualan::class);
+        return $this->belongsTo(Setoran::class);
     }
 
     public function kelas()

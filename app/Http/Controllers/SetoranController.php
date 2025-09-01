@@ -6,14 +6,19 @@ use App\Models\Setoran;
 use App\Models\Siswa;
 use App\Models\JenisSampah;
 use App\Models\Kelas;
+use App\Models\Setting; // Tambahkan ini
+use App\Models\BukuKas; // Tambahkan ini
+use App\Models\Insentif; // Tambahkan ini
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Imports\SetoranImport;
 use App\Exports\SetoranSampleExport;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Auth; // Tambahkan ini
 
 class SetoranController extends Controller
 {
+    // ... (method index dan create tidak berubah) ...
     public function index(Request $request)
     {
         $perPage = $request->input('perPage', 10);
@@ -49,29 +54,57 @@ class SetoranController extends Controller
         ]);
 
         DB::transaction(function () use ($request) {
-    $totalHargaKeseluruhan = 0;
-    foreach ($request->sampah as $item) {
-        $jenisSampah = JenisSampah::find($item['jenis_sampah_id']);
-        $totalHarga = $jenisSampah->harga_per_satuan * $item['jumlah'];
-        $totalHargaKeseluruhan += $totalHarga;
+            $totalHargaKeseluruhan = 0;
+            $siswa = Siswa::with('kelas')->find($request->siswa_id);
 
-        Setoran::create([
-            'siswa_id' => $request->siswa_id,
-            'jenis_sampah_id' => $item['jenis_sampah_id'],
-            'jumlah' => $item['jumlah'],
-            'total_harga' => $totalHarga,
-        ]);
+            // Ambil persentase insentif wali kelas
+            $settings = Setting::pluck('value', 'key');
+            $persentaseWaliKelas = $settings['persentase_wali_kelas'] ?? 0;
 
-        // TAMBAHKAN BARIS INI JUGA
-        $jenisSampah->increment('stok', $item['jumlah']);
-    }
-    $siswa = Siswa::find($request->siswa_id);
-    $siswa->increment('saldo', $totalHargaKeseluruhan);
-});
+            foreach ($request->sampah as $item) {
+                $jenisSampah = JenisSampah::find($item['jenis_sampah_id']);
+                $totalHarga = $jenisSampah->harga_per_satuan * $item['jumlah'];
+                $totalHargaKeseluruhan += $totalHarga;
+
+                $setoran = Setoran::create([
+                    'siswa_id' => $request->siswa_id,
+                    'jenis_sampah_id' => $item['jenis_sampah_id'],
+                    'jumlah' => $item['jumlah'],
+                    'total_harga' => $totalHarga,
+                ]);
+
+                // Tambah stok sampah
+                $jenisSampah->increment('stok', $item['jumlah']);
+
+                // --- LOGIKA INSENTIF BARU ---
+                if ($persentaseWaliKelas > 0 && $siswa->kelas) {
+                    $insentifWaliKelas = $totalHarga * ($persentaseWaliKelas / 100);
+
+                    if ($insentifWaliKelas > 0) {
+                        Insentif::create([
+                            'setoran_id' => $setoran->id,
+                            'kelas_id' => $siswa->id_kelas,
+                            'jumlah_insentif' => $insentifWaliKelas,
+                        ]);
+
+                        BukuKas::create([
+                            'tanggal' => now(),
+                            'deskripsi' => 'Insentif Wali Kelas: ' . $siswa->kelas->nama_kelas . ' (dari Setoran Siswa: ' . $siswa->pengguna->nama_lengkap . ')',
+                            'tipe' => 'pengeluaran',
+                            'jumlah' => $insentifWaliKelas,
+                            'id_admin' => Auth::id(),
+                        ]);
+                    }
+                }
+            }
+            // Update saldo siswa
+            $siswa->increment('saldo', $totalHargaKeseluruhan);
+        });
 
         return redirect()->route('setoran.index')->with('success', 'Setoran berhasil ditambahkan.');
     }
 
+    // ... (method getSiswa, showImportForm, import, sampleExport, createMassal tidak berubah) ...
     public function getSiswa(Request $request)
     {
         $search = $request->input('q');
@@ -119,7 +152,6 @@ class SetoranController extends Controller
         
         return view('pages.setoran.create-massal', compact('jenisSampahs', 'kelasList'));
     }
-
     public function storeMassal(Request $request)
     {
         $request->validate([
@@ -132,30 +164,54 @@ class SetoranController extends Controller
         $jenisSampah = JenisSampah::find($request->jenis_sampah_id);
         
         DB::transaction(function () use ($request, $jenisSampah) {
-    foreach ($request->setoran as $data) {
-        if (!empty($data['jumlah']) && $data['jumlah'] > 0) {
-            $totalHarga = $data['jumlah'] * $jenisSampah->harga_per_satuan;
+            $settings = Setting::pluck('value', 'key');
+            $persentaseWaliKelas = $settings['persentase_wali_kelas'] ?? 0;
 
-            Setoran::create([
-                'siswa_id' => $data['siswa_id'],
-                'jenis_sampah_id' => $jenisSampah->id,
-                'jumlah' => $data['jumlah'],
-                'total_harga' => $totalHarga,
-            ]);
+            foreach ($request->setoran as $data) {
+                if (!empty($data['jumlah']) && $data['jumlah'] > 0) {
+                    $totalHarga = $data['jumlah'] * $jenisSampah->harga_per_satuan;
+                    $siswa = Siswa::with('kelas', 'pengguna')->find($data['siswa_id']);
 
-            // TAMBAHKAN BARIS INI UNTUK MENAIKKAN STOK
-            $jenisSampah->increment('stok', $data['jumlah']);
+                    $setoran = Setoran::create([
+                        'siswa_id' => $data['siswa_id'],
+                        'jenis_sampah_id' => $jenisSampah->id,
+                        'jumlah' => $data['jumlah'],
+                        'total_harga' => $totalHarga,
+                    ]);
 
-            $siswa = Siswa::find($data['siswa_id']);
-            $siswa->increment('saldo', $totalHarga);
+                    // Tambah stok sampah
+                    $jenisSampah->increment('stok', $data['jumlah']);
 
-            $points = floor($totalHarga / 1000);
-            if ($points > 0) {
-                $siswa->increment('points', $points);
+                    // Update saldo dan poin siswa
+                    $siswa->increment('saldo', $totalHarga);
+                    $points = floor($totalHarga / 1000);
+                    if ($points > 0) {
+                        $siswa->increment('points', $points);
+                    }
+
+                    // --- LOGIKA INSENTIF BARU ---
+                    if ($persentaseWaliKelas > 0 && $siswa->kelas) {
+                        $insentifWaliKelas = $totalHarga * ($persentaseWaliKelas / 100);
+
+                        if ($insentifWaliKelas > 0) {
+                            Insentif::create([
+                                'setoran_id' => $setoran->id,
+                                'kelas_id' => $siswa->id_kelas,
+                                'jumlah_insentif' => $insentifWaliKelas,
+                            ]);
+
+                            BukuKas::create([
+                                'tanggal' => now(),
+                                'deskripsi' => 'Insentif Wali Kelas: ' . $siswa->kelas->nama_kelas . ' (dari Setoran Massal: ' . $siswa->pengguna->nama_lengkap . ')',
+                                'tipe' => 'pengeluaran',
+                                'jumlah' => $insentifWaliKelas,
+                                'id_admin' => Auth::id(),
+                            ]);
+                        }
+                    }
+                }
             }
-        }
-    }
-});
+        });
 
         return redirect()->route('setoran.index')->with('success', 'Setoran massal berhasil disimpan.');
     }
