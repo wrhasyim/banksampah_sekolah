@@ -15,7 +15,7 @@
                         <select id="kelas_filter" name="kelas_filter" class="block w-full mt-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
                             <option value="">-- Pilih Kelas --</option>
                             @foreach ($kelasList as $kelas)
-                                <option value="{{ $kelas->id }}">{{ $kelas->nama_kelas }}</option>
+                                <option value="{{ $kelas->id }}" data-nama-kelas="{{ $kelas->nama_kelas }}">{{ $kelas->nama_kelas }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -25,20 +25,10 @@
                         <div class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
-                                    <tr>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-10">
-                                            Nama Siswa
-                                        </th>
-                                        @foreach ($jenisSampahs as $sampah)
-                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                {{ $sampah->nama_sampah }} (kg)
-                                            </th>
-                                        @endforeach
-                                    </tr>
-                                </thead>
+                                    </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
                                     <tr>
-                                        <td colspan="{{ count($jenisSampahs) + 1 }}" class="text-center p-4">
+                                        <td id="initial-message" class="text-center p-4">
                                             Silakan pilih kelas terlebih dahulu untuk menampilkan siswa.
                                         </td>
                                     </tr>
@@ -61,52 +51,69 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const kelasFilter = document.getElementById('kelas_filter');
+            const tableHead = document.querySelector('thead');
             const tableBody = document.querySelector('tbody');
-            const jenisSampahs = @json($jenisSampahs);
+            const initialMessage = document.getElementById('initial-message');
+
+            // Mengambil data jenis sampah dari PHP ke JavaScript
+            const jenisSampahSiswa = @json($jenisSampahSiswa->values());
+            const jenisSampahGuru = @json($jenisSampahGuru->values());
 
             kelasFilter.addEventListener('change', function () {
-                const kelasId = this.value;
-                tableBody.innerHTML = `<tr><td colspan="${jenisSampahs.length + 1}" class="text-center p-4">Memuat data siswa...</td></tr>`;
+                const selectedOption = this.options[this.selectedIndex];
+                const kelasId = selectedOption.value;
+                const namaKelas = selectedOption.getAttribute('data-nama-kelas');
+                
+                // Tentukan jenis sampah mana yang akan digunakan
+                const isGuruClass = namaKelas && namaKelas.toLowerCase().includes('guru');
+                const activeJenisSampah = isGuruClass ? jenisSampahGuru : jenisSampahSiswa;
+                
+                // Kosongkan tabel dan tampilkan pesan loading
+                tableHead.innerHTML = '';
+                tableBody.innerHTML = `<tr><td colspan="${activeJenisSampah.length + 1}" class="text-center p-4">Memuat data siswa...</td></tr>`;
 
                 if (kelasId) {
-                    // Ambil data siswa dari server berdasarkan kelas yang dipilih
+                    // 1. Bangun Header Tabel
+                    let headerRow = '<tr>';
+                    headerRow += '<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-10">Nama Siswa</th>';
+                    activeJenisSampah.forEach(sampah => {
+                        headerRow += `<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">${sampah.nama_sampah} (kg)</th>`;
+                    });
+                    headerRow += '</tr>';
+                    tableHead.innerHTML = headerRow;
+
+                    // 2. Ambil dan Bangun Body Tabel
                     fetch(`{{ url('/api/siswa-by-kelas') }}/${kelasId}`)
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error('Network response was not ok');
-                            }
-                            return response.json();
-                        })
+                        .then(response => response.json())
                         .then(data => {
                             tableBody.innerHTML = ''; // Kosongkan tabel
                             if (data.length > 0) {
                                 data.forEach(siswa => {
-                                    let row = `<tr>`;
-                                    row += `<td class="px-6 py-4 whitespace-nowrap sticky left-0 bg-white z-10">${siswa.pengguna.nama_lengkap}</td>`;
+                                    let bodyRow = '<tr>';
+                                    bodyRow += `<td class="px-6 py-4 whitespace-nowrap sticky left-0 bg-white z-10">${siswa.pengguna.nama_lengkap}</td>`;
                                     
-                                    // Membuat input untuk setiap jenis sampah
-                                    jenisSampahs.forEach(sampah => {
-                                        row += `<td class="px-6 py-4 whitespace-nowrap">
+                                    activeJenisSampah.forEach(sampah => {
+                                        bodyRow += `<td class="px-6 py-4 whitespace-nowrap">
                                                     <input type="number" step="0.01" min="0" 
                                                            name="setoran[${siswa.id}][${sampah.id}]" 
                                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                                                            placeholder="0">
                                                 </td>`;
                                     });
-
-                                    row += `</tr>`;
-                                    tableBody.innerHTML += row;
+                                    bodyRow += '</tr>';
+                                    tableBody.innerHTML += bodyRow;
                                 });
                             } else {
-                                tableBody.innerHTML = `<tr><td colspan="${jenisSampahs.length + 1}" class="text-center p-4">Tidak ada siswa di kelas ini.</td></tr>`;
+                                tableBody.innerHTML = `<tr><td colspan="${activeJenisSampah.length + 1}" class="text-center p-4">Tidak ada siswa di kelas ini.</td></tr>`;
                             }
                         })
                         .catch(error => {
                             console.error('Error fetching siswa:', error);
-                            tableBody.innerHTML = `<tr><td colspan="${jenisSampahs.length + 1}" class="text-center p-4">Gagal memuat data siswa. Pastikan route API sudah benar.</td></tr>`;
+                            tableBody.innerHTML = `<tr><td colspan="${activeJenisSampah.length + 1}" class="text-center p-4">Gagal memuat data siswa. Pastikan route API sudah benar.</td></tr>`;
                         });
                 } else {
-                    tableBody.innerHTML = `<tr><td colspan="${jenisSampahs.length + 1}" class="text-center p-4">Silakan pilih kelas terlebih dahulu.</td></tr>`;
+                    tableHead.innerHTML = '';
+                    tableBody.innerHTML = `<tr><td class="text-center p-4">Silakan pilih kelas terlebih dahulu.</td></tr>`;
                 }
             });
         });

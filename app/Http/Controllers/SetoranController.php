@@ -73,7 +73,7 @@ class SetoranController extends Controller
 
                 $jenisSampah->increment('stok', $item['jumlah']);
 
-                if ($persentaseWaliKelas > 0 && $siswa->kelas) {
+                if ($persentaseWaliKelas > 0 && $siswa->kelas && $siswa->kelas->id_wali_kelas) {
                     $insentifWaliKelas = $totalHarga * ($persentaseWaliKelas / 100);
 
                     if ($insentifWaliKelas > 0) {
@@ -103,7 +103,7 @@ class SetoranController extends Controller
             ->get();
 
         $formattedSiswa = $siswa->map(function ($item) {
-            return ['id' => $item->id, 'text' => $item->pengguna->nama_lengkap . ' (' . $item->kelas->nama_kelas . ')'];
+            return ['id' => $item->id, 'text' => $item->pengguna->nama_lengkap . ' (' . ($item->kelas->nama_kelas ?? 'Tanpa Kelas') . ')'];
         });
 
         return response()->json($formattedSiswa);
@@ -130,21 +130,31 @@ class SetoranController extends Controller
         return Excel::download(new SetoranSampleExport, 'sample-setoran.xlsx');
     }
 
-    /**
-     * Menampilkan form untuk membuat setoran massal.
-     */
     public function createMassal()
     {
-        // FINAL CORRECTION: Using the correct column name 'nama_sampah' from your migration file.
-        $jenisSampahs = JenisSampah::where('status', 'aktif')->orderBy('nama_sampah', 'asc')->get();
         $kelasList = Kelas::orderBy('nama_kelas', 'asc')->get();
+    
+        // Ambil semua jenis sampah yang aktif
+        $allJenisSampah = JenisSampah::where('status', 'aktif')->orderBy('nama_sampah', 'asc')->get();
+
+        // Pisahkan jenis sampah untuk siswa dan guru berdasarkan nama
+        $jenisSampahSiswa = $allJenisSampah->filter(function ($value, $key) {
+            // Ambil sampah yang namanya TIDAK mengandung kata 'Guru' (case-insensitive)
+            return strpos(strtolower($value->nama_sampah), 'guru') === false;
+        });
+
+        $jenisSampahGuru = $allJenisSampah->filter(function ($value, $key) {
+            // Ambil sampah yang namanya MENGANDUNG kata 'Guru' (case-insensitive)
+            return strpos(strtolower($value->nama_sampah), 'guru') !== false;
+        });
         
-        return view('pages.setoran.create-massal', compact('jenisSampahs', 'kelasList'));
+        return view('pages.setoran.create-massal', compact(
+            'kelasList', 
+            'jenisSampahSiswa', 
+            'jenisSampahGuru'
+        ));
     }
 
-    /**
-     * Menyimpan data dari form setoran massal.
-     */
     public function storeMassal(Request $request)
     {
         $request->validate([
@@ -179,7 +189,7 @@ class SetoranController extends Controller
 
                         $jenisSampah->increment('stok', $jumlah);
 
-                        if ($persentaseWaliKelas > 0 && $siswa->kelas) {
+                        if ($persentaseWaliKelas > 0 && $siswa->kelas && $siswa->kelas->id_wali_kelas) {
                             $insentifWaliKelas = $totalHarga * ($persentaseWaliKelas / 100);
 
                             if ($insentifWaliKelas > 0) {
