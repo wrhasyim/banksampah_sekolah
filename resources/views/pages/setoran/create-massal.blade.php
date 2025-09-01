@@ -64,11 +64,9 @@
                 const kelasId = selectedOption.value;
                 const namaKelas = selectedOption.getAttribute('data-nama-kelas');
                 
-                // Tentukan jenis sampah mana yang akan digunakan
                 const isGuruClass = namaKelas && namaKelas.toLowerCase().includes('guru');
                 const activeJenisSampah = isGuruClass ? jenisSampahGuru : jenisSampahSiswa;
                 
-                // Kosongkan tabel dan tampilkan pesan loading
                 tableHead.innerHTML = '';
                 tableBody.innerHTML = `<tr><td colspan="${activeJenisSampah.length + 1}" class="text-center p-4">Memuat data siswa...</td></tr>`;
 
@@ -77,7 +75,9 @@
                     let headerRow = '<tr>';
                     headerRow += '<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-10">Nama Siswa</th>';
                     activeJenisSampah.forEach(sampah => {
-                        headerRow += `<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">${sampah.nama_sampah} (kg)</th>`;
+                        // --- PERUBAHAN DI SINI ---
+                        // Menggunakan 'sampah.satuan' untuk menampilkan unit dinamis
+                        headerRow += `<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">${sampah.nama_sampah} (${sampah.satuan})</th>`;
                     });
                     headerRow += '</tr>';
                     tableHead.innerHTML = headerRow;
@@ -86,7 +86,7 @@
                     fetch(`{{ url('/api/siswa-by-kelas') }}/${kelasId}`)
                         .then(response => response.json())
                         .then(data => {
-                            tableBody.innerHTML = ''; // Kosongkan tabel
+                            tableBody.innerHTML = ''; 
                             if (data.length > 0) {
                                 data.forEach(siswa => {
                                     let bodyRow = '<tr>';
