@@ -99,14 +99,12 @@ class ChartController extends Controller
         ]);
     }
 
-    /**
-     * KHUSUS Menyiapkan data jumlah sampah terkumpul per jenis untuk grafik.
-     */
     public function getSampahChartData(Request $request)
     {
         $period = $request->input('period', 'monthly');
         $query = DB::table('setoran')
-            ->join('jenis_sampah', 'setoran.id_sampah', '=', 'jenis_sampah.id');
+            // KEMBALIKAN KE NAMA KOLOM YANG BENAR SESUAI MIGRASI
+            ->join('jenis_sampah', 'setoran.jenis_sampah_id', '=', 'jenis_sampah.id');
 
         switch ($period) {
             case 'today':
