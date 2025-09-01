@@ -10,6 +10,9 @@ use Carbon\Carbon;
 
 class ChartController extends Controller
 {
+    /**
+     * Mengambil data untuk grafik multifungsi berdasarkan tipe dan periode.
+     */
     public function getChartData(Request $request)
     {
         $type = $request->input('type', 'transaksi');
@@ -24,129 +27,123 @@ class ChartController extends Controller
         }
     }
 
+    /**
+     * Menyiapkan data transaksi (Setoran & Penjualan) untuk grafik.
+     */
     private function getTransaksiChartData($period)
     {
-        // Logika untuk data transaksi (setoran dan penjualan)
         $endDate = Carbon::now();
-    $groupByFormat = 'Y-m-d';
-    $labels = [];
+        $labels = [];
+        $dataSetoran = [];
+        $dataPenjualan = [];
 
-    switch ($period) {
-        case 'today':
-            $startDate = Carbon::today();
-            $groupByFormat = 'H:00';
-            for ($i = 0; $i < 24; $i++) {
-                $labels[] = str_pad($i, 2, '0', STR_PAD_LEFT) . ':00';
-            }
-            break;
-        case '7d':
-            $startDate = Carbon::now()->subDays(6);
-            for ($i = 0; $i < 7; $i++) {
-                $labels[] = $startDate->copy()->addDays($i)->format('D, M d');
-            }
-            break;
-        case '30d':
-            $startDate = Carbon::now()->subDays(29);
-            for ($i = 0; $i < 30; $i++) {
-                $labels[] = $startDate->copy()->addDays($i)->format('M d');
-            }
-            break;
-        case 'monthly':
-        default:
+        if ($period === 'monthly') {
             $startDate = Carbon::now()->startOfYear();
-            $endDate = Carbon::now()->endOfYear();
-            $groupByFormat = 'Y-m';
+            // Inisialisasi label untuk 12 bulan
             for ($i = 1; $i <= 12; $i++) {
                 $labels[] = Carbon::create(null, $i, 1)->format('F');
+                $dataSetoran[date('Y-m', mktime(0, 0, 0, $i, 1, date('Y')))] = 0;
+                $dataPenjualan[date('Y-m', mktime(0, 0, 0, $i, 1, date('Y')))] = 0;
             }
-            break;
-    }
 
-    // Ambil data setoran
-    $setoranQuery = Setoran::whereBetween('created_at', [$startDate, $endDate]);
-    if ($period !== 'monthly') {
-        $dataSetoran = $setoranQuery
-            ->select(DB::raw("DATE_FORMAT(created_at, '%Y-%m-%d') as date"), DB::raw('SUM(total_harga) as total'))
-            ->groupBy('date')
-            ->pluck('total', 'date');
-    } else {
-        $dataSetoran = $setoranQuery
-            ->select(DB::raw("DATE_FORMAT(created_at, '%Y-%m') as month"), DB::raw('SUM(total_harga) as total'))
-            ->groupBy('month')
-            ->pluck('total', 'month');
-    }
-    
-    // Ambil data penjualan
-    $penjualanQuery = Penjualan::whereBetween('created_at', [$startDate, $endDate]);
-    if ($period !== 'monthly') {
-         $dataPenjualan = $penjualanQuery
-            ->select(DB::raw("DATE_FORMAT(created_at, '%Y-%m-%d') as date"), DB::raw('SUM(total_harga) as total'))
-            ->groupBy('date')
-            ->pluck('total', 'date');
-    } else {
-        $dataPenjualan = $penjualanQuery
-            ->select(DB::raw("DATE_FORMAT(created_at, '%Y-%m') as month"), DB::raw('SUM(total_harga) as total'))
-            ->groupBy('month')
-            ->pluck('total', 'month');
-    }
+            $setoran = Setoran::whereBetween('created_at', [$startDate, $endDate])
+                ->select(DB::raw("DATE_FORMAT(created_at, '%Y-%m') as month"), DB::raw('SUM(total_harga) as total'))
+                ->groupBy('month')->pluck('total', 'month')->all();
 
-    $formattedSetoran = [];
-    $formattedPenjualan = [];
+            $penjualan = Penjualan::whereBetween('created_at', [$startDate, $endDate])
+                ->select(DB::raw("DATE_FORMAT(created_at, '%Y-%m') as month"), DB::raw('SUM(total_harga) as total'))
+                ->groupBy('month')->pluck('total', 'month')->all();
+            
+            foreach ($setoran as $month => $total) $dataSetoran[$month] = $total;
+            foreach ($penjualan as $month => $total) $dataPenjualan[$month] = $total;
 
-    foreach ($labels as $label) {
-        $key = '';
-        if ($period === 'monthly') {
-            $monthNum = Carbon::parse($label)->month;
-            $key = Carbon::now()->year . '-' . str_pad($monthNum, 2, '0', STR_PAD_LEFT);
         } else {
-            $key = Carbon::parse($label)->format('Y-m-d');
+            switch ($period) {
+                case 'today':
+                    $startDate = Carbon::today();
+                    $days = 1;
+                    $format = 'D, H:00';
+                    $groupBy = DB::raw("DATE_FORMAT(created_at, '%Y-%m-%d %H:00')");
+                    $labelFormat = 'H:00';
+                    break;
+                case '7d':
+                    $startDate = Carbon::now()->subDays(6)->startOfDay();
+                    $days = 7;
+                    $format = 'Y-m-d';
+                    $groupBy = DB::raw("DATE_FORMAT(created_at, '%Y-%m-%d')");
+                    $labelFormat = 'D, M d';
+                    break;
+                case '30d':
+                default:
+                    $startDate = Carbon::now()->subDays(29)->startOfDay();
+                    $days = 30;
+                    $format = 'Y-m-d';
+                    $groupBy = DB::raw("DATE_FORMAT(created_at, '%Y-%m-%d')");
+                    $labelFormat = 'M d';
+                    break;
+            }
+
+            for ($i = 0; $i < $days; $i++) {
+                $date = $startDate->copy()->addDays($i);
+                $labels[] = $date->format($labelFormat);
+                $key = $date->format($format);
+                $dataSetoran[$key] = 0;
+                $dataPenjualan[$key] = 0;
+            }
+            
+            $setoran = Setoran::whereBetween('created_at', [$startDate, $endDate])
+                ->select($groupBy.' as date', DB::raw('SUM(total_harga) as total'))
+                ->groupBy('date')->pluck('total', 'date')->all();
+
+            $penjualan = Penjualan::whereBetween('created_at', [$startDate, $endDate])
+                ->select($groupBy.' as date', DB::raw('SUM(total_harga) as total'))
+                ->groupBy('date')->pluck('total', 'date')->all();
+
+            foreach ($setoran as $date => $total) $dataSetoran[$date] = $total;
+            foreach ($penjualan as $date => $total) $dataPenjualan[$date] = $total;
         }
-        
-        $formattedSetoran[] = $dataSetoran[$key] ?? 0;
-        $formattedPenjualan[] = $dataPenjualan[$key] ?? 0;
+
+        return response()->json([
+            'labels' => $labels,
+            'dataSetoran' => array_values($dataSetoran),
+            'dataPenjualan' => array_values($dataPenjualan),
+        ]);
     }
 
-    return response()->json([
-        'labels' => $labels,
-        'dataSetoran' => $formattedSetoran,
-        'dataPenjualan' => $formattedPenjualan,
-    ]);
-    }
-
+    /**
+     * Menyiapkan data jumlah sampah terkumpul per jenis untuk grafik.
+     */
     private function getSampahChartData($period)
     {
-        // Logika untuk data jenis sampah
         $endDate = Carbon::now();
 
-    switch ($period) {
-        case 'today':
-            $startDate = Carbon::today();
-            break;
-        case '7d':
-            $startDate = Carbon::now()->subDays(6);
-            break;
-        case '30d':
-            $startDate = Carbon::now()->subDays(29);
-            break;
-        case 'monthly':
-        default:
-            $startDate = Carbon::now()->startOfMonth();
-            break;
-    }
+        switch ($period) {
+            case 'today':
+                $startDate = Carbon::today();
+                break;
+            case '7d':
+                $startDate = Carbon::now()->subDays(6)->startOfDay();
+                break;
+            case '30d':
+                $startDate = Carbon::now()->subDays(29)->startOfDay();
+                break;
+            case 'monthly':
+            default:
+                $startDate = Carbon::now()->startOfMonth();
+                break;
+        }
 
-    $data = Setoran::join('jenis_sampah', 'setoran.id_jenis_sampah', '=', 'jenis_sampah.id')
-        ->whereBetween('setoran.created_at', [$startDate, $endDate])
-        ->select('jenis_sampah.nama_sampah', DB::raw('SUM(setoran.jumlah) as total_jumlah'))
-        ->groupBy('jenis_sampah.nama_sampah')
-        ->orderBy('total_jumlah', 'desc')
-        ->get();
+        $data = DB::table('setoran')
+            ->join('jenis_sampah', 'setoran.id_jenis_sampah', '=', 'jenis_sampah.id')
+            ->whereBetween('setoran.created_at', [$startDate, $endDate])
+            ->select('jenis_sampah.nama_sampah', DB::raw('SUM(setoran.jumlah) as total_jumlah'))
+            ->groupBy('jenis_sampah.nama_sampah')
+            ->orderBy('total_jumlah', 'desc')
+            ->get();
 
-    $labels = $data->pluck('nama_sampah');
-    $dataValues = $data->pluck('total_jumlah');
-
-    return response()->json([
-        'labels' => $labels,
-        'data' => $dataValues,
-    ]);
+        return response()->json([
+            'labels' => $data->pluck('nama_sampah'),
+            'data' => $data->pluck('total_jumlah'),
+        ]);
     }
 }

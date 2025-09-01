@@ -17,6 +17,7 @@ use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PembayaranInsentifController;
 use App\Http\Controllers\InsentifController;
+use App\Http\Controllers\ChartController;
 // Rute untuk halaman utama
 Route::get('/', function () {
     if (auth()->check()) {
@@ -46,7 +47,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
 
     // CRUD Jenis Sampah
     Route::resource('jenis-sampah', JenisSampahController::class);
-
+Route::get('/dashboard/chart', [ChartController::class, 'getChartData'])->name('dashboard.chart');
     // Transaksi Setoran
     Route::get('setoran/export', [SetoranController::class, 'export'])->name('setoran.export');
     Route::get('setoran/sample-export', [SetoranController::class, 'sampleExport'])->name('setoran.sample.export');
