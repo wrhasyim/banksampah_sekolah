@@ -143,111 +143,114 @@
     </div>
 
     @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const ctx = document.getElementById('myChart').getContext('2d');
-        let myChart;
-        
-        const chartTypeButtons = document.querySelectorAll('.chart-type-btn');
-        const filterButtons = document.querySelectorAll('.chart-filter-btn');
-        const chartTitle = document.getElementById('chart-title');
-
-        const defaultButtonClasses = 'px-3 py-1 text-sm font-medium text-gray-500 bg-gray-100 rounded-md hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600';
-        const activeButtonClasses = 'px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-md';
-
-        let currentPeriod = 'monthly';
-        let currentType = 'transaksi';
-
-        const renderChart = (data) => {
-            if (myChart) {
-                myChart.destroy();
-            }
-
-            let chartConfig;
-            if (currentType === 'transaksi') {
-                chartTitle.innerText = 'Grafik Transaksi';
-                chartConfig = {
-                    type: (currentPeriod === 'monthly' || currentPeriod === '30d') ? 'bar' : 'line',
-                    data: {
-                        labels: data.labels,
-                        datasets: [{
-                            label: 'Setoran',
-                            data: data.dataSetoran,
-                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                            borderColor: 'rgba(54, 162, 235, 1)',
-                            borderWidth: 1,
-                            tension: 0.1
-                        }, {
-                            label: 'Penjualan',
-                            data: data.dataPenjualan,
-                            backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                            borderColor: 'rgba(255, 99, 132, 1)',
-                            borderWidth: 1,
-                            tension: 0.1
-                        }]
-                    },
-                    options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { callback: (value) => 'Rp ' + new Intl.NumberFormat('id-ID').format(value) } } } }
-                };
-            } else if (currentType === 'sampah') {
-                chartTitle.innerText = 'Grafik Jumlah Sampah Terkumpul';
-                chartConfig = {
-                    type: 'bar',
-                    data: {
-                        labels: data.labels,
-                        datasets: [{
-                            label: 'Jumlah Sampah',
-                            data: data.data,
-                            backgroundColor: 'rgba(75, 192, 192, 0.5)',
-                            borderColor: 'rgba(75, 192, 192, 1)',
-                            borderWidth: 1
-                        }]
-                    },
-                    options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, title: { display: true, text: 'Jumlah (Kg/Pcs)' } } }, plugins: { legend: { display: false } } }
-                };
-            }
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const ctx = document.getElementById('myChart').getContext('2d');
+            let myChart;
             
-            myChart = new Chart(ctx, chartConfig);
-        };
+            const chartTypeButtons = document.querySelectorAll('.chart-type-btn');
+            const filterButtons = document.querySelectorAll('.chart-filter-btn');
+            const chartTitle = document.getElementById('chart-title');
 
-        const fetchChartData = async () => {
-            let url = '';
-            if (currentType === 'transaksi') {
-                url = `{{ route('dashboard.chart.transaksi') }}?period=${currentPeriod}`;
-            } else {
-                url = `{{ route('dashboard.chart.sampah') }}?period=${currentPeriod}`;
-            }
+            const defaultButtonClasses = 'px-3 py-1 text-sm font-medium text-gray-500 bg-gray-100 rounded-md hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600';
+            const activeButtonClasses = 'px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-md';
 
-            try {
-                const response = await axios.get(url);
-                renderChart(response.data);
-            } catch (error) {
-                console.error(`Gagal memuat data chart dari ${url}:`, error);
-            }
-        };
+            let currentPeriod = 'monthly';
+            let currentType = 'transaksi';
 
-        chartTypeButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                chartTypeButtons.forEach(btn => btn.className = defaultButtonClasses);
-                this.className = activeButtonClasses;
-                currentType = this.getAttribute('data-type');
-                fetchChartData();
+            const renderChart = (data) => {
+                if (myChart) {
+                    myChart.destroy();
+                }
+
+                let chartConfig;
+                if (currentType === 'transaksi') {
+                    chartTitle.innerText = 'Grafik Transaksi';
+                    chartConfig = {
+                        type: (currentPeriod === 'monthly' || currentPeriod === '30d') ? 'bar' : 'line',
+                        data: {
+                            labels: data.labels,
+                            datasets: [{
+                                label: 'Setoran',
+                                data: data.dataSetoran,
+                                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                                borderColor: 'rgba(54, 162, 235, 1)',
+                                borderWidth: 1,
+                                tension: 0.1
+                            }, {
+                                label: 'Penjualan',
+                                data: data.dataPenjualan,
+                                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                                borderColor: 'rgba(255, 99, 132, 1)',
+                                borderWidth: 1,
+                                tension: 0.1
+                            }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { callback: (value) => 'Rp ' + new Intl.NumberFormat('id-ID').format(value) } } } }
+                    };
+                } else if (currentType === 'sampah') {
+                    chartTitle.innerText = 'Grafik Jumlah Sampah Terkumpul';
+                    chartConfig = {
+                        type: 'bar',
+                        data: {
+                            labels: data.labels,
+                            datasets: [{
+                                label: 'Jumlah Sampah',
+                                data: data.data,
+                                backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, title: { display: true, text: 'Jumlah (Kg/Pcs)' } } }, plugins: { legend: { display: false } } }
+                    };
+                }
+                
+                myChart = new Chart(ctx, chartConfig);
+            };
+
+            const fetchChartData = async () => {
+                let url = '';
+                // LOGIKA KRUSIAL: Menentukan URL berdasarkan tipe yang dipilih
+                if (currentType === 'transaksi') {
+                    url = `{{ route('dashboard.chart.transaksi') }}?period=${currentPeriod}`;
+                } else {
+                    url = `{{ route('dashboard.chart.sampah') }}?period=${currentPeriod}`;
+                }
+                
+                console.log("Memanggil URL:", url); // Untuk debugging di browser console
+
+                try {
+                    const response = await axios.get(url);
+                    renderChart(response.data);
+                } catch (error) {
+                    console.error(`Gagal memuat data chart dari ${url}:`, error);
+                }
+            };
+
+            chartTypeButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    chartTypeButtons.forEach(btn => btn.className = defaultButtonClasses);
+                    this.className = activeButtonClasses;
+                    currentType = this.getAttribute('data-type');
+                    fetchChartData();
+                });
             });
-        });
 
-        filterButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                filterButtons.forEach(btn => btn.className = defaultButtonClasses);
-                this.className = activeButtonClasses;
-                currentPeriod = this.getAttribute('data-period');
-                fetchChartData();
+            filterButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    filterButtons.forEach(btn => btn.className = defaultButtonClasses);
+                    this.className = activeButtonClasses;
+                    currentPeriod = this.getAttribute('data-period');
+                    fetchChartData();
+                });
             });
-        });
 
-        // Panggil data awal saat halaman dimuat
-        fetchChartData();
-    });
-</script>
-@endpush
+            // Panggil data awal saat halaman dimuat
+            fetchChartData();
+        });
+    </script>
+    @endpush
 </x-app-layout>
