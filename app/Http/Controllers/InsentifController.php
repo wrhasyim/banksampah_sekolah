@@ -7,6 +7,7 @@ use App\Models\BukuKas;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
+
 class InsentifController extends Controller
 {
     public function index()

@@ -8,6 +8,9 @@ use App\Models\BukuKas;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use App\Models\Penjualan;
+use App\Models\JenisSampah;
+use Illuminate\Http\Request;
 
 class PenjualanController extends Controller
 {
