@@ -22,7 +22,7 @@
                 @forelse ($penjualans as $item)
                 <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
                     <td class="px-6 py-4">{{ \Carbon\Carbon::parse($item->tanggal_penjualan)->format('d-m-Y') }}</td>
-                    <td class="px-6 py-4">Rp {{ number_format($item->total_harga, 2, ',', '.') }}</td>
+                    <td class="px-6 py-4">Rp {{ number_format($item->total_harga, 0, ',', '.') }}</td>
                     <td class="px-6 py-4">
                         <a href="{{ route('penjualan.show', $item->id) }}" class="text-blue-600 hover:underline">Detail</a>
                     </td>

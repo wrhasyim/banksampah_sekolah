@@ -19,17 +19,17 @@
             <tbody>
                 <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
                     <td class="px-6 py-4 font-medium">Total Pendapatan (dari Penjualan)</td>
-                    <td class="px-6 py-4 text-green-600">Rp {{ number_format($pendapatan, 2, ',', '.') }}</td>
+                    <td class="px-6 py-4 text-green-600">Rp {{ number_format($pendapatan, 0, ',', '.') }}</td>
                 </tr>
                 <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
                     {{-- --- PERBAIKAN LABEL DI SINI --- --}}
                     <td class="px-6 py-4 font-medium">Total Beban (Penarikan, Honor, dll)</td>
-                    <td class="px-6 py-4 text-red-600">- Rp {{ number_format($beban, 2, ',', '.') }}</td>
+                    <td class="px-6 py-4 text-red-600">- Rp {{ number_format($beban, 0, ',', '.') }}</td>
                 </tr>
                 <tr class="bg-white dark:bg-gray-800">
                     <td class="px-6 py-4 text-lg font-bold">Laba / Rugi Bersih</td>
                     <td class="px-6 py-4 text-lg font-bold {{ $labaRugi >= 0 ? 'text-green-600' : 'text-red-600' }}">
-                        Rp {{ number_format($labaRugi, 2, ',', '.') }}
+                        Rp {{ number_format($labaRugi, 0, ',', '.') }}
                     </td>
                 </tr>
             </tbody>

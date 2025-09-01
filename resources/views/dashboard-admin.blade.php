@@ -42,7 +42,7 @@
                             <p class="font-normal text-gray-700 dark:text-gray-400">Total Kas</p>
                         </div>
                         <div class="p-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
-                            <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{{ number_format($totalStokPcs, 2, ',', '.') }}</h5>
+                            <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{{ number_format($totalStokPcs, 0, ',', '.') }}</h5>
                             <p class="font-normal text-gray-700 dark:text-gray-400">Total Stok Sampah (pcs)</p>
                         </div>
                         <div class="p-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
@@ -91,7 +91,7 @@
                         @forelse($stokPerJenis as $jenis)
                         <li class="py-3 flex justify-between items-center text-gray-800 dark:text-gray-300">
                             <span>{{ $jenis->nama_sampah }}</span>
-                            <span class="font-bold">{{ number_format($jenis->stok, 2, ',', '.') }} {{ $jenis->satuan }}</span>
+                            <span class="font-bold">{{ number_format($jenis->stok, 0, ',', '.') }} {{ $jenis->satuan }}</span>
                         </li>
                         @empty
                         <li class="py-3 text-gray-500 dark:text-gray-400">Belum ada data stok.</li>
