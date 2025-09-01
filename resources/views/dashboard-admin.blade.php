@@ -59,38 +59,25 @@
                         </div>
                     </div>
 
-                    {{-- Chart --}}
+                    {{-- Chart Multifungsi --}}
                     <div class="w-full p-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm sm:p-6 mb-6">
                         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
-                            <h5 class="mb-3 sm:mb-0 text-base font-semibold text-gray-900 md:text-xl dark:text-white">
+                            <h5 id="chart-title" class="mb-3 sm:mb-0 text-base font-semibold text-gray-900 md:text-xl dark:text-white">
                                 Grafik Transaksi
                             </h5>
                             <div class="flex items-center space-x-2">
-                                <button data-period="today" class="chart-filter-btn px-3 py-1 text-sm font-medium text-gray-500 bg-gray-100 rounded-md hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">Hari Ini</button>
-                                <button data-period="7d" class="chart-filter-btn px-3 py-1 text-sm font-medium text-gray-500 bg-gray-100 rounded-md hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">7 Hari</button>
-                                <button data-period="30d" class="chart-filter-btn px-3 py-1 text-sm font-medium text-gray-500 bg-gray-100 rounded-md hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">30 Hari</button>
-                                <button data-period="monthly" class="chart-filter-btn px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-md">Bulanan</button>
+                                <button data-type="transaksi" class="chart-type-btn px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-md">Transaksi</button>
+                                <button data-type="sampah" class="chart-type-btn px-3 py-1 text-sm font-medium text-gray-500 bg-gray-100 rounded-md hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">Jenis Sampah</button>
                             </div>
+                        </div>
+                        <div class="flex items-center space-x-2 mb-4">
+                            <button data-period="today" class="chart-filter-btn px-3 py-1 text-sm font-medium text-gray-500 bg-gray-100 rounded-md hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">Hari Ini</button>
+                            <button data-period="7d" class="chart-filter-btn px-3 py-1 text-sm font-medium text-gray-500 bg-gray-100 rounded-md hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">7 Hari</button>
+                            <button data-period="30d" class="chart-filter-btn px-3 py-1 text-sm font-medium text-gray-500 bg-gray-100 rounded-md hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">30 Hari</button>
+                            <button data-period="monthly" class="chart-filter-btn px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-md">Bulan Ini</button>
                         </div>
                         <div class="h-96">
                              <canvas id="myChart"></canvas>
-                        </div>
-                    </div>
-                     {{-- Chart Sampah --}}
-                    <div class="w-full p-4 mt-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm sm:p-6">
-                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
-                            <h5 class="mb-3 sm:mb-0 text-base font-semibold text-gray-900 md:text-xl dark:text-white">
-                                Grafik Jumlah Sampah Terkumpul (Berdasarkan Berat/Jumlah)
-                            </h5>
-                            <div class="flex items-center space-x-2">
-                                <button data-period="today" class="sampah-chart-filter-btn px-3 py-1 text-sm font-medium text-gray-500 bg-gray-100 rounded-md hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">Hari Ini</button>
-                                <button data-period="7d" class="sampah-chart-filter-btn px-3 py-1 text-sm font-medium text-gray-500 bg-gray-100 rounded-md hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">7 Hari</button>
-                                <button data-period="30d" class="sampah-chart-filter-btn px-3 py-1 text-sm font-medium text-gray-500 bg-gray-100 rounded-md hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">30 Hari</button>
-                                <button data-period="monthly" class="sampah-chart-filter-btn px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-md">Bulan Ini</button>
-                            </div>
-                        </div>
-                        <div class="h-96">
-                             <canvas id="sampahChart"></canvas>
                         </div>
                     </div>
 
@@ -132,7 +119,6 @@
                             @endforelse
                         </ul>
                         
-                        {{-- --- PERBAIKAN DI SINI --- --}}
                         <h4 class="font-semibold text-sm mt-6 text-gray-800 dark:text-gray-200">Penarikan Terakhir</h4>
                         <ul class="text-sm text-gray-600 dark:text-gray-400 mt-2 space-y-2">
                             @forelse($aktivitasTerakhir['penarikan'] as $penarikan)
@@ -161,142 +147,129 @@
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // --- PENGATURAN GRAFIK 1: TRANSAKSI ---
             const ctx = document.getElementById('myChart');
             let myChart;
+            
+            const chartTypeButtons = document.querySelectorAll('.chart-type-btn');
             const filterButtons = document.querySelectorAll('.chart-filter-btn');
+            const chartTitle = document.getElementById('chart-title');
+
             const defaultButtonClasses = 'px-3 py-1 text-sm font-medium text-gray-500 bg-gray-100 rounded-md hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600';
             const activeButtonClasses = 'px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-md';
 
-            const renderChart = (data, type) => {
+            let currentPeriod = 'monthly';
+            let currentType = 'transaksi';
+
+            const renderChart = (data) => {
                 if (myChart) {
                     myChart.destroy();
                 }
-                myChart = new Chart(ctx, {
-                    type: type,
-                    data: {
-                        labels: data.labels,
-                        datasets: [{
-                            label: 'Setoran',
-                            data: data.dataSetoran,
-                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                            borderColor: 'rgba(54, 162, 235, 1)',
-                            borderWidth: 1,
-                            tension: 0.1
-                        }, {
-                            label: 'Penjualan',
-                            data: data.dataPenjualan,
-                            backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                            borderColor: 'rgba(255, 99, 132, 1)',
-                            borderWidth: 1,
-                            tension: 0.1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: {
-                                    callback: function(value, index, values) {
-                                        return 'Rp ' + new Intl.NumberFormat('id-ID').format(value);
+
+                let chartConfig;
+                if (currentType === 'transaksi') {
+                    chartTitle.innerText = 'Grafik Transaksi';
+                    chartConfig = {
+                        type: (currentPeriod === 'monthly') ? 'bar' : 'line',
+                        data: {
+                            labels: data.labels,
+                            datasets: [{
+                                label: 'Setoran',
+                                data: data.dataSetoran,
+                                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                                borderColor: 'rgba(54, 162, 235, 1)',
+                                borderWidth: 1,
+                                tension: 0.1
+                            }, {
+                                label: 'Penjualan',
+                                data: data.dataPenjualan,
+                                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                                borderColor: 'rgba(255, 99, 132, 1)',
+                                borderWidth: 1,
+                                tension: 0.1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: function(value) {
+                                            return 'Rp ' + new Intl.NumberFormat('id-ID').format(value);
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
-                });
+                    };
+                } else { // type === 'sampah'
+                    chartTitle.innerText = 'Grafik Jumlah Sampah Terkumpul';
+                    chartConfig = {
+                        type: 'bar',
+                        data: {
+                            labels: data.labels,
+                            datasets: [{
+                                label: 'Jumlah Sampah',
+                                data: data.data,
+                                backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    title: {
+                                        display: true,
+                                        text: 'Jumlah (Kg/Pcs)'
+                                    }
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            }
+                        }
+                    };
+                }
+                
+                myChart = new Chart(ctx, chartConfig);
             };
 
-            const fetchChartData = async (period) => {
+            const fetchChartData = async () => {
                 try {
-                    const response = await axios.get(`{{ route('dashboard.chart') }}?period=${period}`);
-                    const chartType = (period === 'monthly') ? 'bar' : 'line';
-                    renderChart(response.data, chartType);
+                    const response = await axios.get(`{{ route('dashboard.chart') }}?type=${currentType}&period=${currentPeriod}`);
+                    renderChart(response.data);
                 } catch (error) {
                     console.error('Gagal memuat data chart:', error);
                 }
             };
 
+            chartTypeButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    chartTypeButtons.forEach(btn => btn.className = defaultButtonClasses);
+                    this.className = activeButtonClasses;
+                    currentType = this.getAttribute('data-type');
+                    fetchChartData();
+                });
+            });
+
             filterButtons.forEach(button => {
                 button.addEventListener('click', function() {
                     filterButtons.forEach(btn => btn.className = defaultButtonClasses);
                     this.className = activeButtonClasses;
-                    const period = this.getAttribute('data-period');
-                    fetchChartData(period);
+                    currentPeriod = this.getAttribute('data-period');
+                    fetchChartData();
                 });
             });
 
-            // Panggil data awal untuk Grafik Transaksi
-            fetchChartData('monthly');
-
-
-            // --- PENGATURAN GRAFIK 2: SAMPAH ---
-            const sampahCtx = document.getElementById('sampahChart');
-            let sampahChart;
-            const sampahFilterButtons = document.querySelectorAll('.sampah-chart-filter-btn');
-            const defaultSampahButtonClasses = 'px-3 py-1 text-sm font-medium text-gray-500 bg-gray-100 rounded-md hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600';
-            const activeSampahButtonClasses = 'px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-md';
-
-            const renderSampahChart = (data) => {
-                if (sampahChart) {
-                    sampahChart.destroy();
-                }
-                sampahChart = new Chart(sampahCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: data.labels,
-                        datasets: [{
-                            label: 'Jumlah Sampah',
-                            data: data.data,
-                            backgroundColor: 'rgba(75, 192, 192, 0.5)',
-                            borderColor: 'rgba(75, 192, 192, 1)',
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                title: {
-                                    display: true,
-                                    text: 'Jumlah (Kg/Pcs)'
-                                }
-                            }
-                        },
-                        plugins: {
-                            legend: {
-                                display: false
-                            }
-                        }
-                    }
-                });
-            };
-
-            const fetchSampahChartData = async (period) => {
-                try {
-                    const response = await axios.get(`{{ route('dashboard.sampah.chart') }}?period=${period}`);
-                    renderSampahChart(response.data);
-                } catch (error) {
-                    console.error('Gagal memuat data chart sampah:', error);
-                }
-            };
-
-            sampahFilterButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    sampahFilterButtons.forEach(btn => btn.className = defaultSampahButtonClasses);
-                    this.className = activeSampahButtonClasses;
-                    const period = this.getAttribute('data-period');
-                    fetchSampahChartData(period);
-                });
-            });
-
-            // Panggil data awal untuk Grafik Sampah
-            fetchSampahChartData('monthly');
-
+            // Panggil data awal
+            fetchChartData();
         });
     </script>
     @endpush

@@ -84,6 +84,7 @@ Route::get('/api/siswa-by-kelas/{kelasId}', [App\Http\Controllers\SiswaControlle
     Route::post('settings', [SettingController::class, 'store'])->name('settings.store');
 // Perbaikan: Tambahkan rute untuk pembaruan pengaturan
      Route::post('settings', [SettingController::class, 'update'])->name('settings.update');
+     Route::get('/dashboard/chart', [App\Http\Controllers\ChartController::class, 'getChartData'])->name('dashboard.chart');
      // === PINDAHKAN RUTE PEMBAYARAN INSENTIF KE SINI ===
     Route::get('/insentif/pembayaran', [PembayaranInsentifController::class, 'index'])->name('insentif.pembayaran');
     Route::post('/insentif/bayar', [PembayaranInsentifController::class, 'store'])->name('insentif.bayar');
