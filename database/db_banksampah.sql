@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Sep 01, 2025 at 06:44 AM
+-- Generation Time: Sep 01, 2025 at 07:15 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -121,8 +121,10 @@ CREATE TABLE `insentifs` (
   `setoran_id` bigint(20) UNSIGNED NOT NULL,
   `kelas_id` bigint(20) UNSIGNED NOT NULL,
   `jumlah_insentif` decimal(10,2) NOT NULL,
+  `status_pembayaran` varchar(255) NOT NULL DEFAULT 'belum dibayar',
   `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `pembayaran_insentif_id` bigint(20) UNSIGNED DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -279,7 +281,25 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (22, '2025_08_30_164252_create_insentifs_table', 1),
 (23, '2025_08_30_171811_modify_role_in_pengguna_table', 1),
 (24, '2025_08_30_172022_add_id_wali_kelas_to_kelas_table', 1),
-(25, '2025_08_30_172632_add_unique_constraint_to_id_wali_kelas_in_kelas_table', 1);
+(25, '2025_08_30_172632_add_unique_constraint_to_id_wali_kelas_in_kelas_table', 1),
+(26, '2025_09_01_115843_create_pembayaran_insentifs_table', 2),
+(27, '2025_09_01_115855_add_status_pembayaran_to_insentifs_table', 2);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `pembayaran_insentifs`
+--
+
+CREATE TABLE `pembayaran_insentifs` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `id_admin` bigint(20) UNSIGNED NOT NULL,
+  `tanggal_pembayaran` date NOT NULL,
+  `total_dibayar` decimal(15,2) NOT NULL,
+  `keterangan` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -1207,7 +1227,7 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('VdL1KSOIqGBwbCFvz7ebA8gikmhgXlIAPO50rO6p', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoiOXcwZXdRT29oSGxVclI3c05rTHFCMXNCWWR0VWJuaVVIdGJISDRtaSI7czozOiJ1cmwiO2E6MDp7fXM6OToiX3ByZXZpb3VzIjthOjE6e3M6MzoidXJsIjtzOjI3OiJodHRwOi8vMTI3LjAuMC4xOjgwMDAva2VsYXMiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX1zOjUwOiJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI7aToxO30=', 1756701869);
+('VdL1KSOIqGBwbCFvz7ebA8gikmhgXlIAPO50rO6p', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoiOXcwZXdRT29oSGxVclI3c05rTHFCMXNCWWR0VWJuaVVIdGJISDRtaSI7czozOiJ1cmwiO2E6MDp7fXM6OToiX3ByZXZpb3VzIjthOjE6e3M6MzoidXJsIjtzOjMwOiJodHRwOi8vMTI3LjAuMC4xOjgwMDAvaW5zZW50aWYiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX1zOjUwOiJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI7aToxO30=', 1756703474);
 
 -- --------------------------------------------------------
 
@@ -2119,7 +2139,8 @@ ALTER TABLE `detail_penjualan`
 ALTER TABLE `insentifs`
   ADD PRIMARY KEY (`id`),
   ADD KEY `insentifs_setoran_id_foreign` (`setoran_id`),
-  ADD KEY `insentifs_kelas_id_foreign` (`kelas_id`);
+  ADD KEY `insentifs_kelas_id_foreign` (`kelas_id`),
+  ADD KEY `insentifs_pembayaran_insentif_id_foreign` (`pembayaran_insentif_id`);
 
 --
 -- Indexes for table `jenis_sampah`
@@ -2152,6 +2173,13 @@ ALTER TABLE `kelas`
 --
 ALTER TABLE `migrations`
   ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `pembayaran_insentifs`
+--
+ALTER TABLE `pembayaran_insentifs`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `pembayaran_insentifs_id_admin_foreign` (`id_admin`);
 
 --
 -- Indexes for table `penarikan`
@@ -2278,7 +2306,13 @@ ALTER TABLE `kelas`
 -- AUTO_INCREMENT for table `migrations`
 --
 ALTER TABLE `migrations`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
+
+--
+-- AUTO_INCREMENT for table `pembayaran_insentifs`
+--
+ALTER TABLE `pembayaran_insentifs`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `penarikan`
@@ -2352,6 +2386,7 @@ ALTER TABLE `detail_penjualan`
 --
 ALTER TABLE `insentifs`
   ADD CONSTRAINT `insentifs_kelas_id_foreign` FOREIGN KEY (`kelas_id`) REFERENCES `kelas` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `insentifs_pembayaran_insentif_id_foreign` FOREIGN KEY (`pembayaran_insentif_id`) REFERENCES `pembayaran_insentifs` (`id`),
   ADD CONSTRAINT `insentifs_setoran_id_foreign` FOREIGN KEY (`setoran_id`) REFERENCES `setoran` (`id`) ON DELETE CASCADE;
 
 --
@@ -2359,6 +2394,12 @@ ALTER TABLE `insentifs`
 --
 ALTER TABLE `kelas`
   ADD CONSTRAINT `kelas_id_wali_kelas_foreign` FOREIGN KEY (`id_wali_kelas`) REFERENCES `pengguna` (`id`);
+
+--
+-- Constraints for table `pembayaran_insentifs`
+--
+ALTER TABLE `pembayaran_insentifs`
+  ADD CONSTRAINT `pembayaran_insentifs_id_admin_foreign` FOREIGN KEY (`id_admin`) REFERENCES `pengguna` (`id`);
 
 --
 -- Constraints for table `penarikan`
