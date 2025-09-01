@@ -15,7 +15,8 @@ use App\Http\Controllers\SettingController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\DashboardController;
-
+use App\Http\Controllers\PembayaranInsentifController;
+use App\Http\Controllers\InsentifController;
 // Rute untuk halaman utama
 Route::get('/', function () {
     if (auth()->check()) {
@@ -90,7 +91,8 @@ Route::get('/insentif/rekap', [App\Http\Controllers\InsentifController::class, '
     Route::get('/laporan/transaksi/export/excel', [ReportController::class, 'exportTransaksiExcel'])->name('laporan.transaksi.export.excel');
     Route::get('/laporan/transaksi/export/pdf', [ReportController::class, 'exportTransaksiPdf'])->name('laporan.transaksi.export.pdf');
     Route::get('/laporan/laba-rugi/export/pdf', [ReportController::class, 'exportLabaRugiPdf'])->name('laporan.laba-rugi.export.pdf');
-
+Route::get('/insentif/pembayaran', [PembayaranInsentifController::class, 'index'])->name('insentif.pembayaran');
+Route::post('/insentif/bayar', [PembayaranInsentifController::class, 'store'])->name('insentif.bayar');
     // Leaderboard
     Route::get('/leaderboard', [LeaderboardController::class, 'index'])->name('leaderboard.index');
 
