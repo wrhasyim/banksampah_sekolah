@@ -1,67 +1,54 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('Buat Setoran Massal') }}
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            {{ __('Buat Setoran Massal Baru') }}
         </h2>
     </x-slot>
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900 dark:text-gray-100">
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="p-6 bg-white border-b border-gray-200">
+
+                    <div class="mb-4">
+                        <label for="kelas_filter" class="block font-medium text-sm text-gray-700">Filter Berdasarkan Kelas</label>
+                        <select id="kelas_filter" name="kelas_filter" class="block w-full mt-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                            <option value="">-- Pilih Kelas --</option>
+                            @foreach ($kelasList as $kelas)
+                                <option value="{{ $kelas->id }}">{{ $kelas->nama_kelas }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
                     <form action="{{ route('setoran.storeMassal') }}" method="POST">
                         @csrf
-                        <div class="mb-4">
-                            <label for="kelas_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Pilih Kelas</label>
-                            <select id="kelas_id" name="kelas_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                                <option value="">-- Pilih Kelas --</option>
-                                @foreach($kelasList as $kelas)
-                                    <option value="{{ $kelas->id }}">{{ $kelas->nama_kelas }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div class="mb-4">
-                            <label for="jenis_sampah_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Jenis Sampah</label>
-                            <select id="jenis_sampah_id" name="jenis_sampah_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" required>
-                                <option value="">-- Pilih Jenis Sampah --</option>
-                                @foreach($jenisSampahs as $jenis)
-                                    <option value="{{ $jenis->id }}">{{ $jenis->nama_sampah }} (Rp {{ number_format($jenis->harga_per_satuan, 0, ',', '.') }}/{{$jenis->satuan}})</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
-                            <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                                <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
                                     <tr>
-                                        <th scope="col" class="px-4 py-3">No</th>
-                                        <th scope="col" class="px-4 py-3">Nama Siswa</th>
-                                        <th scope="col" class="px-4 py-3">NIS</th>
-                                        <th scope="col" class="px-4 py-3">Jumlah (kg/pcs)</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-10">
+                                            Nama Siswa
+                                        </th>
+                                        @foreach ($jenisSampahs as $sampah)
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                {{ $sampah->nama_sampah }} (kg)
+                                            </th>
+                                        @endforeach
                                     </tr>
                                 </thead>
-                                <tbody id="siswa-table-body">
-                                    <tr id="initial-row">
-                                        <td colspan="4" class="px-4 py-3 text-center">Pilih kelas untuk menampilkan siswa.</td>
-                                    </tr>
-                                </tbody>
-                                <tbody id="loading-row" style="display: none;">
+                                <tbody class="bg-white divide-y divide-gray-200">
                                     <tr>
-                                        <td colspan="4" class="px-4 py-3 text-center">Memuat data siswa...</td>
-                                    </tr>
-                                </tbody>
-                                <tbody id="error-row" style="display: none;">
-                                    <tr>
-                                        <td colspan="4" class="px-4 py-3 text-center text-red-500">Gagal memuat data siswa. Coba lagi.</td>
+                                        <td colspan="{{ count($jenisSampahs) + 1 }}" class="text-center p-4">
+                                            Silakan pilih kelas terlebih dahulu untuk menampilkan siswa.
+                                        </td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
 
                         <div class="flex items-center justify-end mt-4">
-                            <x-primary-button class="ml-4">
-                                {{ __('Simpan') }}
+                            <x-primary-button>
+                                {{ __('Simpan Semua Setoran') }}
                             </x-primary-button>
                         </div>
                     </form>
@@ -72,56 +59,56 @@
 
     @push('scripts')
     <script>
-        document.getElementById('kelas_id').addEventListener('change', function() {
-            var kelasId = this.value;
-            var tableBody = document.getElementById('siswa-table-body');
-            var initialRow = document.getElementById('initial-row');
-            var loadingRow = document.getElementById('loading-row');
-            var errorRow = document.getElementById('error-row');
+        document.addEventListener('DOMContentLoaded', function () {
+            const kelasFilter = document.getElementById('kelas_filter');
+            const tableBody = document.querySelector('tbody');
+            const jenisSampahs = @json($jenisSampahs);
 
-            tableBody.innerHTML = '';
-            if(initialRow) initialRow.style.display = 'none';
-            loadingRow.style.display = 'table-row';
-            errorRow.style.display = 'none';
+            kelasFilter.addEventListener('change', function () {
+                const kelasId = this.value;
+                tableBody.innerHTML = `<tr><td colspan="${jenisSampahs.length + 1}" class="text-center p-4">Memuat data siswa...</td></tr>`;
 
-            if (kelasId) {
-                fetch(`/get-siswa-by-kelas/${kelasId}`)
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Network response was not ok');
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        loadingRow.style.display = 'none';
-                        if (data.length === 0) {
-                            tableBody.innerHTML = '<tr><td colspan="4" class="px-4 py-3 text-center">Tidak ada siswa di kelas ini.</td></tr>';
-                        } else {
-                            data.forEach(function(siswa, index) {
-                                var namaLengkap = siswa.pengguna ? siswa.pengguna.nama_lengkap : 'Data Pengguna Hilang';
-                                var row = `
-                                    <tr class="border-b dark:border-gray-700">
-                                        <td class="px-4 py-3">${index + 1}</td>
-                                        <td class="px-4 py-3">${namaLengkap}</td>
-                                        <td class="px-4 py-3">${siswa.nis}</td>
-                                        <td class="px-4 py-3">
-                                            <input type="hidden" name="setoran[${index}][siswa_id]" value="${siswa.id}">
-                                            <input type="number" name="setoran[${index}][jumlah]" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" value="0" step="0.01" min="0">
-                                        </td>
-                                    </tr>`;
-                                tableBody.innerHTML += row;
-                            });
-                        }
-                    })
-                    .catch(error => {
-                        loadingRow.style.display = 'none';
-                        errorRow.style.display = 'table-row';
-                        console.error('Error fetching students:', error);
-                    });
-            } else {
-                loadingRow.style.display = 'none';
-                tableBody.innerHTML = '<tr id="initial-row"><td colspan="4" class="px-4 py-3 text-center">Pilih kelas untuk menampilkan siswa.</td></tr>';
-            }
+                if (kelasId) {
+                    // Ambil data siswa dari server berdasarkan kelas yang dipilih
+                    fetch(`{{ url('/api/siswa-by-kelas') }}/${kelasId}`)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            tableBody.innerHTML = ''; // Kosongkan tabel
+                            if (data.length > 0) {
+                                data.forEach(siswa => {
+                                    let row = `<tr>`;
+                                    row += `<td class="px-6 py-4 whitespace-nowrap sticky left-0 bg-white z-10">${siswa.pengguna.nama_lengkap}</td>`;
+                                    
+                                    // Membuat input untuk setiap jenis sampah
+                                    jenisSampahs.forEach(sampah => {
+                                        row += `<td class="px-6 py-4 whitespace-nowrap">
+                                                    <input type="number" step="0.01" min="0" 
+                                                           name="setoran[${siswa.id}][${sampah.id}]" 
+                                                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                                           placeholder="0">
+                                                </td>`;
+                                    });
+
+                                    row += `</tr>`;
+                                    tableBody.innerHTML += row;
+                                });
+                            } else {
+                                tableBody.innerHTML = `<tr><td colspan="${jenisSampahs.length + 1}" class="text-center p-4">Tidak ada siswa di kelas ini.</td></tr>`;
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error fetching siswa:', error);
+                            tableBody.innerHTML = `<tr><td colspan="${jenisSampahs.length + 1}" class="text-center p-4">Gagal memuat data siswa. Pastikan route API sudah benar.</td></tr>`;
+                        });
+                } else {
+                    tableBody.innerHTML = `<tr><td colspan="${jenisSampahs.length + 1}" class="text-center p-4">Silakan pilih kelas terlebih dahulu.</td></tr>`;
+                }
+            });
         });
     </script>
     @endpush

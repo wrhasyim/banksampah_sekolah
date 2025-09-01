@@ -82,17 +82,6 @@ class SetoranController extends Controller
                             'kelas_id' => $siswa->id_kelas,
                             'jumlah_insentif' => $insentifWaliKelas,
                         ]);
-
-                        // --- BAGIAN INI SUDAH DIHAPUS ---
-                        /*
-                        BukuKas::create([
-                            'tanggal' => now(),
-                            'deskripsi' => 'Insentif Wali Kelas: ' . $siswa->kelas->nama_kelas . ' (dari Setoran Siswa: ' . $siswa->pengguna->nama_lengkap . ')',
-                            'tipe' => 'pengeluaran',
-                            'jumlah' => $insentifWaliKelas,
-                            'id_admin' => Auth::id(),
-                        ]);
-                        */
                     }
                 }
             }
@@ -141,69 +130,74 @@ class SetoranController extends Controller
         return Excel::download(new SetoranSampleExport, 'sample-setoran.xlsx');
     }
 
+    /**
+     * Menampilkan form untuk membuat setoran massal.
+     */
     public function createMassal()
     {
-        $jenisSampahs = JenisSampah::where('status', 'aktif')->get();
+        // FINAL CORRECTION: Using the correct column name 'nama_sampah' from your migration file.
+        $jenisSampahs = JenisSampah::where('status', 'aktif')->orderBy('nama_sampah', 'asc')->get();
         $kelasList = Kelas::orderBy('nama_kelas', 'asc')->get();
         
         return view('pages.setoran.create-massal', compact('jenisSampahs', 'kelasList'));
     }
 
+    /**
+     * Menyimpan data dari form setoran massal.
+     */
     public function storeMassal(Request $request)
     {
         $request->validate([
-            'jenis_sampah_id' => 'required|exists:jenis_sampah,id',
             'setoran' => 'required|array',
-            'setoran.*.siswa_id' => 'required|exists:siswa,id',
-            'setoran.*.jumlah' => 'nullable|numeric|min:0',
+            'setoran.*.*' => 'nullable|numeric|min:0',
         ]);
 
-        $jenisSampah = JenisSampah::find($request->jenis_sampah_id);
-        
-        DB::transaction(function () use ($request, $jenisSampah) {
+        DB::transaction(function () use ($request) {
             $settings = Setting::pluck('value', 'key');
             $persentaseWaliKelas = $settings['persentase_wali_kelas'] ?? 0;
 
-            foreach ($request->setoran as $data) {
-                if (!empty($data['jumlah']) && $data['jumlah'] > 0) {
-                    $totalHarga = $data['jumlah'] * $jenisSampah->harga_per_satuan;
-                    $siswa = Siswa::with('kelas', 'pengguna')->find($data['siswa_id']);
+            foreach ($request->setoran as $siswa_id => $sampahData) {
+                $totalHargaKeseluruhanSiswa = 0;
+                $siswa = Siswa::with('kelas', 'pengguna')->find($siswa_id);
 
-                    $setoran = Setoran::create([
-                        'siswa_id' => $data['siswa_id'],
-                        'jenis_sampah_id' => $jenisSampah->id,
-                        'jumlah' => $data['jumlah'],
-                        'total_harga' => $totalHarga,
-                    ]);
+                if (!$siswa) continue;
 
-                    $jenisSampah->increment('stok', $data['jumlah']);
-                    $siswa->increment('saldo', $totalHarga);
-                    $points = floor($totalHarga / 1000);
+                foreach ($sampahData as $jenis_sampah_id => $jumlah) {
+                    if (!empty($jumlah) && $jumlah > 0) {
+                        $jenisSampah = JenisSampah::find($jenis_sampah_id);
+                        if (!$jenisSampah) continue;
+
+                        $totalHarga = $jumlah * $jenisSampah->harga_per_satuan;
+                        $totalHargaKeseluruhanSiswa += $totalHarga;
+
+                        $setoran = Setoran::create([
+                            'siswa_id' => $siswa_id,
+                            'jenis_sampah_id' => $jenis_sampah_id,
+                            'jumlah' => $jumlah,
+                            'total_harga' => $totalHarga,
+                        ]);
+
+                        $jenisSampah->increment('stok', $jumlah);
+
+                        if ($persentaseWaliKelas > 0 && $siswa->kelas) {
+                            $insentifWaliKelas = $totalHarga * ($persentaseWaliKelas / 100);
+
+                            if ($insentifWaliKelas > 0) {
+                                Insentif::create([
+                                    'setoran_id' => $setoran->id,
+                                    'kelas_id' => $siswa->id_kelas,
+                                    'jumlah_insentif' => $insentifWaliKelas,
+                                ]);
+                            }
+                        }
+                    }
+                }
+
+                if ($totalHargaKeseluruhanSiswa > 0) {
+                    $siswa->increment('saldo', $totalHargaKeseluruhanSiswa);
+                    $points = floor($totalHargaKeseluruhanSiswa / 1000);
                     if ($points > 0) {
                         $siswa->increment('points', $points);
-                    }
-
-                    if ($persentaseWaliKelas > 0 && $siswa->kelas) {
-                        $insentifWaliKelas = $totalHarga * ($persentaseWaliKelas / 100);
-
-                        if ($insentifWaliKelas > 0) {
-                            Insentif::create([
-                                'setoran_id' => $setoran->id,
-                                'kelas_id' => $siswa->id_kelas,
-                                'jumlah_insentif' => $insentifWaliKelas,
-                            ]);
-
-                            // --- BAGIAN INI SUDAH DIHAPUS ---
-                            /*
-                            BukuKas::create([
-                                'tanggal' => now(),
-                                'deskripsi' => 'Insentif Wali Kelas: ' . $siswa->kelas->nama_kelas . ' (dari Setoran Massal: ' . $siswa->pengguna->nama_lengkap . ')',
-                                'tipe' => 'pengeluaran',
-                                'jumlah' => $insentifWaliKelas,
-                                'id_admin' => Auth::id(),
-                            ]);
-                            */
-                        }
                     }
                 }
             }
