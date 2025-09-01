@@ -45,6 +45,9 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::get('/get-siswa-by-kelas/{id_kelas}', [SiswaController::class, 'getSiswaByKelas'])->name('siswa.get-by-kelas');
     Route::resource('siswa', SiswaController::class);
 
+    // TAMBAHKAN DUA RUTE BARU INI:
+Route::get('/dashboard/chart/transaksi', [App\Http\Controllers\ChartController::class, 'getTransaksiChartData'])->name('dashboard.chart.transaksi');
+Route::get('/dashboard/chart/sampah', [App\Http\Controllers\ChartController::class, 'getSampahChartData'])->name('dashboard.chart.sampah');
     // CRUD Jenis Sampah
     Route::resource('jenis-sampah', JenisSampahController::class);
 Route::get('/dashboard/chart', [ChartController::class, 'getChartData'])->name('dashboard.chart');
