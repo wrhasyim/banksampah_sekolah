@@ -115,28 +115,33 @@ class ChartController extends Controller
      */
     private function getSampahChartData($period)
     {
-        $endDate = Carbon::now();
+        // Inisialisasi query builder
+        $query = DB::table('setoran')
+            ->join('jenis_sampah', 'setoran.id_jenis_sampah', '=', 'jenis_sampah.id');
 
+        // Terapkan filter periode
         switch ($period) {
             case 'today':
-                $startDate = Carbon::today();
+                // Gunakan whereDate untuk memastikan semua data hari ini terambil tanpa peduli waktu
+                $query->whereDate('setoran.created_at', Carbon::today());
                 break;
             case '7d':
                 $startDate = Carbon::now()->subDays(6)->startOfDay();
+                $query->where('setoran.created_at', '>=', $startDate);
                 break;
             case '30d':
                 $startDate = Carbon::now()->subDays(29)->startOfDay();
+                $query->where('setoran.created_at', '>=', $startDate);
                 break;
             case 'monthly':
             default:
                 $startDate = Carbon::now()->startOfMonth();
+                $query->where('setoran.created_at', '>=', $startDate);
                 break;
         }
 
-        $data = DB::table('setoran')
-            ->join('jenis_sampah', 'setoran.id_jenis_sampah', '=', 'jenis_sampah.id')
-            ->whereBetween('setoran.created_at', [$startDate, $endDate])
-            ->select('jenis_sampah.nama_sampah', DB::raw('SUM(setoran.jumlah) as total_jumlah'))
+        // Eksekusi query setelah filter diterapkan
+        $data = $query->select('jenis_sampah.nama_sampah', DB::raw('SUM(setoran.jumlah) as total_jumlah'))
             ->groupBy('jenis_sampah.nama_sampah')
             ->orderBy('total_jumlah', 'desc')
             ->get();
