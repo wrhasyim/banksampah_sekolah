@@ -147,6 +147,5 @@ Proyek ini dilisensikan di bawah **Lisensi MIT**.
 
 **Wahyu Rusdiansyah**
 * GitHub: `https://github.com/wrhasyim`
-* Email: `[Alamat Email Anda]`
 
 Dibuat dengan ❤️ untuk pendidikan dan lingkungan yang lebih baik.
