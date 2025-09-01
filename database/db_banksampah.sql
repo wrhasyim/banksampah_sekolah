@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Waktu pembuatan: 01 Sep 2025 pada 16.04
+-- Waktu pembuatan: 01 Sep 2025 pada 16.43
 -- Versi server: 10.4.32-MariaDB
 -- Versi PHP: 8.2.12
 
@@ -1408,7 +1408,7 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('pcPpzkkrOKDWfZLS5aUkKA6pFAZBf4awjStTgkyN', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoieDlveFhFeVhmWjBLb3NpYU1ubUxkTWJsOEwyUk9UWE9xUjVhcVpSNSI7czozOiJ1cmwiO2E6MDp7fXM6OToiX3ByZXZpb3VzIjthOjE6e3M6MzoidXJsIjtzOjMwOiJodHRwOi8vMTI3LjAuMC4xOjgwMDAvaW5zZW50aWYiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX1zOjUwOiJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI7aToxO30=', 1756735420);
+('pcPpzkkrOKDWfZLS5aUkKA6pFAZBf4awjStTgkyN', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoieDlveFhFeVhmWjBLb3NpYU1ubUxkTWJsOEwyUk9UWE9xUjVhcVpSNSI7czozOiJ1cmwiO2E6MDp7fXM6OToiX3ByZXZpb3VzIjthOjE6e3M6MzoidXJsIjtzOjMxOiJodHRwOi8vMTI3LjAuMC4xOjgwMDAvZGFzaGJvYXJkIjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6MTt9', 1756737717);
 
 -- --------------------------------------------------------
 
@@ -1619,7 +1619,7 @@ CREATE TABLE `settings` (
 --
 
 INSERT INTO `settings` (`id`, `key`, `value`, `created_at`, `updated_at`) VALUES
-(1, 'site_title', 'Laravel', '2025-09-01 06:07:20', '2025-09-01 06:07:20'),
+(1, 'site_title', 'Bank Sampah TKM', '2025-09-01 06:07:20', '2025-09-01 14:21:42'),
 (2, 'persentase_pengelola', '0', '2025-09-01 06:07:20', '2025-09-01 06:07:20'),
 (3, 'persentase_wali_kelas', '20', '2025-09-01 06:07:20', '2025-09-01 06:07:20'),
 (4, 'persentase_sekolah', '5', '2025-09-01 06:07:20', '2025-09-01 06:07:20');

@@ -94,4 +94,55 @@ class DashboardController extends Controller
 
         return response()->json(compact('labels', 'dataSetoran', 'dataPenjualan'));
     }
+    public function getSampahChartData(Request $request)
+    {
+        $period = $request->input('period', 'monthly');
+        $query = \App\Models\Setoran::query();
+
+        if ($period == 'monthly') {
+            // Mengambil data untuk bulan saat ini
+            $query->whereYear('created_at', now()->year)->whereMonth('created_at', now()->month);
+        } else {
+            $days = 0;
+            if ($period == 'today') $days = 0;
+            if ($period == '7d') $days = 6;
+            if ($period == '30d') $days = 29;
+
+            $startDate = now()->subDays($days)->startOfDay();
+            $endDate = now()->endOfDay();
+            $query->whereBetween('created_at', [$startDate, $endDate]);
+        }
+
+        $setorans = $query->get();
+
+        $sampahData = [];
+        // Proses data dari kolom JSON
+        foreach ($setorans as $setoran) {
+            $details = json_decode($setoran->detail_setoran, true);
+            if (is_array($details)) {
+                foreach ($details as $detail) {
+                    if (isset($detail['id']) && isset($detail['jumlah']) && is_numeric($detail['jumlah'])) {
+                        if (!isset($sampahData[$detail['id']])) {
+                            $sampahData[$detail['id']] = 0;
+                        }
+                        $sampahData[$detail['id']] += $detail['jumlah'];
+                    }
+                }
+            }
+        }
+
+        $jenisSampahIds = array_keys($sampahData);
+        $jenisSampah = \App\Models\JenisSampah::whereIn('id', $jenisSampahIds)->pluck('nama_sampah', 'id');
+
+        $labels = [];
+        $data = [];
+        foreach ($sampahData as $id => $jumlah) {
+            if (isset($jenisSampah[$id])) {
+                $labels[] = $jenisSampah[$id];
+                $data[] = $jumlah;
+            }
+        }
+
+        return response()->json(compact('labels', 'data'));
+    }
 }

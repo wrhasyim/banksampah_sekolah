@@ -87,6 +87,7 @@ Route::get('/api/siswa-by-kelas/{kelasId}', [App\Http\Controllers\SiswaControlle
      // === PINDAHKAN RUTE PEMBAYARAN INSENTIF KE SINI ===
     Route::get('/insentif/pembayaran', [PembayaranInsentifController::class, 'index'])->name('insentif.pembayaran');
     Route::post('/insentif/bayar', [PembayaranInsentifController::class, 'store'])->name('insentif.bayar');
+    Route::get('/dashboard/sampah-chart', [App\Http\Controllers\DashboardController::class, 'getSampahChartData'])->name('dashboard.sampah.chart');
     // Laporan
     Route::get('/laporan', [ReportController::class, 'index'])->name('laporan.index');
     Route::get('/laporan/penjualan/export/excel', [ReportController::class, 'exportPenjualanExcel'])->name('laporan.penjualan.export.excel');

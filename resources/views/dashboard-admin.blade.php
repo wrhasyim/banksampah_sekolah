@@ -76,6 +76,23 @@
                              <canvas id="myChart"></canvas>
                         </div>
                     </div>
+                     {{-- Chart Sampah --}}
+                    <div class="w-full p-4 mt-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm sm:p-6">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
+                            <h5 class="mb-3 sm:mb-0 text-base font-semibold text-gray-900 md:text-xl dark:text-white">
+                                Grafik Jumlah Sampah Terkumpul (Berdasarkan Berat/Jumlah)
+                            </h5>
+                            <div class="flex items-center space-x-2">
+                                <button data-period="today" class="sampah-chart-filter-btn px-3 py-1 text-sm font-medium text-gray-500 bg-gray-100 rounded-md hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">Hari Ini</button>
+                                <button data-period="7d" class="sampah-chart-filter-btn px-3 py-1 text-sm font-medium text-gray-500 bg-gray-100 rounded-md hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">7 Hari</button>
+                                <button data-period="30d" class="sampah-chart-filter-btn px-3 py-1 text-sm font-medium text-gray-500 bg-gray-100 rounded-md hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">30 Hari</button>
+                                <button data-period="monthly" class="sampah-chart-filter-btn px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-md">Bulan Ini</button>
+                            </div>
+                        </div>
+                        <div class="h-96">
+                             <canvas id="sampahChart"></canvas>
+                        </div>
+                    </div>
 
                 </div>
             </div>
@@ -139,24 +156,22 @@
 
     </div>
 
-    @push('scripts')
+     @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            // --- PENGATURAN GRAFIK 1: TRANSAKSI ---
             const ctx = document.getElementById('myChart');
             let myChart;
-
+            const filterButtons = document.querySelectorAll('.chart-filter-btn');
             const defaultButtonClasses = 'px-3 py-1 text-sm font-medium text-gray-500 bg-gray-100 rounded-md hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600';
             const activeButtonClasses = 'px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-md';
-            
-            const filterButtons = document.querySelectorAll('.chart-filter-btn');
 
             const renderChart = (data, type) => {
                 if (myChart) {
                     myChart.destroy();
                 }
-
                 myChart = new Chart(ctx, {
                     type: type,
                     data: {
@@ -203,7 +218,7 @@
                     console.error('Gagal memuat data chart:', error);
                 }
             };
-            
+
             filterButtons.forEach(button => {
                 button.addEventListener('click', function() {
                     filterButtons.forEach(btn => btn.className = defaultButtonClasses);
@@ -213,7 +228,75 @@
                 });
             });
 
+            // Panggil data awal untuk Grafik Transaksi
             fetchChartData('monthly');
+
+
+            // --- PENGATURAN GRAFIK 2: SAMPAH ---
+            const sampahCtx = document.getElementById('sampahChart');
+            let sampahChart;
+            const sampahFilterButtons = document.querySelectorAll('.sampah-chart-filter-btn');
+            const defaultSampahButtonClasses = 'px-3 py-1 text-sm font-medium text-gray-500 bg-gray-100 rounded-md hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600';
+            const activeSampahButtonClasses = 'px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-md';
+
+            const renderSampahChart = (data) => {
+                if (sampahChart) {
+                    sampahChart.destroy();
+                }
+                sampahChart = new Chart(sampahCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            label: 'Jumlah Sampah',
+                            data: data.data,
+                            backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Jumlah (Kg/Pcs)'
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        }
+                    }
+                });
+            };
+
+            const fetchSampahChartData = async (period) => {
+                try {
+                    const response = await axios.get(`{{ route('dashboard.sampah.chart') }}?period=${period}`);
+                    renderSampahChart(response.data);
+                } catch (error) {
+                    console.error('Gagal memuat data chart sampah:', error);
+                }
+            };
+
+            sampahFilterButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    sampahFilterButtons.forEach(btn => btn.className = defaultSampahButtonClasses);
+                    this.className = activeSampahButtonClasses;
+                    const period = this.getAttribute('data-period');
+                    fetchSampahChartData(period);
+                });
+            });
+
+            // Panggil data awal untuk Grafik Sampah
+            fetchSampahChartData('monthly');
+
         });
     </script>
     @endpush
