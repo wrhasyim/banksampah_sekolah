@@ -1,97 +1,152 @@
-#  Aplikasi Manajemen Bank Sampah Sekolah 🏫♻️
+#  Bank Sampah Sekolah Digital ♻️
 
-Aplikasi Manajemen Bank Sampah Sekolah adalah sebuah platform digital berbasis web yang dibangun menggunakan **Laravel 12** untuk mengelola seluruh alur kerja program bank sampah di lingkungan sekolah. Aplikasi ini bertujuan untuk mendidik siswa tentang pentingnya pengelolaan sampah, menumbuhkan kebiasaan menabung, sekaligus memberikan kemudahan bagi pengelola dalam administrasi dan pelaporan.
+![Banner Proyek Bank Sampah](https://user-images.githubusercontent.com/23249117/129487056-2e118318-6215-4148-9366-1c3905c1e57c.png)
 
-## ✨ Fitur Utama
+Selamat datang di Proyek **Bank Sampah Sekolah Digital**! Aplikasi web ini dirancang untuk memodernisasi dan menyederhanakan pengelolaan bank sampah di lingkungan sekolah. Tujuannya adalah untuk mendorong kesadaran lingkungan, mengajarkan siswa tentang nilai ekonomi dari sampah, serta memberikan sistem administrasi yang efisien dan transparan bagi pengelola.
 
-Aplikasi ini dilengkapi dengan berbagai fitur canggih untuk mendukung operasional bank sampah secara efisien dan transparan.
+Aplikasi ini dibangun menggunakan **Laravel 12** dan **Tailwind CSS**, menghasilkan sistem yang modern, responsif, dan mudah digunakan.
 
-#### 📊 Dashboard & Analitik
-- **Dashboard Admin Interaktif:** Menampilkan statistik kunci seperti total kas, total stok sampah, jumlah siswa, serta grafik transaksi dinamis dengan filter rentang waktu (harian, mingguan, bulanan).
-- **Dashboard Sederhana untuk Siswa:** Memungkinkan siswa untuk melihat saldo tabungan mereka.
-- **Papan Peringkat (Leaderboard):** Menampilkan peringkat siswa dan kelas berdasarkan jumlah setoran terbanyak untuk meningkatkan motivasi.
+> [!NOTE]
+> Proyek ini adalah contoh implementasi sistem informasi manajemen yang dapat diadaptasi untuk berbagai kebutuhan di lingkungan pendidikan atau komunitas.
 
-#### 🗂️ Manajemen Data (Master Data)
-- **Manajemen Pengguna:** CRUD (Create, Read, Update, Delete) untuk pengguna dengan role **Admin** dan **Wali Kelas**, menggunakan *username* sebagai identitas unik.
-- **Manajemen Siswa:** CRUD untuk data siswa, termasuk fitur **Impor Siswa dari file Excel** untuk pendaftaran massal.
-- **Manajemen Kelas:** CRUD untuk data kelas dengan fungsionalitas untuk **menugaskan satu wali kelas ke satu kelas**, di mana wali kelas yang sudah ditugaskan tidak akan muncul di pilihan.
-- **Manajemen Jenis Sampah:** Mengelola daftar jenis sampah yang diterima beserta harganya.
+---
 
-#### 💸 Transaksi Keuangan
-- **Setoran Sampah:** Mencatat setoran sampah dari siswa, dengan saldo otomatis masuk ke tabungan siswa.
-- **Penarikan Saldo:** Memfasilitasi penarikan saldo baik secara **individu per siswa** maupun **kolektif per kelas**.
-- **Penjualan ke Pengepul:** Mencatat transaksi penjualan akumulasi sampah ke pengepul.
-- **Buku Kas Umum:** Semua transaksi (pemasukan & pengeluaran) tercatat secara otomatis di buku kas dengan paginasi dan urutan data terbaru.
+## 🌟 Fitur Utama
 
-#### 💰 Sistem Insentif Otomatis
-- **Pengaturan Persentase:** Admin dapat mengatur persentase pembagian insentif untuk **pengelola**, **sekolah**, dan **wali kelas** melalui halaman Pengaturan.
-- **Distribusi Proporsional:** Insentif untuk wali kelas dibagikan secara otomatis dan **proporsional** berdasarkan total nilai setoran dari masing-masing kelas pada setiap transaksi penjualan.
-- **Riwayat & Rekap Insentif:** Terdapat halaman khusus untuk melihat riwayat insentif yang diterima oleh setiap wali kelas, serta rekapitulasi total insentif untuk pengelola dan sekolah dengan filter tanggal.
+Aplikasi ini dilengkapi dengan berbagai fitur canggih untuk melayani kebutuhan tiga peran pengguna utama: **Admin**, **Siswa**, dan **Wali Kelas**.
 
-#### 📄 Pelaporan & Ekspor
-- **Laporan Dinamis:** Halaman laporan terintegrasi dengan filter **rentang waktu kustom** untuk semua modul (Laba Rugi, Transaksi Siswa, Penjualan).
-- **Cetak Nota per Kelas:** Fitur untuk mencetak nota (rekapitulasi setoran) per kelas berdasarkan rentang tanggal kustom, lengkap dengan rincian per jenis sampah dan total insentif untuk wali kelas.
-- **Ekspor Data:** Semua laporan utama dapat diekspor ke format **PDF** dan **Excel**.
+### Fitur untuk Admin (Pengelola)
+* **Dashboard Analitik**: Tampilan ringkasan data penting seperti total saldo siswa, total sampah terkumpul, jumlah transaksi, dan grafik tren setoran serta penarikan.
+* **Manajemen Data Master**:
+    * **Pengguna**: Mengelola akun untuk Admin, Siswa, dan Guru/Wali Kelas.
+    * **Siswa**: CRUD data siswa lengkap dengan fitur impor dari file Excel.
+    * **Kelas**: Mengelola daftar kelas dan menetapkan wali kelas.
+    * **Jenis Sampah**: Mengatur jenis sampah yang diterima, lengkap dengan harga dan satuan (kg, pcs, dll).
+* **Manajemen Transaksi**:
+    * **Setoran Sampah**: Fitur input setoran per-individu dan **Setoran Massal** per-kelas untuk efisiensi.
+    * **Penarikan Saldo**: Mengelola permintaan penarikan tabungan oleh siswa.
+    * **Penjualan Sampah**: Mencatat hasil penjualan sampah yang terkumpul ke pengepul.
+* **Manajemen Keuangan**:
+    * **Buku Kas Digital**: Mencatat semua pemasukan dan pengeluaran bank sampah secara terperinci.
+    * **Insentif Wali Kelas**: Sistem otomatis untuk menghitung dan mengelola insentif bagi wali kelas berdasarkan setoran siswa di kelasnya.
+* **Laporan Lengkap**:
+    * Cetak dan ekspor (PDF/Excel) laporan transaksi, laporan penjualan, dan laporan laba rugi.
+* **Pengaturan Aplikasi**: Mengonfigurasi parameter sistem seperti persentase insentif, nama sekolah, dan lainnya.
+
+### Fitur untuk Siswa & Guru
+* **Dashboard Personal**: Melihat saldo tabungan, total poin, dan riwayat transaksi terakhir.
+* **Buku Tabungan Digital**: Melihat rincian riwayat setoran dan penarikan pribadi.
+* **Leaderboard**: Tampilan peringkat siswa berdasarkan poin yang terkumpul untuk mendorong partisipasi aktif (gamifikasi).
+* **Profil**: Mengelola informasi akun pribadi.
+
+---
 
 ## 🛠️ Teknologi yang Digunakan
 
-- **Framework:** Laravel 12
-- **Bahasa:** PHP 8.2
-- **Database:** MySQL
-- **Frontend:** Tailwind CSS, Alpine.js
-- **Lainnya:** Chart.js, Laravel DOMPDF, Maatwebsite/Excel
+Proyek ini dibangun dengan tumpukan teknologi modern dan populer:
 
-## 🚀 Instalasi & Setup Lokal
+* **Backend**: Laravel 12
+* **Frontend**: Blade Engine, Tailwind CSS, Alpine.js
+* **Database**: MySQL
+* **Library Utama**:
+    * **Maatwebsite/Excel**: Untuk fungsionalitas impor dan ekspor data Excel.
+    * **DomPDF**: Untuk generate laporan dalam format PDF.
+    * **Chart.js**: Untuk menampilkan grafik yang interaktif di dashboard.
 
+---
+
+## 🚀 Panduan Instalasi
+
+Ikuti langkah-langkah di bawah ini untuk menjalankan proyek ini di lingkungan lokal Anda.
+
+### Prasyarat
+* PHP >= 8.2
+* Composer
+* Node.js & NPM
+* Database Server (contoh: MySQL, MariaDB)
+
+### Langkah-langkah Instalasi
 1.  **Clone repository ini:**
     ```bash
-    git clone [URL_REPOSITORY_ANDA]
-    cd [NAMA_FOLDER_PROYEK]
+    git clone [https://github.com/username/banksampah_sekolah.git](https://github.com/username/banksampah_sekolah.git)
+    cd banksampah_sekolah
     ```
 
-2.  **Install dependensi Composer:**
+2.  **Install dependensi PHP (Composer):**
     ```bash
     composer install
     ```
 
-3.  **Salin file environment:**
+3.  **Install dependensi JavaScript (NPM):**
     ```bash
-    copy .env.example .env
+    npm install
     ```
 
-4.  **Generate application key:**
+4.  **Salin dan konfigurasi file environment:**
+    ```bash
+    cp .env.example .env
+    ```
+    Buka file `.env` dan sesuaikan konfigurasi database Anda (DB_HOST, DB_PORT, DB_DATABASE, DB_USERNAME, DB_PASSWORD).
+
+5.  **Generate application key:**
     ```bash
     php artisan key:generate
     ```
 
-5.  **Konfigurasi database Anda di file `.env`:**
-    ```env
-    DB_CONNECTION=mysql
-    DB_HOST=127.0.0.1
-    DB_PORT=3306
-    DB_DATABASE=db_banksampah
-    DB_USERNAME=root
-    DB_PASSWORD=
-    ```
-
 6.  **Jalankan migrasi dan seeder database:**
-    Perintah ini akan membuat semua tabel dan mengisi data awal yang diperlukan.
+    > [!IMPORTANT]
+    > Perintah ini akan membuat semua tabel yang dibutuhkan dan mengisinya dengan data awal (termasuk akun admin default).
     ```bash
     php artisan migrate --seed
     ```
-    - **Akun Admin Default:** `username: admin`, `password: password`
 
-7.  **Install dependensi NPM dan build assets:**
+7.  **Jalankan build asset frontend:**
     ```bash
-    npm install
     npm run dev
     ```
 
-8.  **Jalankan server development:**
+8.  **Jalankan server pengembangan:**
     ```bash
     php artisan serve
     ```
 
 Aplikasi sekarang akan berjalan di `http://127.0.0.1:8000`.
 
+### Akun Default
+Setelah menjalankan seeder, Anda dapat login menggunakan akun berikut:
+* **Role**: Admin
+* **Username**: `admin`
+* **Password**: `password`
 
+---
+
+## 🖼️ Tampilan Aplikasi 
+
+
+---
+
+## 🤝 Kontribusi
+
+Kontribusi untuk pengembangan proyek ini sangat diterima. Jika Anda memiliki ide untuk fitur baru atau perbaikan, silakan buat *fork* dari repositori ini dan ajukan *Pull Request*.
+
+1.  Fork proyek ini.
+2.  Buat branch fitur baru (`git checkout -b fitur/FiturBaru`).
+3.  Commit perubahan Anda (`git commit -m 'Menambahkan FiturBaru'`).
+4.  Push ke branch tersebut (`git push origin fitur/FiturBaru`).
+5.  Buka Pull Request.
+
+---
+
+## 📄 Lisensi
+
+Proyek ini dilisensikan di bawah **Lisensi MIT**.
+
+---
+
+## 👤 Kontak
+
+**Wahyu Rusdiansyah**
+* GitHub: `https://github.com/wrhasyim`
+* Email: `[Alamat Email Anda]`
+
+Dibuat dengan ❤️ untuk pendidikan dan lingkungan yang lebih baik.
