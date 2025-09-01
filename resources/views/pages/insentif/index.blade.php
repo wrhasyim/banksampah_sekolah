@@ -4,10 +4,7 @@
             <h2 class="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
                 {{ __('Riwayat Insentif Wali Kelas') }}
             </h2>
-            {{-- Tombol untuk navigasi ke halaman pembayaran --}}
-            <a href="{{ route('insentif.pembayaran') }}" class="px-4 py-2 font-bold text-white bg-green-500 rounded hover:bg-green-700">
-                Bayar Insentif
-            </a>
+           
         </div>
     </x-slot>
 
