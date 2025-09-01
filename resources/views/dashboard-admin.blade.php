@@ -142,7 +142,7 @@
 
     </div>
 
-     @push('scripts')
+      @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
@@ -203,15 +203,15 @@
                             }
                         }
                     };
-                } else { // type === 'sampah'
+                } else { // **INI BAGIAN PERBAIKANNYA**
                     chartTitle.innerText = 'Grafik Jumlah Sampah Terkumpul';
                     chartConfig = {
                         type: 'bar',
                         data: {
-                            labels: data.labels,
+                            labels: data.labels, // Label dari controller
                             datasets: [{
                                 label: 'Jumlah Sampah',
-                                data: data.data,
+                                data: data.data, // Data dari controller
                                 backgroundColor: 'rgba(75, 192, 192, 0.5)',
                                 borderColor: 'rgba(75, 192, 192, 1)',
                                 borderWidth: 1
@@ -231,7 +231,7 @@
                             },
                             plugins: {
                                 legend: {
-                                    display: false
+                                    display: false // Sembunyikan legenda karena sudah jelas dari judul
                                 }
                             }
                         }
@@ -243,6 +243,7 @@
 
             const fetchChartData = async () => {
                 try {
+                    // Pastikan URL-nya benar menunjuk ke rute yang sudah kita perbaiki
                     const response = await axios.get(`{{ route('dashboard.chart') }}?type=${currentType}&period=${currentPeriod}`);
                     renderChart(response.data);
                 } catch (error) {

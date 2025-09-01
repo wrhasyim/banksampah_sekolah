@@ -48,7 +48,8 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     // CRUD Jenis Sampah
     Route::resource('jenis-sampah', JenisSampahController::class);
 Route::get('/dashboard/chart', [ChartController::class, 'getChartData'])->name('dashboard.chart');
-    // Transaksi Setoran
+ Route::get('/debug-sampah-chart', [App\Http\Controllers\ChartController::class, 'debugSampahChart']);    
+// Transaksi Setoran
     Route::get('setoran/export', [SetoranController::class, 'export'])->name('setoran.export');
     Route::get('setoran/sample-export', [SetoranController::class, 'sampleExport'])->name('setoran.sample.export');
     Route::post('setoran/import', [SetoranController::class, 'import'])->name('setoran.import');
