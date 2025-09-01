@@ -12,7 +12,7 @@
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                         <h3 class="text-lg font-semibold">Daftar Siswa</h3>
                         <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                            <a href="{{ route('siswa.create') }}" class="w-full text-center inline-flex items-center justify-center px-4 py-2 bg-green-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-600 active:bg-green-700 focus:outline-none focus:border-green-700 focus:ring ring-green-300 disabled:opacity-25 transition ease-in-out duration-150">Tambah Siswa</a>
+                            
                              <a href="{{ route('siswa.import.form') }}" class="w-full text-center inline-flex items-center justify-center px-4 py-2 bg-blue-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-600 active:bg-blue-700 focus:outline-none focus:border-blue-700 focus:ring ring-blue-300 disabled:opacity-25 transition ease-in-out duration-150">Impor Siswa</a>
                         </div>
                     </div>

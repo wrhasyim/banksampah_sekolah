@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Sep 01, 2025 at 11:08 AM
+-- Generation Time: Sep 01, 2025 at 11:39 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -1313,7 +1313,7 @@ INSERT INTO `pengguna` (`id`, `nama_lengkap`, `username`, `password`, `role`, `c
 (802, 'RIKI', '232410275', '$2y$12$5Iy13TlJT/F4XMd47MJJQ.ZNzo1Gp36T0oOPJAc3s4kZ1cE83WEBu', 'siswa', '2025-09-01 04:28:35', '2025-09-01 04:28:35'),
 (803, 'SAEPUL ANWAR', '232410276', '$2y$12$/ARPZEdg2eAFmA0kBTqo7e4X24E03XHcpZe5qmhDz9z608U9OpZhe', 'siswa', '2025-09-01 04:28:35', '2025-09-01 04:28:35'),
 (804, 'WARMAN', '232410277', '$2y$12$jMjGLqVH.MAKJa7.0rf/i.KFAaRmGXXozf5IcX5EJpfArbnLdgU7G', 'siswa', '2025-09-01 04:28:36', '2025-09-01 04:28:36'),
-(805, 'YASMIN', '232410278', '$2y$12$PP.YF14AawNfY5o4IbAQoenx.f21kv48UVcYA73XZ0iuKz98jH6rS', 'siswa', '2025-09-01 04:28:36', '2025-09-01 04:28:36'),
+(805, 'YASMIN', '232410278', '$2y$12$PP.YF14AawNfY5o4IbAQoenx.f21kv48UVcYA73XZ0iuKz98jH6rS', 'siswa', '2025-09-01 04:28:36', '2025-09-01 09:35:03'),
 (806, 'IIM FAUZIAH, S.Ag', 'iim', '$2y$12$8kn0lic.Oa8TTCpFTvk0mOuNkgGNFYm5ljr.QMe5EQ0uf4bpQX0BK', 'wali', '2025-09-01 04:30:01', '2025-09-01 04:30:01'),
 (807, 'VIONA FARA NABILA, S.Pd', 'viona', '$2y$12$TG0ESHSfr17nnFFX.R3fWuVEJrfaOnZB.rJTigdv4J1hDoT9zLxVy', 'wali', '2025-09-01 04:30:25', '2025-09-01 04:30:25'),
 (808, 'SITI INA ROSTIANA, S.Pd', 'siti', '$2y$12$R6WRfXB74pcllMg046bjS.M6dyygoH5TigyRO6rTnhcg7pW81z6OS', 'wali', '2025-09-01 04:30:47', '2025-09-01 04:30:47'),
@@ -1396,7 +1396,7 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('VdL1KSOIqGBwbCFvz7ebA8gikmhgXlIAPO50rO6p', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoiOXcwZXdRT29oSGxVclI3c05rTHFCMXNCWWR0VWJuaVVIdGJISDRtaSI7czozOiJ1cmwiO2E6MDp7fXM6OToiX3ByZXZpb3VzIjthOjE6e3M6MzoidXJsIjtzOjMxOiJodHRwOi8vMTI3LjAuMC4xOjgwMDAvZGFzaGJvYXJkIjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6MTt9', 1756717686);
+('VdL1KSOIqGBwbCFvz7ebA8gikmhgXlIAPO50rO6p', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoiOXcwZXdRT29oSGxVclI3c05rTHFCMXNCWWR0VWJuaVVIdGJISDRtaSI7czozOiJ1cmwiO2E6MDp7fXM6OToiX3ByZXZpb3VzIjthOjE6e3M6MzoidXJsIjtzOjMxOiJodHRwOi8vMTI3LjAuMC4xOjgwMDAvZGFzaGJvYXJkIjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6MTt9', 1756719557);
 
 -- --------------------------------------------------------
 
@@ -2672,7 +2672,7 @@ ALTER TABLE `penarikan`
 -- AUTO_INCREMENT for table `pengguna`
 --
 ALTER TABLE `pengguna`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=832;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=833;
 
 --
 -- AUTO_INCREMENT for table `penjualan`
