@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Setoran;
-use Barryvdh\DomPDF\Facade\Pdf; // Import PDF Facade
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class RekapanController extends Controller
 {
@@ -13,9 +13,8 @@ class RekapanController extends Controller
      */
     public function index(Request $request)
     {
-        // Query dasar untuk mengambil data setoran siswa (bukan guru)
         $querySiswa = function ($query) {
-            $query->whereHas('siswa.kelas', function ($q) {
+            $query->whereHas('kelas', function ($q) {
                 $q->where('nama_kelas', 'not like', '%guru%');
             });
         };
@@ -37,41 +36,12 @@ class RekapanController extends Controller
     }
 
     /**
-     * Menampilkan rekapan khusus untuk GURU.
-     */
-    public function indexGuru(Request $request)
-    {
-        // Query dasar untuk mengambil data setoran guru
-        $queryGuru = function ($query) {
-            $query->whereHas('siswa.kelas', function ($q) {
-                $q->where('nama_kelas', 'like', '%guru%');
-            });
-        };
-        
-        $setoranTerlambatGuru = Setoran::with(['siswa.pengguna', 'siswa.kelas', 'jenisSampah'])
-            ->where('status', 'terlambat')
-            ->whereHas('siswa', $queryGuru)
-            ->latest()
-            ->paginate(5, ['*'], 'terlambat_page');
-
-        $setoranTanpaWaliKelasGuru = Setoran::with(['siswa.pengguna', 'siswa.kelas', 'jenisSampah'])
-            ->where('status', 'normal')
-            ->whereDoesntHave('insentif')
-            ->whereHas('siswa', $queryGuru)
-            ->latest()
-            ->paginate(5, ['*'], 'tanpa_wali_kelas_page');
-
-        return view('pages.rekapan.rekapan-guru', compact('setoranTerlambatGuru', 'setoranTanpaWaliKelasGuru'));
-    }
-
-
-    /**
      * Ekspor PDF untuk rekapan SISWA.
      */
     public function exportSiswaPdf()
     {
         $querySiswa = function ($query) {
-            $query->whereHas('siswa.kelas', function ($q) {
+            $query->whereHas('kelas', function ($q) {
                 $q->where('nama_kelas', 'not like', '%guru%');
             });
         };
@@ -91,29 +61,36 @@ class RekapanController extends Controller
         return $pdf->download('rekapan-khusus-siswa-'.date('Y-m-d').'.pdf');
     }
 
+    // ===== BAGIAN REKAPAN GURU YANG DIPERBARUI =====
+
     /**
-     * Ekspor PDF untuk rekapan GURU.
+     * Menampilkan rekapan setoran GURU yang disederhanakan.
+     */
+    public function indexGuru(Request $request)
+    {
+        $setoranGuru = Setoran::with(['siswa.pengguna', 'jenisSampah'])
+            ->whereHas('siswa.kelas', function ($q) {
+                $q->where('nama_kelas', 'like', '%guru%');
+            })
+            ->latest()
+            ->paginate(10); // Menampilkan 10 data per halaman
+
+        return view('pages.rekapan.rekapan-guru', compact('setoranGuru'));
+    }
+
+    /**
+     * Ekspor PDF untuk semua setoran GURU.
      */
     public function exportGuruPdf()
     {
-        $queryGuru = function ($query) {
-            $query->whereHas('siswa.kelas', function ($q) {
+        $setoranGuru = Setoran::with(['siswa.pengguna', 'jenisSampah'])
+            ->whereHas('siswa.kelas', function ($q) {
                 $q->where('nama_kelas', 'like', '%guru%');
-            });
-        };
+            })
+            ->latest()
+            ->get();
 
-        $data['setoranTerlambat'] = Setoran::with(['siswa.pengguna', 'siswa.kelas', 'jenisSampah'])
-            ->where('status', 'terlambat')
-            ->whereHas('siswa', $queryGuru)
-            ->latest()->get();
-
-        $data['setoranTanpaWaliKelas'] = Setoran::with(['siswa.pengguna', 'siswa.kelas', 'jenisSampah'])
-            ->where('status', 'normal')
-            ->whereDoesntHave('insentif')
-            ->whereHas('siswa', $queryGuru)
-            ->latest()->get();
-
-        $pdf = Pdf::loadView('pages.rekapan.rekapan-pdf', ['data' => $data, 'title' => 'Rekapan Khusus Guru']);
-        return $pdf->download('rekapan-khusus-guru-'.date('Y-m-d').'.pdf');
+        $pdf = Pdf::loadView('pages.rekapan.rekapan-guru-pdf', ['setoranGuru' => $setoranGuru]);
+        return $pdf->download('rekapan-setoran-guru-'.date('Y-m-d').'.pdf');
     }
 }
