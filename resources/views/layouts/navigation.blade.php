@@ -48,6 +48,9 @@
                                 <x-dropdown-link :href="route('penjualan.index')">Penjualan Sampah</x-dropdown-link>
                                 <div class="border-t border-gray-200 dark:border-gray-600"></div>
                                 <x-dropdown-link :href="route('insentif.index')">Riwayat Insentif</x-dropdown-link>
+                                 <x-dropdown-link :href="route('insentif.rekap')" :active="request()->routeIs('insentif.rekap')">
+                        {{ __('Rekap Insentif') }}
+                    </x-dropdown-link>
                                 <x-dropdown-link :href="route('insentif.pembayaran')">Pembayaran Insentif</x-dropdown-link>
                             </x-slot>
                         </x-dropdown>
