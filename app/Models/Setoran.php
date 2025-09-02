@@ -29,4 +29,11 @@ class Setoran extends Model
     {
         return $this->belongsTo(Pengguna::class, 'id_admin');
     }
+    /**
+     * Definisikan relasi one-to-one dengan model Insentif.
+     */
+    public function insentif()
+    {
+        return $this->hasOne(Insentif::class, 'setoran_id');
+    }
 }

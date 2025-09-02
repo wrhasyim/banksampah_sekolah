@@ -105,7 +105,8 @@ Route::get('/insentif/pembayaran', [PembayaranInsentifController::class, 'index'
 Route::post('/insentif/bayar', [PembayaranInsentifController::class, 'store'])->name('insentif.bayar');
     // Leaderboard
     Route::get('/leaderboard', [LeaderboardController::class, 'index'])->name('leaderboard.index');
-
+ // Route untuk Rekapan
+    Route::get('/rekapan', [App\Http\Controllers\RekapanController::class, 'index'])->name('rekapan.index');
       Route::prefix('setoran')->name('setoran.')->group(function () {
         // ... route setoran lainnya
         Route::get('/create-massal', [SetoranController::class, 'createMassal'])->name('create.massal');
