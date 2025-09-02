@@ -56,7 +56,6 @@
             const tableBody = document.querySelector('tbody');
             const initialMessage = document.getElementById('initial-message');
 
-            // Mengambil data jenis sampah dari PHP ke JavaScript
             const jenisSampahSiswa = @json($jenisSampahSiswa->values());
             const jenisSampahGuru = @json($jenisSampahGuru->values());
 
@@ -68,23 +67,25 @@
                 const isGuruClass = namaKelas && namaKelas.toLowerCase().includes('guru');
                 const activeJenisSampah = isGuruClass ? jenisSampahGuru : jenisSampahSiswa;
                 
-                // Menyesuaikan colspan untuk pesan loading/error (+2 karena ada kolom Nama dan Terlambat)
+                // ===== PERUBAHAN 1: Menyesuaikan colspan untuk pesan (+3 dari sebelumnya +2) =====
+                const colspanValue = activeJenisSampah.length + 3; 
+
                 tableHead.innerHTML = '';
-                tableBody.innerHTML = `<tr><td colspan="${activeJenisSampah.length + 2}" class="text-center p-4">Memuat data siswa...</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="${colspanValue}" class="text-center p-4">Memuat data siswa...</td></tr>`;
 
                 if (kelasId) {
-                    // 1. Bangun Header Tabel
                     let headerRow = '<tr>';
                     headerRow += '<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-10">Nama Siswa</th>';
                     activeJenisSampah.forEach(sampah => {
                         headerRow += `<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">${sampah.nama_sampah} (${sampah.satuan})</th>`;
                     });
-                    // ===== PERUBAHAN 1: Tambahkan header kolom "Terlambat" =====
-                    headerRow += '<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Terlambat</th>';
+                    
+                    // ===== PERUBAHAN 2: Tambahkan header kolom "Tanpa Wali Kelas" =====
+                    headerRow += '<th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Terlambat</th>';
+                    headerRow += '<th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Tanpa Wali Kelas</th>';
                     headerRow += '</tr>';
                     tableHead.innerHTML = headerRow;
 
-                    // 2. Ambil dan Bangun Body Tabel
                     fetch(`{{ url('/api/siswa-by-kelas') }}/${kelasId}`)
                         .then(response => response.json())
                         .then(data => {
@@ -102,22 +103,24 @@
                                                                placeholder="0">
                                                     </td>`;
                                     });
-                                    // ===== PERUBAHAN 2: Tambahkan sel untuk checkbox "Terlambat" =====
+
+                                    // ===== PERUBAHAN 3: Tambahkan sel untuk checkbox "Tanpa Wali Kelas" =====
                                     bodyRow += `<td class="px-6 py-4 whitespace-nowrap text-center">
                                                     <input type="checkbox" name="terlambat[]" value="${siswa.id}" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500">
+                                                </td>`;
+                                    bodyRow += `<td class="px-6 py-4 whitespace-nowrap text-center">
+                                                    <input type="checkbox" name="tanpa_wali_kelas[]" value="${siswa.id}" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500">
                                                 </td>`;
                                     bodyRow += '</tr>';
                                     tableBody.innerHTML += bodyRow;
                                 });
                             } else {
-                                // Menyesuaikan colspan
-                                tableBody.innerHTML = `<tr><td colspan="${activeJenisSampah.length + 2}" class="text-center p-4">Tidak ada siswa di kelas ini.</td></tr>`;
+                                tableBody.innerHTML = `<tr><td colspan="${colspanValue}" class="text-center p-4">Tidak ada siswa di kelas ini.</td></tr>`;
                             }
                         })
                         .catch(error => {
                             console.error('Error fetching siswa:', error);
-                            // Menyesuaikan colspan
-                            tableBody.innerHTML = `<tr><td colspan="${activeJenisSampah.length + 2}" class="text-center p-4">Gagal memuat data siswa. Pastikan route API sudah benar.</td></tr>`;
+                            tableBody.innerHTML = `<tr><td colspan="${colspanValue}" class="text-center p-4">Gagal memuat data siswa. Pastikan route API sudah benar.</td></tr>`;
                         });
                 } else {
                     tableHead.innerHTML = '';

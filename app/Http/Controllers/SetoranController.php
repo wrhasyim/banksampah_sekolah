@@ -164,8 +164,10 @@ class SetoranController extends Controller
     $request->validate([
         'setoran' => 'required|array',
         'setoran.*.*' => 'nullable|numeric|min:0',
-        'terlambat' => 'nullable|array', // Tambahkan validasi untuk input terlambat
-        'terlambat.*' => 'integer|exists:siswa,id' // Pastikan isinya adalah ID siswa yang valid
+        'terlambat' => 'nullable|array',
+        'terlambat.*' => 'integer|exists:siswa,id',
+        'tanpa_wali_kelas' => 'nullable|array', 
+        'tanpa_wali_kelas.*' => 'integer|exists:siswa,id'
     ]);
 
     DB::transaction(function () use ($request) {
@@ -178,8 +180,9 @@ class SetoranController extends Controller
 
             if (!$siswa) continue;
 
-            // Cek apakah siswa ini ditandai terlambat
+            // Cek apakah siswa ditandai terlambat atau tanpa wali kelas
             $is_terlambat = in_array($siswa_id, $request->terlambat ?? []);
+            $tanpa_wali_kelas = in_array($siswa_id, $request->tanpa_wali_kelas ?? []);
 
             foreach ($sampahData as $jenis_sampah_id => $jumlah) {
                 if (!empty($jumlah) && $jumlah > 0) {
@@ -194,13 +197,14 @@ class SetoranController extends Controller
                         'jenis_sampah_id' => $jenis_sampah_id,
                         'jumlah' => $jumlah,
                         'total_harga' => $totalHarga,
-                        'status' => $is_terlambat ? 'terlambat' : 'normal', // Tambahkan status
+                        'status' => $is_terlambat ? 'terlambat' : 'normal',
                     ]);
 
                     $jenisSampah->increment('stok', $jumlah);
 
-                    // Insentif hanya jika setoran TIDAK terlambat
-                    if (!$is_terlambat) {
+                    // ===== LOGIKA UTAMA =====
+                    // Insentif hanya diberikan jika TIDAK terlambat DAN TIDAK tanpa wali kelas.
+                    if (!$is_terlambat && !$tanpa_wali_kelas) {
                         if ($persentaseWaliKelas > 0 && $siswa->kelas && $siswa->kelas->id_wali_kelas) {
                             $insentifWaliKelas = $totalHarga * ($persentaseWaliKelas / 100);
 
