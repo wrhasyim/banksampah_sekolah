@@ -15,11 +15,16 @@ class LeaderboardController extends Controller
         $filter = $request->input('filter', 'minggu_ini');
         $dateRange = $this->getDateRange($filter);
 
-        // --- PERBAIKAN FINAL DI SINI ---
-        // 1. Menambahkan has('pengguna') untuk memfilter HANYA siswa yang masih aktif.
-        // 2. Menambahkan with('pengguna', 'kelas') untuk memuat data nama dan kelas.
-        $topSiswa = Siswa::has('pengguna') // <-- Filter utama
-            ->with('pengguna', 'kelas')   // <-- Memuat relasi
+        // --- REVISI PERINGKAT SISWA ---
+        // 1. Memfilter pengguna dengan role 'siswa'.
+        // 2. Memfilter agar siswa yang ada di kelas 'Guru' tidak ikut tampil.
+        $topSiswa = Siswa::whereHas('pengguna', function ($query) {
+                $query->where('role', 'siswa');
+            })
+            ->whereHas('kelas', function ($query) {
+                $query->where('nama_kelas', '!=', 'Guru');
+            })
+            ->with('pengguna', 'kelas')
             ->withSum(['setoran' => function ($query) use ($dateRange) {
                 $query->whereBetween('created_at', $dateRange);
             }], 'total_harga')
@@ -27,9 +32,16 @@ class LeaderboardController extends Controller
             ->take(10)
             ->get();
 
-        $topKelas = Kelas::withSum(['setoran' => function ($query) use ($dateRange) {
-            $query->whereBetween('setoran.created_at', $dateRange);
-        }], 'total_harga')
+        // --- REVISI PERINGKAT KELAS ---
+        // 1. Tidak menampilkan kelas 'Guru'.
+        // 2. Memastikan total setoran kelas hanya dihitung dari setoran milik siswa.
+        $topKelas = Kelas::where('nama_kelas', '!=', 'Guru')
+            ->withSum(['setoran' => function ($query) use ($dateRange) {
+                $query->whereBetween('setoran.created_at', $dateRange)
+                      ->whereHas('siswa.pengguna', function($q) {
+                            $q->where('role', 'siswa');
+                      });
+            }], 'total_harga')
             ->orderByDesc('setoran_sum_total_harga')
             ->take(10)
             ->get();

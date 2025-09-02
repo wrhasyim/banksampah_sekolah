@@ -55,7 +55,7 @@
                         </div>
                         <div class="p-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
                             <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{{ $totalSiswa }}</h5>
-                            <p class="font-normal text-gray-700 dark:text-gray-400">Total Siswa</p>
+                            <p class="font-normal text-gray-700 dark:text-gray-400">Total Siswa & Guru</p>
                         </div>
                     </div>
 
