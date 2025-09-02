@@ -20,7 +20,6 @@
                     <h3 class="mb-4 text-lg font-semibold">Rekapan Siswa Terlambat</h3>
                     <div class="overflow-x-auto">
                         <table class="min-w-full bg-white divide-y divide-gray-200 dark:bg-gray-800">
-                            {{-- ... isi thead dan tbody sama seperti sebelumnya ... --}}
                             <thead class="bg-gray-50 dark:bg-gray-700">
                                 <tr>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">Tanggal</th>
@@ -58,7 +57,6 @@
                     <h3 class="mb-4 text-lg font-semibold">Rekapan Setoran Tanpa Wali Kelas</h3>
                      <div class="overflow-x-auto">
                         <table class="min-w-full bg-white divide-y divide-gray-200 dark:bg-gray-800">
-                           {{-- ... isi thead dan tbody sama seperti sebelumnya ... --}}
                             <thead class="bg-gray-50 dark:bg-gray-700">
                                 <tr>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">Tanggal</th>
@@ -79,13 +77,13 @@
                                     </tr>
                                 @empty
                                      <tr>
-                                        <td colspan="5" class="px-6 py-4 text-center">Tidak ada data setoran siswa tanpa wali kelas.</td>
+                                        <td colspan="5" class="px-6 py-4 text-center">Tidak ada data setoran tanpa wali kelas.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
                         </table>
                     </div>
-                     <div class="mt-4">
+                    <div class="mt-4">
                         {{ $setoranTanpaWaliKelas->links() }}
                     </div>
                 </div>

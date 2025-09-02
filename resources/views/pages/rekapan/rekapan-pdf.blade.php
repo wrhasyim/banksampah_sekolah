@@ -5,7 +5,7 @@
     <style>
         body { font-family: sans-serif; }
         table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 12px; }
         th { background-color: #f2f2f2; }
         h1, h2 { text-align: center; }
     </style>
@@ -35,7 +35,7 @@
                     <td>Rp {{ number_format($setoran->total_harga, 0, ',', '.') }}</td>
                 </tr>
             @empty
-                <tr><td colspan="5">Tidak ada data.</td></tr>
+                <tr><td colspan="5" style="text-align: center;">Tidak ada data.</td></tr>
             @endforelse
         </tbody>
     </table>
@@ -61,7 +61,7 @@
                     <td>Rp {{ number_format($setoran->total_harga, 0, ',', '.') }}</td>
                 </tr>
             @empty
-                <tr><td colspan="5">Tidak ada data.</td></tr>
+                <tr><td colspan="5" style="text-align: center;">Tidak ada data.</td></tr>
             @endforelse
         </tbody>
     </table>
