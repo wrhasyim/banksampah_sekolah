@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Sep 02, 2025 at 03:04 AM
+-- Generation Time: Sep 02, 2025 at 03:20 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -457,7 +457,8 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (27, '2025_09_01_115855_add_status_pembayaran_to_insentifs_table', 2),
 (28, '2025_09_02_072425_add_status_to_setoran_table', 3),
 (29, '2025_09_02_075146_add_id_wali_kelas_to_pembayaran_insentifs_table', 4),
-(30, '2025_09_02_075314_add_jumlah_pembayaran_to_pembayaran_insentifs_table', 4);
+(30, '2025_09_02_075314_add_jumlah_pembayaran_to_pembayaran_insentifs_table', 4),
+(31, '2025_09_02_081823_cleanup_pembayaran_insentifs_table', 5);
 
 -- --------------------------------------------------------
 
@@ -469,7 +470,6 @@ CREATE TABLE `pembayaran_insentifs` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `id_admin` bigint(20) UNSIGNED NOT NULL,
   `tanggal_pembayaran` date NOT NULL,
-  `jumlah_pembayaran` decimal(15,2) NOT NULL,
   `total_dibayar` decimal(15,2) NOT NULL,
   `keterangan` text DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
@@ -2714,7 +2714,7 @@ ALTER TABLE `kelas`
 -- AUTO_INCREMENT for table `migrations`
 --
 ALTER TABLE `migrations`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
 
 --
 -- AUTO_INCREMENT for table `pembayaran_insentifs`

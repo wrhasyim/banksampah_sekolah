@@ -22,63 +22,71 @@ class PembayaranInsentifController extends Controller
             ->with('kelas.waliKelas')
             ->select('kelas_id', DB::raw('SUM(jumlah_insentif) as total_insentif'))
             ->groupBy('kelas_id')
+            ->havingRaw('SUM(jumlah_insentif) > 0')
             ->get();
 
         return view('pages.insentif.pembayaran', compact('insentifPerKelas'));
     }
 
     /**
-     * Menyimpan data pembayaran insentif.
+     * Menyimpan data pembayaran insentif HANYA untuk wali kelas yang dipilih.
      */
     public function store(Request $request)
     {
+        // Validasi untuk memastikan setidaknya satu wali kelas dipilih
         $request->validate([
             'pembayaran' => 'required|array|min:1',
             'pembayaran.*.kelas_id' => 'required|exists:kelas,id',
             'pembayaran.*.jumlah' => 'required|numeric|min:1',
+        ], [
+            'pembayaran.required' => 'Anda harus memilih setidaknya satu wali kelas untuk dibayar.',
+            'pembayaran.min' => 'Anda harus memilih setidaknya satu wali kelas untuk dibayar.'
         ]);
 
         DB::transaction(function () use ($request) {
+            
+            // Loop HANYA pada data pembayaran yang dikirim dari form (yang dicentang)
             foreach ($request->pembayaran as $bayar) {
-                $kelasId = $bayar['kelas_id'];
-                $jumlahDibayar = $bayar['jumlah'];
                 
-                // ===== PERUBAHAN 1: Memuat relasi 'waliKelas' saja =====
-                $kelas = Kelas::with('waliKelas')->find($kelasId);
+                // Pastikan data yang dikirim valid dan lengkap
+                if (isset($bayar['kelas_id']) && isset($bayar['jumlah'])) {
+                    $kelasId = $bayar['kelas_id'];
+                    $jumlahDibayar = $bayar['jumlah'];
+                    
+                    $kelas = Kelas::with('waliKelas')->find($kelasId);
 
-                if (!$kelas || !$kelas->waliKelas) {
-                    // Lompati jika kelas atau wali kelas tidak ditemukan
-                    continue;
+                    // Lanjutkan hanya jika kelas dan wali kelas ada
+                    if ($kelas && $kelas->waliKelas) {
+                        // 1. Buat catatan riwayat pembayaran
+                        $pembayaran = PembayaranInsentif::create([
+                            'id_admin' => Auth::id(),
+                            'id_wali_kelas' => $kelas->id_wali_kelas,
+                            'tanggal_pembayaran' => now(),
+                            'total_dibayar' => $jumlahDibayar,
+                            'keterangan' => 'Pembayaran Insentif untuk Wali Kelas: ' . ($kelas->waliKelas->nama_lengkap ?? 'N/A'),
+                        ]);
+
+                        // 2. Catat sebagai pengeluaran di Buku Kas
+                        BukuKas::create([
+                            'tanggal' => now(),
+                            'deskripsi' => 'Pembayaran Insentif Wali Kelas: ' . ($kelas->waliKelas->nama_lengkap ?? 'N/A'),
+                            'tipe' => 'pengeluaran',
+                            'jumlah' => $jumlahDibayar,
+                            'id_admin' => Auth::id(),
+                        ]);
+
+                        // 3. Update status semua insentif yang terkait dengan kelas ini
+                        Insentif::where('kelas_id', $kelasId)
+                            ->where('status_pembayaran', 'belum dibayar')
+                            ->update([
+                                'status_pembayaran' => 'sudah dibayar',
+                                'pembayaran_insentif_id' => $pembayaran->id,
+                            ]);
+                    }
                 }
-
-                // 1. Buat catatan riwayat pembayaran
-                $pembayaran = PembayaranInsentif::create([
-                    'id_admin' => Auth::id(),
-                    'id_wali_kelas' => $kelas->id_wali_kelas,
-                    'tanggal_pembayaran' => now(),
-                      'total_dibayar' => $jumlahDibayar, // <-- UBAH NAMA KOLOM DI SINI
-                ]);
-
-                // 2. Catat sebagai pengeluaran di Buku Kas
-                BukuKas::create([
-                    'tanggal' => now(),
-                    // ===== PERUBAHAN 2: Akses nama_lengkap langsung dari waliKelas =====
-                    'deskripsi' => 'Pembayaran Insentif Wali Kelas: ' . ($kelas->waliKelas->nama_lengkap ?? 'N/A'),
-                    'tipe' => 'pengeluaran',
-                    'jumlah' => $jumlahDibayar,
-                    'id_admin' => Auth::id(),
-                ]);
-
-                // 3. Update status semua insentif yang terkait
-                Insentif::where('kelas_id', $kelasId)
-                    ->where('status_pembayaran', 'belum dibayar')
-                    ->update([
-                        'status_pembayaran' => 'sudah dibayar',
-                        'pembayaran_insentif_id' => $pembayaran->id,
-                    ]);
             }
         });
 
-        return redirect()->route('insentif.index')->with('success', 'Pembayaran insentif berhasil dicatat.');
+        return redirect()->route('insentif.index')->with('success', 'Pembayaran insentif untuk wali kelas yang dipilih berhasil dicatat.');
     }
 }
