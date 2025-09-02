@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Sep 02, 2025 at 02:35 AM
+-- Generation Time: Sep 02, 2025 at 03:04 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -455,7 +455,9 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (25, '2025_08_30_172632_add_unique_constraint_to_id_wali_kelas_in_kelas_table', 1),
 (26, '2025_09_01_115843_create_pembayaran_insentifs_table', 2),
 (27, '2025_09_01_115855_add_status_pembayaran_to_insentifs_table', 2),
-(28, '2025_09_02_072425_add_status_to_setoran_table', 3);
+(28, '2025_09_02_072425_add_status_to_setoran_table', 3),
+(29, '2025_09_02_075146_add_id_wali_kelas_to_pembayaran_insentifs_table', 4),
+(30, '2025_09_02_075314_add_jumlah_pembayaran_to_pembayaran_insentifs_table', 4);
 
 -- --------------------------------------------------------
 
@@ -467,10 +469,12 @@ CREATE TABLE `pembayaran_insentifs` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `id_admin` bigint(20) UNSIGNED NOT NULL,
   `tanggal_pembayaran` date NOT NULL,
+  `jumlah_pembayaran` decimal(15,2) NOT NULL,
   `total_dibayar` decimal(15,2) NOT NULL,
   `keterangan` text DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `id_wali_kelas` bigint(20) UNSIGNED DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -1409,7 +1413,7 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('6SdOYCrBy1ZneFH2mi5WCHaYZCmJRhCPKShIduIf', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoidGxpcnJkRWg3QjhUcnJFdEUwZE9QRXJhaUVyblp1V2tiYTN6OWk1ZyI7czozOiJ1cmwiO2E6MDp7fXM6OToiX3ByZXZpb3VzIjthOjE6e3M6MzoidXJsIjtzOjMxOiJodHRwOi8vMTI3LjAuMC4xOjgwMDAvZGFzaGJvYXJkIjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6MTt9', 1756773298);
+('6SdOYCrBy1ZneFH2mi5WCHaYZCmJRhCPKShIduIf', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoidGxpcnJkRWg3QjhUcnJFdEUwZE9QRXJhaUVyblp1V2tiYTN6OWk1ZyI7czozOiJ1cmwiO2E6MDp7fXM6OToiX3ByZXZpb3VzIjthOjE6e3M6MzoidXJsIjtzOjQxOiJodHRwOi8vMTI3LjAuMC4xOjgwMDAvaW5zZW50aWYvcGVtYmF5YXJhbiI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fXM6NTA6ImxvZ2luX3dlYl81OWJhMzZhZGRjMmIyZjk0MDE1ODBmMDE0YzdmNThlYTRlMzA5ODlkIjtpOjE7fQ==', 1756775027);
 
 -- --------------------------------------------------------
 
@@ -2582,7 +2586,8 @@ ALTER TABLE `migrations`
 --
 ALTER TABLE `pembayaran_insentifs`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `pembayaran_insentifs_id_admin_foreign` (`id_admin`);
+  ADD KEY `pembayaran_insentifs_id_admin_foreign` (`id_admin`),
+  ADD KEY `pembayaran_insentifs_id_wali_kelas_foreign` (`id_wali_kelas`);
 
 --
 -- Indexes for table `penarikan`
@@ -2709,7 +2714,7 @@ ALTER TABLE `kelas`
 -- AUTO_INCREMENT for table `migrations`
 --
 ALTER TABLE `migrations`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 
 --
 -- AUTO_INCREMENT for table `pembayaran_insentifs`
@@ -2802,7 +2807,8 @@ ALTER TABLE `kelas`
 -- Constraints for table `pembayaran_insentifs`
 --
 ALTER TABLE `pembayaran_insentifs`
-  ADD CONSTRAINT `pembayaran_insentifs_id_admin_foreign` FOREIGN KEY (`id_admin`) REFERENCES `pengguna` (`id`);
+  ADD CONSTRAINT `pembayaran_insentifs_id_admin_foreign` FOREIGN KEY (`id_admin`) REFERENCES `pengguna` (`id`),
+  ADD CONSTRAINT `pembayaran_insentifs_id_wali_kelas_foreign` FOREIGN KEY (`id_wali_kelas`) REFERENCES `pengguna` (`id`);
 
 --
 -- Constraints for table `penarikan`
