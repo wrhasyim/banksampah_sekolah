@@ -20,7 +20,7 @@
                         </select>
                     </div>
 
-                    <form action="{{ route('setoran.storeMassal') }}" method="POST">
+                    <form action="{{ route('setoran.store.massal') }}" method="POST">
                         @csrf
                         <div class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-gray-200">

@@ -85,7 +85,11 @@
                 {{ __('Laporan Umum') }}
             </x-dropdown-link>
             <x-dropdown-link :href="route('rekapan.index')">
-                {{ __('Rekapan Khusus') }}
+                {{ __('Rekapan Siswa') }}
+            </x-dropdown-link>
+            {{-- ===== TAMBAHKAN BARIS INI ===== --}}
+            <x-dropdown-link :href="route('rekapan.indexGuru')">
+                {{ __('Rekapan Guru') }}
             </x-dropdown-link>
         </x-slot>
     </x-dropdown>
