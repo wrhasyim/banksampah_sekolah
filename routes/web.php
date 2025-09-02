@@ -41,7 +41,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::resource('kategori-transaksi', KategoriTransaksiController::class);
     Route::resource('pengguna', PenggunaController::class)->except(['show']);
 
-    // Manajemen Siswa (termasuk import/export)
+    // Manajemen Siswa
     Route::prefix('siswa')->name('siswa.')->group(function () {
         Route::get('/export', [SiswaController::class, 'export'])->name('export');
         Route::get('/sample-export', [SiswaController::class, 'sampleExport'])->name('sample.export');
@@ -50,19 +50,18 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     });
     Route::resource('siswa', SiswaController::class);
 
-    // Transaksi Setoran (termasuk import/export & massal)
+    // Transaksi Setoran
     Route::prefix('setoran')->name('setoran.')->group(function () {
         Route::get('/export', [SetoranController::class, 'export'])->name('export');
         Route::get('/sample-export', [SetoranController::class, 'sampleExport'])->name('sample.export');
         Route::get('/import', [SetoranController::class, 'showImportForm'])->name('import.form');
         Route::post('/import', [SetoranController::class, 'import'])->name('import');
         Route::get('/create-massal', [SetoranController::class, 'createMassal'])->name('create.massal');
-        // ===== BARIS INI TELAH DIPERBAIKI =====
         Route::post('/store-massal', [SetoranController::class, 'storeMassal'])->name('store.massal');
     });
     Route::resource('setoran', SetoranController::class);
 
-    // Transaksi Penarikan (termasuk penarikan per kelas)
+    // Transaksi Penarikan
     Route::prefix('penarikan')->name('penarikan.')->group(function () {
         Route::get('/create/kelas', [PenarikanController::class, 'createKelas'])->name('create.kelas');
         Route::post('/store/kelas', [PenarikanController::class, 'storeKelas'])->name('store.kelas');
@@ -72,13 +71,13 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     // Transaksi Penjualan
     Route::resource('penjualan', PenjualanController::class);
     
-    // Keuangan & Laporan
+    // Keuangan
     Route::resource('buku-kas', BukuKasController::class)->except(['create', 'show']);
     Route::get('buku-kas/export/excel', [BukuKasController::class, 'exportExcel'])->name('buku-kas.export.excel');
     Route::get('buku-kas/export/pdf', [BukuKasController::class, 'exportPdf'])->name('buku-kas.export.pdf');
     Route::get('buku-tabungan', [BukuTabunganController::class, 'index'])->name('buku-tabungan.index');
     
-    // Laporan
+    // Laporan Umum
     Route::prefix('laporan')->name('laporan.')->group(function () {
         Route::get('/', [ReportController::class, 'index'])->name('index');
         Route::get('/penjualan/export/excel', [ReportController::class, 'exportPenjualanExcel'])->name('penjualan.export.excel');
@@ -88,11 +87,17 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
         Route::get('/laba-rugi/export/pdf', [ReportController::class, 'exportLabaRugiPdf'])->name('laba-rugi.export.pdf');
     });
 
-    // Rekapan Khusus
-    Route::get('/rekapan-siswa', [RekapanController::class, 'index'])->name('rekapan.index');
-    Route::get('/rekapan-siswa/export-pdf', [RekapanController::class, 'exportSiswaPdf'])->name('rekapan.exportSiswaPdf');
+    // --- BLOK REKAPAN KHUSUS YANG SUDAH BERSIH DAN BENAR ---
+    // Rekapan Khusus Siswa (DIPISAH)
+    Route::get('/rekapan-siswa/terlambat', [RekapanController::class, 'indexSiswaTerlambat'])->name('rekapan.siswa.terlambat');
+    Route::get('/rekapan-siswa/terlambat/export-pdf', [RekapanController::class, 'exportSiswaTerlambatPdf'])->name('rekapan.siswa.terlambat.exportPdf');
+    Route::get('/rekapan-siswa/tanpa-wali-kelas', [RekapanController::class, 'indexSiswaTanpaWaliKelas'])->name('rekapan.siswa.tanpaWaliKelas');
+    Route::get('/rekapan-siswa/tanpa-wali-kelas/export-pdf', [RekapanController::class, 'exportSiswaTanpaWaliKelasPdf'])->name('rekapan.siswa.tanpaWaliKelas.exportPdf');
+
+    // Rekapan Khusus Guru
     Route::get('/rekapan-guru', [RekapanController::class, 'indexGuru'])->name('rekapan.indexGuru');
     Route::get('/rekapan-guru/export-pdf', [RekapanController::class, 'exportGuruPdf'])->name('rekapan.exportGuruPdf');
+    // ----------------------------------------------------
 
     // Insentif
     Route::get('/insentif', [InsentifController::class, 'index'])->name('insentif.index');
