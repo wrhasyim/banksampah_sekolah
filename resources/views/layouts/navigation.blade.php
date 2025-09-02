@@ -60,12 +60,16 @@
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
                         {{ __('Buku Kas') }}
                     </x-nav-link>
-                    
-                    @endif
-                    <div class="hidden sm:flex sm:items-center sm:ml-6">
+                   <div class="hidden sm:flex sm:items-center sm:ml-6">
     <x-dropdown align="right" width="48">
         <x-slot name="trigger">
             <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
+                
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" />
+                    <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z" />
+                </svg>
+                
                 <div>Laporan</div>
 
                 <div class="ml-1">
@@ -86,6 +90,8 @@
         </x-slot>
     </x-dropdown>
 </div>
+                    @endif
+                    
                     @if(Auth::user()->role !== 'admin')
                     <x-nav-link :href="route('buku-tabungan.index')" :active="request()->routeIs('buku-tabungan.index')">
                         {{ __('Buku Tabungan') }}
