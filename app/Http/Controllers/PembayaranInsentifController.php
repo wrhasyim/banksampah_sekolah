@@ -33,29 +33,27 @@ class PembayaranInsentifController extends Controller
      */
     public function store(Request $request)
     {
-        // Validasi untuk memastikan setidaknya satu wali kelas dipilih
         $request->validate([
-            'pembayaran' => 'required|array|min:1',
-            'pembayaran.*.kelas_id' => 'required|exists:kelas,id',
-            'pembayaran.*.jumlah' => 'required|numeric|min:1',
+            'pembayaran' => 'required|array',
         ], [
             'pembayaran.required' => 'Anda harus memilih setidaknya satu wali kelas untuk dibayar.',
-            'pembayaran.min' => 'Anda harus memilih setidaknya satu wali kelas untuk dibayar.'
         ]);
 
         DB::transaction(function () use ($request) {
             
-            // Loop HANYA pada data pembayaran yang dikirim dari form (yang dicentang)
-            foreach ($request->pembayaran as $bayar) {
+            $pembayaranDiproses = 0;
+
+            // Loop pada semua data pembayaran yang dikirim dari form
+            foreach ($request->pembayaran as $data) {
                 
-                // Pastikan data yang dikirim valid dan lengkap
-                if (isset($bayar['kelas_id']) && isset($bayar['jumlah'])) {
-                    $kelasId = $bayar['kelas_id'];
-                    $jumlahDibayar = $bayar['jumlah'];
+                // =================== LOGIKA KUNCI DI SINI ===================
+                // Proses HANYA jika checkbox 'status' ada dan nilainya 'bayar'
+                if (isset($data['status']) && $data['status'] === 'bayar') {
                     
+                    $kelasId = $data['kelas_id'];
+                    $jumlahDibayar = $data['jumlah'];
                     $kelas = Kelas::with('waliKelas')->find($kelasId);
 
-                    // Lanjutkan hanya jika kelas dan wali kelas ada
                     if ($kelas && $kelas->waliKelas) {
                         // 1. Buat catatan riwayat pembayaran
                         $pembayaran = PembayaranInsentif::create([
@@ -75,17 +73,31 @@ class PembayaranInsentifController extends Controller
                             'id_admin' => Auth::id(),
                         ]);
 
-                        // 3. Update status semua insentif yang terkait dengan kelas ini
+                        // 3. Update status semua insentif yang terkait
                         Insentif::where('kelas_id', $kelasId)
                             ->where('status_pembayaran', 'belum dibayar')
                             ->update([
                                 'status_pembayaran' => 'sudah dibayar',
                                 'pembayaran_insentif_id' => $pembayaran->id,
                             ]);
+                        
+                        $pembayaranDiproses++;
                     }
                 }
+                // =================== AKHIR LOGIKA KUNCI ===================
+            }
+
+            // Jika tidak ada checkbox yang dicentang sama sekali
+            if ($pembayaranDiproses === 0) {
+                // Batalkan transaksi dan kembalikan dengan pesan error
+                return back()->with('error', 'Tidak ada wali kelas yang dipilih untuk pembayaran.');
             }
         });
+
+        // Cek apakah ada pesan error dari dalam transaksi
+        if (session('error')) {
+            return redirect()->route('insentif.pembayaran')->with('error', session('error'));
+        }
 
         return redirect()->route('insentif.index')->with('success', 'Pembayaran insentif untuk wali kelas yang dipilih berhasil dicatat.');
     }

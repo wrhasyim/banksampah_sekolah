@@ -11,6 +11,7 @@
                 <div class="p-6 text-gray-900 dark:text-gray-100">
                     <h3 class="mb-6 text-lg font-semibold">Rekap Insentif Belum Dibayar</h3>
 
+                    {{-- Form dimulai di sini --}}
                     <form action="{{ route('insentif.bayar') }}" method="POST">
                         @csrf
                         <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
@@ -20,22 +21,25 @@
                                         <th scope="col" class="px-6 py-3">Kelas</th>
                                         <th scope="col" class="px-6 py-3">Wali Kelas</th>
                                         <th scope="col" class="px-6 py-3">Total Insentif</th>
-                                        <th scope="col" class="px-6 py-3">Aksi</th>
+                                        {{-- =================== PERUBAHAN 1: Ganti Aksi menjadi "Pilih" =================== --}}
+                                        <th scope="col" class="px-6 py-3 text-center">Pilih untuk Dibayar</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @forelse ($insentifPerKelas as $item)
-                                    <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                                    <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                                         <td class="px-6 py-4">{{ $item->kelas->nama_kelas ?? 'Kelas Dihapus' }}</td>
                                         <td class="px-6 py-4">{{ $item->kelas->waliKelas->nama_lengkap ?? 'Belum Diatur' }}</td>
                                         <td class="px-6 py-4 font-medium text-green-600">Rp {{ number_format($item->total_insentif, 0, ',', '.') }}</td>
-                                        <td class="px-6 py-4">
-                                            {{-- Hidden inputs to send data --}}
-                                            <input type="hidden" name="pembayaran[{{ $loop->index }}][kelas_id]" value="{{ $item->kelas_id }}">
-                                            <input type="hidden" name="pembayaran[{{ $loop->index }}][jumlah]" value="{{ $item->total_insentif }}">
-                                            <button type="submit" name="bayar_single" value="{{ $item->kelas_id }}" class="px-4 py-2 font-bold text-white bg-blue-500 rounded hover:bg-blue-700">
-                                                Bayar
-                                            </button>
+                                        
+                                        {{-- =================== PERUBAHAN 2: Ganti Tombol menjadi Checkbox =================== --}}
+                                        <td class="px-6 py-4 text-center">
+                                            {{-- Checkbox ini akan mengirim data hanya jika dicentang --}}
+                                            <input type="checkbox" name="pembayaran[{{ $item->kelas_id }}][status]" value="bayar" class="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                                            
+                                            {{-- Data ini akan ikut terkirim HANYA jika checkbox di atas dicentang --}}
+                                            <input type="hidden" name="pembayaran[{{ $item->kelas_id }}][jumlah]" value="{{ $item->total_insentif }}">
+                                            <input type="hidden" name="pembayaran[{{ $item->kelas_id }}][kelas_id]" value="{{ $item->kelas_id }}">
                                         </td>
                                     </tr>
                                     @empty
@@ -46,8 +50,18 @@
                                 </tbody>
                             </table>
                         </div>
-                        {{-- Optional: Add a "Pay All" button here --}}
+
+                        {{-- =================== PERUBAHAN 3: Tambahkan satu tombol submit di luar tabel =================== --}}
+                        <div class="flex justify-end mt-6">
+                            @if($insentifPerKelas->isNotEmpty())
+                                <x-primary-button>
+                                    {{ __('Bayar Insentif yang Dipilih') }}
+                                </x-primary-button>
+                            @endif
+                        </div>
                     </form>
+                    {{-- Form berakhir di sini --}}
+
                 </div>
             </div>
         </div>
