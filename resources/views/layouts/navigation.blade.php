@@ -48,9 +48,9 @@
                                 <x-dropdown-link :href="route('penjualan.index')">Penjualan Sampah</x-dropdown-link>
                                 <div class="border-t border-gray-200 dark:border-gray-600"></div>
                                 <x-dropdown-link :href="route('insentif.index')">Riwayat Insentif</x-dropdown-link>
-                                 <x-dropdown-link :href="route('insentif.rekap')" :active="request()->routeIs('insentif.rekap')">
-                        {{ __('Rekap Insentif') }}
-                    </x-dropdown-link>
+                                <x-dropdown-link :href="route('insentif.rekap')" :active="request()->routeIs('insentif.rekap')">
+                                    {{ __('Rekap Insentif') }}
+                                </x-dropdown-link>
                                 <x-dropdown-link :href="route('insentif.pembayaran')">Pembayaran Insentif</x-dropdown-link>
                             </x-slot>
                         </x-dropdown>
@@ -60,50 +60,52 @@
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
                         {{ __('Buku Kas') }}
                     </x-nav-link>
-                   <div class="hidden sm:flex sm:items-center sm:ml-6">
-    <x-dropdown align="right" width="48">
-        <x-slot name="trigger">
-            <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
-                
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" />
-                    <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z" />
-                </svg>
-                
-                <div>Laporan</div>
 
-                <div class="ml-1">
-                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                    </svg>
-                </div>
-            </button>
-        </x-slot>
+                    <div class="hidden sm:flex sm:items-center sm:ml-6">
+                        <x-dropdown align="right" width="48">
+                            <x-slot name="trigger">
+                                <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                                        <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" />
+                                        <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z" />
+                                    </svg>
+                                    <div>Laporan</div>
+                                    <div class="ml-1">
+                                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                        </svg>
+                                    </div>
+                                </button>
+                            </x-slot>
 
-        <x-slot name="content">
-            <x-dropdown-link :href="route('laporan.index')">
-                {{ __('Laporan Umum') }}
-            </x-dropdown-link>
-            <x-dropdown-link :href="route('rekapan.index')">
-                {{ __('Rekapan Siswa') }}
-            </x-dropdown-link>
-            {{-- ===== TAMBAHKAN BARIS INI ===== --}}
-            <x-dropdown-link :href="route('rekapan.indexGuru')">
-                {{ __('Rekapan Guru') }}
-            </x-dropdown-link>
-        </x-slot>
-    </x-dropdown>
-</div>
-<div class="hidden sm:flex sm:items-center sm:ml-6">
-    <a href="{{ route('nota.index') }}" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
-        
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v6a2 2 0 002 2h12a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm0 8H7v4h6v-4z" clip-rule="evenodd" />
-        </svg>
-        
-        Cetak Nota
-    </a>
-</div>
+                            {{-- ===== BLOK INI TELAH DIPERBAIKI ===== --}}
+                            <x-slot name="content">
+                                <x-dropdown-link :href="route('laporan.index')">
+                                    {{ __('Laporan Umum') }}
+                                </x-dropdown-link>
+                                <x-dropdown-link :href="route('rekapan.siswa.terlambat')">
+                                    {{ __('Rekapan Siswa Terlambat') }}
+                                </x-dropdown-link>
+                                <x-dropdown-link :href="route('rekapan.siswa.tanpaWaliKelas')">
+                                    {{ __('Rekapan Tanpa Wali Kelas') }}
+                                </x-dropdown-link>
+                                <x-dropdown-link :href="route('rekapan.indexGuru')">
+                                    {{ __('Rekapan Guru') }}
+                                </x-dropdown-link>
+                            </x-slot>
+                            {{-- ====================================== --}}
+                            
+                        </x-dropdown>
+                    </div>
+
+                    <div class="hidden sm:flex sm:items-center sm:ml-6">
+                        <a href="{{ route('nota.index') }}" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v6a2 2 0 002 2h12a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm0 8H7v4h6v-4z" clip-rule="evenodd" />
+                            </svg>
+                            Cetak Nota
+                        </a>
+                    </div>
                     @endif
                     
                     @if(Auth::user()->role !== 'admin')
@@ -135,7 +137,6 @@
                     </x-slot>
 
                     <x-slot name="content">
-                        {{-- PERUBAHAN DI SINI --}}
                         @if(Auth::user()->role === 'admin')
                         <x-dropdown-link :href="route('settings.index')">
                             {{ __('Pengaturan') }}
