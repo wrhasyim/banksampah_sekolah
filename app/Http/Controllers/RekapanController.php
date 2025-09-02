@@ -8,78 +8,72 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class RekapanController extends Controller
 {
+    // ... (Fungsi untuk rekapan siswa tidak berubah)
+
     /**
      * Menampilkan rekapan khusus untuk SISWA.
      */
-    public function index(Request $request)
+    public function indexSiswaTerlambat(Request $request)
     {
-        $querySiswa = function ($query) {
-            $query->whereHas('kelas', function ($q) {
-                $q->where('nama_kelas', 'not like', '%guru%');
-            });
-        };
-
         $setoranTerlambat = Setoran::with(['siswa.pengguna', 'siswa.kelas', 'jenisSampah'])
             ->where('status', 'terlambat')
-            ->whereHas('siswa', $querySiswa)
+            ->whereHas('siswa.kelas', fn($q) => $q->where('nama_kelas', 'not like', '%guru%'))
             ->latest()
-            ->paginate(5, ['*'], 'terlambat_page');
+            ->paginate(10);
 
+        return view('pages.rekapan.siswa-terlambat', compact('setoranTerlambat'));
+    }
+
+    public function indexSiswaTanpaWaliKelas(Request $request)
+    {
         $setoranTanpaWaliKelas = Setoran::with(['siswa.pengguna', 'siswa.kelas', 'jenisSampah'])
             ->where('status', 'normal')
             ->whereDoesntHave('insentif')
-            ->whereHas('siswa', $querySiswa)
+            ->whereHas('siswa.kelas', fn($q) => $q->where('nama_kelas', 'not like', '%guru%'))
             ->latest()
-            ->paginate(5, ['*'], 'tanpa_wali_kelas_page');
+            ->paginate(10);
 
-        return view('pages.rekapan.index', compact('setoranTerlambat', 'setoranTanpaWaliKelas'));
+        return view('pages.rekapan.siswa-tanpa-wali-kelas', compact('setoranTanpaWaliKelas'));
     }
-
-    /**
-     * Ekspor PDF untuk rekapan SISWA.
-     */
-    public function exportSiswaPdf()
+    
+    public function exportSiswaTerlambatPdf()
     {
-        $querySiswa = function ($query) {
-            $query->whereHas('kelas', function ($q) {
-                $q->where('nama_kelas', 'not like', '%guru%');
-            });
-        };
-
-        $data['setoranTerlambat'] = Setoran::with(['siswa.pengguna', 'siswa.kelas', 'jenisSampah'])
+        $data = Setoran::with(['siswa.pengguna', 'siswa.kelas', 'jenisSampah'])
             ->where('status', 'terlambat')
-            ->whereHas('siswa', $querySiswa)
+            ->whereHas('siswa.kelas', fn($q) => $q->where('nama_kelas', 'not like', '%guru%'))
             ->latest()->get();
 
-        $data['setoranTanpaWaliKelas'] = Setoran::with(['siswa.pengguna', 'siswa.kelas', 'jenisSampah'])
+        $pdf = Pdf::loadView('pages.rekapan.pdf.rekapan-terlambat-pdf', ['data' => $data]);
+        return $pdf->download('rekapan-siswa-terlambat-'.date('Y-m-d').'.pdf');
+    }
+
+    public function exportSiswaTanpaWaliKelasPdf()
+    {
+        $data = Setoran::with(['siswa.pengguna', 'siswa.kelas', 'jenisSampah'])
             ->where('status', 'normal')
             ->whereDoesntHave('insentif')
-            ->whereHas('siswa', $querySiswa)
+            ->whereHas('siswa.kelas', fn($q) => $q->where('nama_kelas', 'not like', '%guru%'))
             ->latest()->get();
 
-        $pdf = Pdf::loadView('pages.rekapan.rekapan-pdf', ['data' => $data, 'title' => 'Rekapan Khusus Siswa']);
-        return $pdf->download('rekapan-khusus-siswa-'.date('Y-m-d').'.pdf');
+        $pdf = Pdf::loadView('pages.rekapan.pdf.rekapan-tanpa-wali-kelas-pdf', ['data' => $data]);
+        return $pdf->download('rekapan-tanpa-wali-kelas-'.date('Y-m-d').'.pdf');
     }
 
-    // ===== BAGIAN REKAPAN GURU YANG DIPERBARUI =====
 
-    /**
-     * Menampilkan rekapan setoran GURU yang disederhanakan.
-     */
+    // ====== FUNGSI UNTUK REKAPAN GURU (TETAP SAMA) ======
+    
     public function indexGuru(Request $request)
     {
         $setoranGuru = Setoran::with(['siswa.pengguna', 'jenisSampah'])
-            ->whereHas('siswa.kelas', function ($q) {
-                $q->where('nama_kelas', 'like', '%guru%');
-            })
+            ->whereHas('siswa.kelas', fn($q) => $q->where('nama_kelas', 'like', '%guru%'))
             ->latest()
-            ->paginate(10); // Menampilkan 10 data per halaman
+            ->paginate(10);
 
         return view('pages.rekapan.rekapan-guru', compact('setoranGuru'));
     }
 
     /**
-     * Ekspor PDF untuk semua setoran GURU.
+     * Ekspor PDF untuk semua setoran GURU dengan rekapitulasi.
      */
     public function exportGuruPdf()
     {
@@ -90,7 +84,34 @@ class RekapanController extends Controller
             ->latest()
             ->get();
 
-        $pdf = Pdf::loadView('pages.rekapan.rekapan-guru-pdf', ['setoranGuru' => $setoranGuru]);
-        return $pdf->download('rekapan-setoran-guru-'.date('Y-m-d').'.pdf');
+        // Mengelompokkan data berdasarkan guru
+        $rekapData = [];
+        foreach ($setoranGuru as $setoran) {
+            $guruId = $setoran->siswa->id;
+            $namaGuru = $setoran->siswa->pengguna->nama_lengkap;
+
+            if (!isset($rekapData[$guruId])) {
+                $rekapData[$guruId] = [
+                    'nama_guru' => $namaGuru,
+                    'total_harga' => 0,
+                    'sampah' => [],
+                ];
+            }
+
+            $rekapData[$guruId]['total_harga'] += $setoran->total_harga;
+
+            $jenisSampah = $setoran->jenisSampah->nama_sampah;
+            $satuan = $setoran->jenisSampah->satuan;
+            if (!isset($rekapData[$guruId]['sampah'][$jenisSampah])) {
+                $rekapData[$guruId]['sampah'][$jenisSampah] = [
+                    'jumlah' => 0,
+                    'satuan' => $satuan,
+                ];
+            }
+            $rekapData[$guruId]['sampah'][$jenisSampah]['jumlah'] += $setoran->jumlah;
+        }
+
+        $pdf = Pdf::loadView('pages.rekapan.pdf.rekapan-guru-summary-pdf', ['rekapData' => $rekapData]);
+        return $pdf->download('rekapitulasi-setoran-guru-'.date('Y-m-d').'.pdf');
     }
 }
