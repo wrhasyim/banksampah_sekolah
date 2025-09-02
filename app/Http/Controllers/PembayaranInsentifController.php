@@ -9,10 +9,13 @@ use App\Models\Kelas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class PembayaranInsentifController extends Controller
 {
-    // Menampilkan halaman rekap & pembayaran
+    /**
+     * Menampilkan halaman rekapitulasi dan formulir pembayaran insentif.
+     */
     public function index()
     {
         $insentifPerKelas = Insentif::where('status_pembayaran', 'belum dibayar')
@@ -24,7 +27,9 @@ class PembayaranInsentifController extends Controller
         return view('pages.insentif.pembayaran', compact('insentifPerKelas'));
     }
 
-    // Memproses pembayaran
+    /**
+     * Menyimpan data pembayaran insentif.
+     */
     public function store(Request $request)
     {
         $request->validate([
@@ -37,26 +42,34 @@ class PembayaranInsentifController extends Controller
             foreach ($request->pembayaran as $bayar) {
                 $kelasId = $bayar['kelas_id'];
                 $jumlahDibayar = $bayar['jumlah'];
-                $kelas = Kelas::find($kelasId);
+                
+                // ===== PERUBAHAN 1: Memuat relasi 'waliKelas' saja =====
+                $kelas = Kelas::with('waliKelas')->find($kelasId);
+
+                if (!$kelas || !$kelas->waliKelas) {
+                    // Lompati jika kelas atau wali kelas tidak ditemukan
+                    continue;
+                }
 
                 // 1. Buat catatan riwayat pembayaran
                 $pembayaran = PembayaranInsentif::create([
                     'id_admin' => Auth::id(),
+                    'id_wali_kelas' => $kelas->id_wali_kelas,
                     'tanggal_pembayaran' => now(),
-                    'total_dibayar' => $jumlahDibayar,
-                    'keterangan' => 'Pembayaran insentif untuk Wali Kelas: ' . ($kelas->waliKelas->nama_lengkap ?? 'N/A'),
+                      'total_dibayar' => $jumlahDibayar, // <-- UBAH NAMA KOLOM DI SINI
                 ]);
 
                 // 2. Catat sebagai pengeluaran di Buku Kas
                 BukuKas::create([
                     'tanggal' => now(),
-                    'deskripsi' => 'Pembayaran Insentif Wali Kelas: ' . ($kelas->nama_kelas ?? 'Kelas Dihapus'),
+                    // ===== PERUBAHAN 2: Akses nama_lengkap langsung dari waliKelas =====
+                    'deskripsi' => 'Pembayaran Insentif Wali Kelas: ' . ($kelas->waliKelas->nama_lengkap ?? 'N/A'),
                     'tipe' => 'pengeluaran',
                     'jumlah' => $jumlahDibayar,
                     'id_admin' => Auth::id(),
                 ]);
 
-                // 3. Update status insentif yang terkait
+                // 3. Update status semua insentif yang terkait
                 Insentif::where('kelas_id', $kelasId)
                     ->where('status_pembayaran', 'belum dibayar')
                     ->update([
@@ -69,20 +82,3 @@ class PembayaranInsentifController extends Controller
         return redirect()->route('insentif.index')->with('success', 'Pembayaran insentif berhasil dicatat.');
     }
 }
-
-// Buat juga model untuk PembayaranInsentif
-// Buat file app/Models/PembayaranInsentif.php
-/*
-<?php
-
-namespace App\Models;
-
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-
-class PembayaranInsentif extends Model
-{
-    use HasFactory;
-    protected $fillable = ['id_admin', 'tanggal_pembayaran', 'total_dibayar', 'keterangan'];
-}
-*/
