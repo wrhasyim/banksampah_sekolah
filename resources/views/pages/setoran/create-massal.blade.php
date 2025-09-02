@@ -25,7 +25,8 @@
                         <div class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
-                                    </thead>
+                                    {{-- Header akan diisi oleh JavaScript --}}
+                                </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
                                     <tr>
                                         <td id="initial-message" class="text-center p-4">
@@ -67,18 +68,19 @@
                 const isGuruClass = namaKelas && namaKelas.toLowerCase().includes('guru');
                 const activeJenisSampah = isGuruClass ? jenisSampahGuru : jenisSampahSiswa;
                 
+                // Menyesuaikan colspan untuk pesan loading/error (+2 karena ada kolom Nama dan Terlambat)
                 tableHead.innerHTML = '';
-                tableBody.innerHTML = `<tr><td colspan="${activeJenisSampah.length + 1}" class="text-center p-4">Memuat data siswa...</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="${activeJenisSampah.length + 2}" class="text-center p-4">Memuat data siswa...</td></tr>`;
 
                 if (kelasId) {
                     // 1. Bangun Header Tabel
                     let headerRow = '<tr>';
                     headerRow += '<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-10">Nama Siswa</th>';
                     activeJenisSampah.forEach(sampah => {
-                        // --- PERUBAHAN DI SINI ---
-                        // Menggunakan 'sampah.satuan' untuk menampilkan unit dinamis
                         headerRow += `<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">${sampah.nama_sampah} (${sampah.satuan})</th>`;
                     });
+                    // ===== PERUBAHAN 1: Tambahkan header kolom "Terlambat" =====
+                    headerRow += '<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Terlambat</th>';
                     headerRow += '</tr>';
                     tableHead.innerHTML = headerRow;
 
@@ -94,22 +96,28 @@
                                     
                                     activeJenisSampah.forEach(sampah => {
                                         bodyRow += `<td class="px-6 py-4 whitespace-nowrap">
-                                                    <input type="number" step="0.01" min="0" 
-                                                           name="setoran[${siswa.id}][${sampah.id}]" 
-                                                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                                           placeholder="0">
-                                                </td>`;
+                                                        <input type="number" step="0.01" min="0" 
+                                                               name="setoran[${siswa.id}][${sampah.id}]" 
+                                                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                                               placeholder="0">
+                                                    </td>`;
                                     });
+                                    // ===== PERUBAHAN 2: Tambahkan sel untuk checkbox "Terlambat" =====
+                                    bodyRow += `<td class="px-6 py-4 whitespace-nowrap text-center">
+                                                    <input type="checkbox" name="terlambat[]" value="${siswa.id}" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500">
+                                                </td>`;
                                     bodyRow += '</tr>';
                                     tableBody.innerHTML += bodyRow;
                                 });
                             } else {
-                                tableBody.innerHTML = `<tr><td colspan="${activeJenisSampah.length + 1}" class="text-center p-4">Tidak ada siswa di kelas ini.</td></tr>`;
+                                // Menyesuaikan colspan
+                                tableBody.innerHTML = `<tr><td colspan="${activeJenisSampah.length + 2}" class="text-center p-4">Tidak ada siswa di kelas ini.</td></tr>`;
                             }
                         })
                         .catch(error => {
                             console.error('Error fetching siswa:', error);
-                            tableBody.innerHTML = `<tr><td colspan="${activeJenisSampah.length + 1}" class="text-center p-4">Gagal memuat data siswa. Pastikan route API sudah benar.</td></tr>`;
+                            // Menyesuaikan colspan
+                            tableBody.innerHTML = `<tr><td colspan="${activeJenisSampah.length + 2}" class="text-center p-4">Gagal memuat data siswa. Pastikan route API sudah benar.</td></tr>`;
                         });
                 } else {
                     tableHead.innerHTML = '';

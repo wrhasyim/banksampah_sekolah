@@ -44,35 +44,38 @@ class SetoranController extends Controller
     }
 
     public function store(Request $request)
-    {
-        $request->validate([
-            'siswa_id' => 'required|exists:siswa,id',
-            'sampah' => 'required|array|min:1',
-            'sampah.*.jenis_sampah_id' => 'required|exists:jenis_sampah,id',
-            'sampah.*.jumlah' => 'required|numeric|min:0.1',
-        ]);
+{
+    $request->validate([
+        'siswa_id' => 'required|exists:siswa,id',
+        'sampah' => 'required|array|min:1',
+        'sampah.*.jenis_sampah_id' => 'required|exists:jenis_sampah,id',
+        'sampah.*.jumlah' => 'required|numeric|min:0.1',
+    ]);
 
-        DB::transaction(function () use ($request) {
-            $totalHargaKeseluruhan = 0;
-            $siswa = Siswa::with('kelas', 'pengguna')->find($request->siswa_id);
+    DB::transaction(function () use ($request) {
+        $totalHargaKeseluruhan = 0;
+        $siswa = Siswa::with('kelas', 'pengguna')->find($request->siswa_id);
 
-            $settings = Setting::pluck('value', 'key');
-            $persentaseWaliKelas = $settings['persentase_wali_kelas'] ?? 0;
+        $settings = Setting::pluck('value', 'key');
+        $persentaseWaliKelas = $settings['persentase_wali_kelas'] ?? 0;
 
-            foreach ($request->sampah as $item) {
-                $jenisSampah = JenisSampah::find($item['jenis_sampah_id']);
-                $totalHarga = $jenisSampah->harga_per_satuan * $item['jumlah'];
-                $totalHargaKeseluruhan += $totalHarga;
+        foreach ($request->sampah as $item) {
+            $jenisSampah = JenisSampah::find($item['jenis_sampah_id']);
+            $totalHarga = $jenisSampah->harga_per_satuan * $item['jumlah'];
+            $totalHargaKeseluruhan += $totalHarga;
 
-                $setoran = Setoran::create([
-                    'siswa_id' => $request->siswa_id,
-                    'jenis_sampah_id' => $item['jenis_sampah_id'],
-                    'jumlah' => $item['jumlah'],
-                    'total_harga' => $totalHarga,
-                ]);
+            $setoran = Setoran::create([
+                'siswa_id' => $request->siswa_id,
+                'jenis_sampah_id' => $item['jenis_sampah_id'],
+                'jumlah' => $item['jumlah'],
+                'total_harga' => $totalHarga,
+                'status' => $request->has('is_terlambat') ? 'terlambat' : 'normal', // Tambahkan baris ini
+            ]);
 
-                $jenisSampah->increment('stok', $item['jumlah']);
+            $jenisSampah->increment('stok', $item['jumlah']);
 
+            // Insentif hanya jika setoran TIDAK terlambat
+            if (!$request->has('is_terlambat')) {
                 if ($persentaseWaliKelas > 0 && $siswa->kelas && $siswa->kelas->id_wali_kelas) {
                     $insentifWaliKelas = $totalHarga * ($persentaseWaliKelas / 100);
 
@@ -85,11 +88,12 @@ class SetoranController extends Controller
                     }
                 }
             }
-            $siswa->increment('saldo', $totalHargaKeseluruhan);
-        });
+        }
+        $siswa->increment('saldo', $totalHargaKeseluruhan);
+    });
 
-        return redirect()->route('setoran.index')->with('success', 'Setoran berhasil ditambahkan.');
-    }
+    return redirect()->route('setoran.index')->with('success', 'Setoran berhasil ditambahkan.');
+}
 
     public function getSiswa(Request $request)
     {
@@ -156,39 +160,47 @@ class SetoranController extends Controller
     }
 
     public function storeMassal(Request $request)
-    {
-        $request->validate([
-            'setoran' => 'required|array',
-            'setoran.*.*' => 'nullable|numeric|min:0',
-        ]);
+{
+    $request->validate([
+        'setoran' => 'required|array',
+        'setoran.*.*' => 'nullable|numeric|min:0',
+        'terlambat' => 'nullable|array', // Tambahkan validasi untuk input terlambat
+        'terlambat.*' => 'integer|exists:siswa,id' // Pastikan isinya adalah ID siswa yang valid
+    ]);
 
-        DB::transaction(function () use ($request) {
-            $settings = Setting::pluck('value', 'key');
-            $persentaseWaliKelas = $settings['persentase_wali_kelas'] ?? 0;
+    DB::transaction(function () use ($request) {
+        $settings = Setting::pluck('value', 'key');
+        $persentaseWaliKelas = $settings['persentase_wali_kelas'] ?? 0;
 
-            foreach ($request->setoran as $siswa_id => $sampahData) {
-                $totalHargaKeseluruhanSiswa = 0;
-                $siswa = Siswa::with('kelas', 'pengguna')->find($siswa_id);
+        foreach ($request->setoran as $siswa_id => $sampahData) {
+            $totalHargaKeseluruhanSiswa = 0;
+            $siswa = Siswa::with('kelas', 'pengguna')->find($siswa_id);
 
-                if (!$siswa) continue;
+            if (!$siswa) continue;
 
-                foreach ($sampahData as $jenis_sampah_id => $jumlah) {
-                    if (!empty($jumlah) && $jumlah > 0) {
-                        $jenisSampah = JenisSampah::find($jenis_sampah_id);
-                        if (!$jenisSampah) continue;
+            // Cek apakah siswa ini ditandai terlambat
+            $is_terlambat = in_array($siswa_id, $request->terlambat ?? []);
 
-                        $totalHarga = $jumlah * $jenisSampah->harga_per_satuan;
-                        $totalHargaKeseluruhanSiswa += $totalHarga;
+            foreach ($sampahData as $jenis_sampah_id => $jumlah) {
+                if (!empty($jumlah) && $jumlah > 0) {
+                    $jenisSampah = JenisSampah::find($jenis_sampah_id);
+                    if (!$jenisSampah) continue;
 
-                        $setoran = Setoran::create([
-                            'siswa_id' => $siswa_id,
-                            'jenis_sampah_id' => $jenis_sampah_id,
-                            'jumlah' => $jumlah,
-                            'total_harga' => $totalHarga,
-                        ]);
+                    $totalHarga = $jumlah * $jenisSampah->harga_per_satuan;
+                    $totalHargaKeseluruhanSiswa += $totalHarga;
 
-                        $jenisSampah->increment('stok', $jumlah);
+                    $setoran = Setoran::create([
+                        'siswa_id' => $siswa_id,
+                        'jenis_sampah_id' => $jenis_sampah_id,
+                        'jumlah' => $jumlah,
+                        'total_harga' => $totalHarga,
+                        'status' => $is_terlambat ? 'terlambat' : 'normal', // Tambahkan status
+                    ]);
 
+                    $jenisSampah->increment('stok', $jumlah);
+
+                    // Insentif hanya jika setoran TIDAK terlambat
+                    if (!$is_terlambat) {
                         if ($persentaseWaliKelas > 0 && $siswa->kelas && $siswa->kelas->id_wali_kelas) {
                             $insentifWaliKelas = $totalHarga * ($persentaseWaliKelas / 100);
 
@@ -202,17 +214,18 @@ class SetoranController extends Controller
                         }
                     }
                 }
+            }
 
-                if ($totalHargaKeseluruhanSiswa > 0) {
-                    $siswa->increment('saldo', $totalHargaKeseluruhanSiswa);
-                    $points = floor($totalHargaKeseluruhanSiswa / 1000);
-                    if ($points > 0) {
-                        $siswa->increment('points', $points);
-                    }
+            if ($totalHargaKeseluruhanSiswa > 0) {
+                $siswa->increment('saldo', $totalHargaKeseluruhanSiswa);
+                $points = floor($totalHargaKeseluruhanSiswa / 1000);
+                if ($points > 0) {
+                    $siswa->increment('points', $points);
                 }
             }
-        });
+        }
+    });
 
-        return redirect()->route('setoran.index')->with('success', 'Setoran massal berhasil disimpan.');
-    }
+    return redirect()->route('setoran.index')->with('success', 'Setoran massal berhasil disimpan.');
+}
 }

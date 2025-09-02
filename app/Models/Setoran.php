@@ -12,7 +12,7 @@ class Setoran extends Model
     protected $table = 'setoran';
 
     // PERBAIKAN: Mengganti 'id_siswa' menjadi 'siswa_id'
-    protected $fillable = ['siswa_id', 'jenis_sampah_id', 'jumlah', 'total_harga', 'id_admin'];
+    protected $fillable = ['siswa_id', 'jenis_sampah_id', 'jumlah', 'total_harga', 'id_admin', 'status', 'created_at', 'updated_at'];
 
     public function siswa()
     {
