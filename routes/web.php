@@ -58,6 +58,9 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
         Route::post('/import', [SetoranController::class, 'import'])->name('import');
         Route::get('/create-massal', [SetoranController::class, 'createMassal'])->name('create.massal');
         Route::post('/store-massal', [SetoranController::class, 'storeMassal'])->name('store.massal');
+        // --- RUTE BARU UNTUK EDIT MASSAL ---
+        Route::get('/edit-massal', [SetoranController::class, 'editMassal'])->name('edit.massal');
+        Route::post('/update-massal', [SetoranController::class, 'updateMassal'])->name('update.massal');
     });
     Route::resource('setoran', SetoranController::class);
 
@@ -109,8 +112,16 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::get('/leaderboard', [LeaderboardController::class, 'index'])->name('leaderboard.index');
     Route::get('/nota', [NotaController::class, 'index'])->name('nota.index');
     Route::post('/nota/cetak', [NotaController::class, 'cetak'])->name('nota.cetak');
-    Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
-    Route::post('settings', [SettingController::class, 'update'])->name('settings.update');
+
+    // Grup untuk Pengaturan, Backup, dan Restore
+    Route::prefix('settings')->name('settings.')->group(function () {
+        Route::get('/', [SettingController::class, 'index'])->name('index');
+        Route::post('/update', [SettingController::class, 'update'])->name('update');
+        Route::post('/backup', [SettingController::class, 'backup'])->name('backup');
+        Route::post('/restore', [SettingController::class, 'restore'])->name('restore');
+        Route::get('/backup/download/{filename}', [SettingController::class, 'downloadBackup'])->name('backup.download');
+        Route::delete('/backup/delete/{filename}', [SettingController::class, 'deleteBackup'])->name('backup.delete');
+    });
 
     // Data untuk Chart (API-like)
     Route::get('/dashboard/chart-data', [DashboardController::class, 'getChartData'])->name('dashboard.chart.data');
