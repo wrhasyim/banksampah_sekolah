@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Waktu pembuatan: 02 Sep 2025 pada 15.04
--- Versi server: 10.4.32-MariaDB
--- Versi PHP: 8.2.12
+-- Generation Time: Sep 03, 2025 at 06:02 AM
+-- Server version: 10.4.32-MariaDB
+-- PHP Version: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -24,7 +24,7 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `badges`
+-- Table structure for table `badges`
 --
 
 CREATE TABLE `badges` (
@@ -40,7 +40,7 @@ CREATE TABLE `badges` (
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `badge_siswa`
+-- Table structure for table `badge_siswa`
 --
 
 CREATE TABLE `badge_siswa` (
@@ -54,7 +54,7 @@ CREATE TABLE `badge_siswa` (
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `buku_kas`
+-- Table structure for table `buku_kas`
 --
 
 CREATE TABLE `buku_kas` (
@@ -73,7 +73,7 @@ CREATE TABLE `buku_kas` (
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `cache`
+-- Table structure for table `cache`
 --
 
 CREATE TABLE `cache` (
@@ -85,7 +85,7 @@ CREATE TABLE `cache` (
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `cache_locks`
+-- Table structure for table `cache_locks`
 --
 
 CREATE TABLE `cache_locks` (
@@ -97,7 +97,7 @@ CREATE TABLE `cache_locks` (
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `detail_penjualan`
+-- Table structure for table `detail_penjualan`
 --
 
 CREATE TABLE `detail_penjualan` (
@@ -113,7 +113,7 @@ CREATE TABLE `detail_penjualan` (
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `insentifs`
+-- Table structure for table `insentifs`
 --
 
 CREATE TABLE `insentifs` (
@@ -128,7 +128,7 @@ CREATE TABLE `insentifs` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data untuk tabel `insentifs`
+-- Dumping data for table `insentifs`
 --
 
 INSERT INTO `insentifs` (`id`, `setoran_id`, `kelas_id`, `jumlah_insentif`, `status_pembayaran`, `created_at`, `updated_at`, `pembayaran_insentif_id`) VALUES
@@ -463,7 +463,7 @@ INSERT INTO `insentifs` (`id`, `setoran_id`, `kelas_id`, `jumlah_insentif`, `sta
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `jenis_sampah`
+-- Table structure for table `jenis_sampah`
 --
 
 CREATE TABLE `jenis_sampah` (
@@ -478,7 +478,7 @@ CREATE TABLE `jenis_sampah` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data untuk tabel `jenis_sampah`
+-- Dumping data for table `jenis_sampah`
 --
 
 INSERT INTO `jenis_sampah` (`id`, `nama_sampah`, `status`, `satuan`, `harga_per_satuan`, `stok`, `created_at`, `updated_at`) VALUES
@@ -486,12 +486,14 @@ INSERT INTO `jenis_sampah` (`id`, `nama_sampah`, `status`, `satuan`, `harga_per_
 (2, 'Gelas Plastik', 'aktif', 'pcs', 10.00, 1628, '2025-09-01 04:23:07', '2025-09-02 13:04:38'),
 (3, 'Kardus', 'aktif', 'kg', 1500.00, 0, '2025-09-01 04:23:07', '2025-09-01 06:00:58'),
 (4, 'Botol Plastik Guru', 'aktif', 'pcs', 42.00, 138, '2025-09-01 13:59:40', '2025-09-01 14:02:35'),
-(5, 'Gelas Plastik Guru', 'aktif', 'pcs', 15.00, 23, '2025-09-01 13:59:51', '2025-09-01 14:02:35');
+(5, 'Gelas Plastik Guru', 'aktif', 'pcs', 15.00, 23, '2025-09-01 13:59:51', '2025-09-01 14:02:35'),
+(6, 'Botol Plastik (warna)', 'aktif', 'pcs', 16.00, 0, '2025-09-03 03:54:10', '2025-09-03 03:54:10'),
+(7, 'Gelas Plastik (warna)', 'aktif', 'pcs', 6.00, 0, '2025-09-03 03:54:24', '2025-09-03 03:54:24');
 
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `jobs`
+-- Table structure for table `jobs`
 --
 
 CREATE TABLE `jobs` (
@@ -507,7 +509,7 @@ CREATE TABLE `jobs` (
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `kategori_transaksi`
+-- Table structure for table `kategori_transaksi`
 --
 
 CREATE TABLE `kategori_transaksi` (
@@ -519,7 +521,7 @@ CREATE TABLE `kategori_transaksi` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data untuk tabel `kategori_transaksi`
+-- Dumping data for table `kategori_transaksi`
 --
 
 INSERT INTO `kategori_transaksi` (`id`, `nama_kategori`, `tipe`, `created_at`, `updated_at`) VALUES
@@ -531,7 +533,7 @@ INSERT INTO `kategori_transaksi` (`id`, `nama_kategori`, `tipe`, `created_at`, `
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `kelas`
+-- Table structure for table `kelas`
 --
 
 CREATE TABLE `kelas` (
@@ -543,7 +545,7 @@ CREATE TABLE `kelas` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data untuk tabel `kelas`
+-- Dumping data for table `kelas`
 --
 
 INSERT INTO `kelas` (`id`, `nama_kelas`, `created_at`, `updated_at`, `id_wali_kelas`) VALUES
@@ -578,7 +580,7 @@ INSERT INTO `kelas` (`id`, `nama_kelas`, `created_at`, `updated_at`, `id_wali_ke
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `migrations`
+-- Table structure for table `migrations`
 --
 
 CREATE TABLE `migrations` (
@@ -588,7 +590,7 @@ CREATE TABLE `migrations` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data untuk tabel `migrations`
+-- Dumping data for table `migrations`
 --
 
 INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
@@ -627,7 +629,7 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `pembayaran_insentifs`
+-- Table structure for table `pembayaran_insentifs`
 --
 
 CREATE TABLE `pembayaran_insentifs` (
@@ -644,7 +646,7 @@ CREATE TABLE `pembayaran_insentifs` (
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `penarikan`
+-- Table structure for table `penarikan`
 --
 
 CREATE TABLE `penarikan` (
@@ -660,7 +662,7 @@ CREATE TABLE `penarikan` (
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `pengguna`
+-- Table structure for table `pengguna`
 --
 
 CREATE TABLE `pengguna` (
@@ -674,7 +676,7 @@ CREATE TABLE `pengguna` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data untuk tabel `pengguna`
+-- Dumping data for table `pengguna`
 --
 
 INSERT INTO `pengguna` (`id`, `nama_lengkap`, `username`, `password`, `role`, `created_at`, `updated_at`) VALUES
@@ -1525,7 +1527,7 @@ INSERT INTO `pengguna` (`id`, `nama_lengkap`, `username`, `password`, `role`, `c
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `penjualan`
+-- Table structure for table `penjualan`
 --
 
 CREATE TABLE `penjualan` (
@@ -1541,7 +1543,7 @@ CREATE TABLE `penjualan` (
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `personal_access_tokens`
+-- Table structure for table `personal_access_tokens`
 --
 
 CREATE TABLE `personal_access_tokens` (
@@ -1560,7 +1562,7 @@ CREATE TABLE `personal_access_tokens` (
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `sessions`
+-- Table structure for table `sessions`
 --
 
 CREATE TABLE `sessions` (
@@ -1573,16 +1575,16 @@ CREATE TABLE `sessions` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data untuk tabel `sessions`
+-- Dumping data for table `sessions`
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('9O2FRipWgDDMZGCSOono6txN4tWu7f2nf0Ou7J6j', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiQm1mSXJ4R3RsSUE2MTFUclZwNzlyNTI5Vjh5MFVobDdZcWJjaXB3cCI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MzA6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9pbnNlbnRpZiI7fXM6NTA6ImxvZ2luX3dlYl81OWJhMzZhZGRjMmIyZjk0MDE1ODBmMDE0YzdmNThlYTRlMzA5ODlkIjtpOjE7fQ==', 1756818283);
+('cCpsWsiH3nrlUFn5nxGkfuH8OePY89JdoX27EePk', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoidVhWdzRkQkpibXQ1aWpvUjNscktFVlJTaXR1Qjg4TlpvZTZYd29uVSI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MzQ6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9qZW5pcy1zYW1wYWgiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX1zOjUwOiJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI7aToxO30=', 1756871665);
 
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `setoran`
+-- Table structure for table `setoran`
 --
 
 CREATE TABLE `setoran` (
@@ -1597,7 +1599,7 @@ CREATE TABLE `setoran` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data untuk tabel `setoran`
+-- Dumping data for table `setoran`
 --
 
 INSERT INTO `setoran` (`id`, `siswa_id`, `jenis_sampah_id`, `jumlah`, `total_harga`, `created_at`, `updated_at`, `status`) VALUES
@@ -2011,7 +2013,7 @@ INSERT INTO `setoran` (`id`, `siswa_id`, `jenis_sampah_id`, `jumlah`, `total_har
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `settings`
+-- Table structure for table `settings`
 --
 
 CREATE TABLE `settings` (
@@ -2023,7 +2025,7 @@ CREATE TABLE `settings` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data untuk tabel `settings`
+-- Dumping data for table `settings`
 --
 
 INSERT INTO `settings` (`id`, `key`, `value`, `created_at`, `updated_at`) VALUES
@@ -2035,7 +2037,7 @@ INSERT INTO `settings` (`id`, `key`, `value`, `created_at`, `updated_at`) VALUES
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `siswa`
+-- Table structure for table `siswa`
 --
 
 CREATE TABLE `siswa` (
@@ -2050,7 +2052,7 @@ CREATE TABLE `siswa` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data untuk tabel `siswa`
+-- Dumping data for table `siswa`
 --
 
 INSERT INTO `siswa` (`id`, `id_pengguna`, `id_kelas`, `nis`, `saldo`, `points`, `created_at`, `updated_at`) VALUES
@@ -2901,13 +2903,13 @@ INSERT INTO `siswa` (`id`, `id_pengguna`, `id_kelas`, `nis`, `saldo`, `points`, 
 --
 
 --
--- Indeks untuk tabel `badges`
+-- Indexes for table `badges`
 --
 ALTER TABLE `badges`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indeks untuk tabel `badge_siswa`
+-- Indexes for table `badge_siswa`
 --
 ALTER TABLE `badge_siswa`
   ADD PRIMARY KEY (`id`),
@@ -2915,7 +2917,7 @@ ALTER TABLE `badge_siswa`
   ADD KEY `badge_siswa_badge_id_foreign` (`badge_id`);
 
 --
--- Indeks untuk tabel `buku_kas`
+-- Indexes for table `buku_kas`
 --
 ALTER TABLE `buku_kas`
   ADD PRIMARY KEY (`id`),
@@ -2923,19 +2925,19 @@ ALTER TABLE `buku_kas`
   ADD KEY `buku_kas_id_kategori_foreign` (`id_kategori`);
 
 --
--- Indeks untuk tabel `cache`
+-- Indexes for table `cache`
 --
 ALTER TABLE `cache`
   ADD PRIMARY KEY (`key`);
 
 --
--- Indeks untuk tabel `cache_locks`
+-- Indexes for table `cache_locks`
 --
 ALTER TABLE `cache_locks`
   ADD PRIMARY KEY (`key`);
 
 --
--- Indeks untuk tabel `detail_penjualan`
+-- Indexes for table `detail_penjualan`
 --
 ALTER TABLE `detail_penjualan`
   ADD PRIMARY KEY (`id`),
@@ -2943,7 +2945,7 @@ ALTER TABLE `detail_penjualan`
   ADD KEY `detail_penjualan_id_jenis_sampah_foreign` (`id_jenis_sampah`);
 
 --
--- Indeks untuk tabel `insentifs`
+-- Indexes for table `insentifs`
 --
 ALTER TABLE `insentifs`
   ADD PRIMARY KEY (`id`),
@@ -2952,39 +2954,39 @@ ALTER TABLE `insentifs`
   ADD KEY `insentifs_pembayaran_insentif_id_foreign` (`pembayaran_insentif_id`);
 
 --
--- Indeks untuk tabel `jenis_sampah`
+-- Indexes for table `jenis_sampah`
 --
 ALTER TABLE `jenis_sampah`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indeks untuk tabel `jobs`
+-- Indexes for table `jobs`
 --
 ALTER TABLE `jobs`
   ADD PRIMARY KEY (`id`),
   ADD KEY `jobs_queue_index` (`queue`);
 
 --
--- Indeks untuk tabel `kategori_transaksi`
+-- Indexes for table `kategori_transaksi`
 --
 ALTER TABLE `kategori_transaksi`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indeks untuk tabel `kelas`
+-- Indexes for table `kelas`
 --
 ALTER TABLE `kelas`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `kelas_id_wali_kelas_unique` (`id_wali_kelas`);
 
 --
--- Indeks untuk tabel `migrations`
+-- Indexes for table `migrations`
 --
 ALTER TABLE `migrations`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indeks untuk tabel `pembayaran_insentifs`
+-- Indexes for table `pembayaran_insentifs`
 --
 ALTER TABLE `pembayaran_insentifs`
   ADD PRIMARY KEY (`id`),
@@ -2992,7 +2994,7 @@ ALTER TABLE `pembayaran_insentifs`
   ADD KEY `pembayaran_insentifs_id_wali_kelas_foreign` (`id_wali_kelas`);
 
 --
--- Indeks untuk tabel `penarikan`
+-- Indexes for table `penarikan`
 --
 ALTER TABLE `penarikan`
   ADD PRIMARY KEY (`id`),
@@ -3000,21 +3002,21 @@ ALTER TABLE `penarikan`
   ADD KEY `penarikan_id_kelas_foreign` (`id_kelas`);
 
 --
--- Indeks untuk tabel `pengguna`
+-- Indexes for table `pengguna`
 --
 ALTER TABLE `pengguna`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `pengguna_username_unique` (`username`);
 
 --
--- Indeks untuk tabel `penjualan`
+-- Indexes for table `penjualan`
 --
 ALTER TABLE `penjualan`
   ADD PRIMARY KEY (`id`),
   ADD KEY `penjualan_id_admin_foreign` (`id_admin`);
 
 --
--- Indeks untuk tabel `personal_access_tokens`
+-- Indexes for table `personal_access_tokens`
 --
 ALTER TABLE `personal_access_tokens`
   ADD PRIMARY KEY (`id`),
@@ -3023,7 +3025,7 @@ ALTER TABLE `personal_access_tokens`
   ADD KEY `personal_access_tokens_expires_at_index` (`expires_at`);
 
 --
--- Indeks untuk tabel `sessions`
+-- Indexes for table `sessions`
 --
 ALTER TABLE `sessions`
   ADD PRIMARY KEY (`id`),
@@ -3031,7 +3033,7 @@ ALTER TABLE `sessions`
   ADD KEY `sessions_last_activity_index` (`last_activity`);
 
 --
--- Indeks untuk tabel `setoran`
+-- Indexes for table `setoran`
 --
 ALTER TABLE `setoran`
   ADD PRIMARY KEY (`id`),
@@ -3039,14 +3041,14 @@ ALTER TABLE `setoran`
   ADD KEY `setoran_jenis_sampah_id_foreign` (`jenis_sampah_id`);
 
 --
--- Indeks untuk tabel `settings`
+-- Indexes for table `settings`
 --
 ALTER TABLE `settings`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `settings_key_unique` (`key`);
 
 --
--- Indeks untuk tabel `siswa`
+-- Indexes for table `siswa`
 --
 ALTER TABLE `siswa`
   ADD PRIMARY KEY (`id`),
@@ -3055,144 +3057,144 @@ ALTER TABLE `siswa`
   ADD KEY `siswa_id_kelas_foreign` (`id_kelas`);
 
 --
--- AUTO_INCREMENT untuk tabel yang dibuang
+-- AUTO_INCREMENT for dumped tables
 --
 
 --
--- AUTO_INCREMENT untuk tabel `badges`
+-- AUTO_INCREMENT for table `badges`
 --
 ALTER TABLE `badges`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT untuk tabel `badge_siswa`
+-- AUTO_INCREMENT for table `badge_siswa`
 --
 ALTER TABLE `badge_siswa`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT untuk tabel `buku_kas`
+-- AUTO_INCREMENT for table `buku_kas`
 --
 ALTER TABLE `buku_kas`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT untuk tabel `detail_penjualan`
+-- AUTO_INCREMENT for table `detail_penjualan`
 --
 ALTER TABLE `detail_penjualan`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT untuk tabel `insentifs`
+-- AUTO_INCREMENT for table `insentifs`
 --
 ALTER TABLE `insentifs`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=358;
 
 --
--- AUTO_INCREMENT untuk tabel `jenis_sampah`
+-- AUTO_INCREMENT for table `jenis_sampah`
 --
 ALTER TABLE `jenis_sampah`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
--- AUTO_INCREMENT untuk tabel `jobs`
+-- AUTO_INCREMENT for table `jobs`
 --
 ALTER TABLE `jobs`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT untuk tabel `kategori_transaksi`
+-- AUTO_INCREMENT for table `kategori_transaksi`
 --
 ALTER TABLE `kategori_transaksi`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
--- AUTO_INCREMENT untuk tabel `kelas`
+-- AUTO_INCREMENT for table `kelas`
 --
 ALTER TABLE `kelas`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
 
 --
--- AUTO_INCREMENT untuk tabel `migrations`
+-- AUTO_INCREMENT for table `migrations`
 --
 ALTER TABLE `migrations`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
 
 --
--- AUTO_INCREMENT untuk tabel `pembayaran_insentifs`
+-- AUTO_INCREMENT for table `pembayaran_insentifs`
 --
 ALTER TABLE `pembayaran_insentifs`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT untuk tabel `penarikan`
+-- AUTO_INCREMENT for table `penarikan`
 --
 ALTER TABLE `penarikan`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT untuk tabel `pengguna`
+-- AUTO_INCREMENT for table `pengguna`
 --
 ALTER TABLE `pengguna`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=843;
 
 --
--- AUTO_INCREMENT untuk tabel `penjualan`
+-- AUTO_INCREMENT for table `penjualan`
 --
 ALTER TABLE `penjualan`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT untuk tabel `personal_access_tokens`
+-- AUTO_INCREMENT for table `personal_access_tokens`
 --
 ALTER TABLE `personal_access_tokens`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT untuk tabel `setoran`
+-- AUTO_INCREMENT for table `setoran`
 --
 ALTER TABLE `setoran`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=438;
 
 --
--- AUTO_INCREMENT untuk tabel `settings`
+-- AUTO_INCREMENT for table `settings`
 --
 ALTER TABLE `settings`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
--- AUTO_INCREMENT untuk tabel `siswa`
+-- AUTO_INCREMENT for table `siswa`
 --
 ALTER TABLE `siswa`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=841;
 
 --
--- Ketidakleluasaan untuk tabel pelimpahan (Dumped Tables)
+-- Constraints for dumped tables
 --
 
 --
--- Ketidakleluasaan untuk tabel `badge_siswa`
+-- Constraints for table `badge_siswa`
 --
 ALTER TABLE `badge_siswa`
   ADD CONSTRAINT `badge_siswa_badge_id_foreign` FOREIGN KEY (`badge_id`) REFERENCES `badges` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `badge_siswa_siswa_id_foreign` FOREIGN KEY (`siswa_id`) REFERENCES `siswa` (`id`) ON DELETE CASCADE;
 
 --
--- Ketidakleluasaan untuk tabel `buku_kas`
+-- Constraints for table `buku_kas`
 --
 ALTER TABLE `buku_kas`
   ADD CONSTRAINT `buku_kas_id_admin_foreign` FOREIGN KEY (`id_admin`) REFERENCES `pengguna` (`id`),
   ADD CONSTRAINT `buku_kas_id_kategori_foreign` FOREIGN KEY (`id_kategori`) REFERENCES `kategori_transaksi` (`id`) ON DELETE SET NULL;
 
 --
--- Ketidakleluasaan untuk tabel `detail_penjualan`
+-- Constraints for table `detail_penjualan`
 --
 ALTER TABLE `detail_penjualan`
   ADD CONSTRAINT `detail_penjualan_id_jenis_sampah_foreign` FOREIGN KEY (`id_jenis_sampah`) REFERENCES `jenis_sampah` (`id`),
   ADD CONSTRAINT `detail_penjualan_id_penjualan_foreign` FOREIGN KEY (`id_penjualan`) REFERENCES `penjualan` (`id`) ON DELETE CASCADE;
 
 --
--- Ketidakleluasaan untuk tabel `insentifs`
+-- Constraints for table `insentifs`
 --
 ALTER TABLE `insentifs`
   ADD CONSTRAINT `insentifs_kelas_id_foreign` FOREIGN KEY (`kelas_id`) REFERENCES `kelas` (`id`) ON DELETE CASCADE,
@@ -3200,40 +3202,40 @@ ALTER TABLE `insentifs`
   ADD CONSTRAINT `insentifs_setoran_id_foreign` FOREIGN KEY (`setoran_id`) REFERENCES `setoran` (`id`) ON DELETE CASCADE;
 
 --
--- Ketidakleluasaan untuk tabel `kelas`
+-- Constraints for table `kelas`
 --
 ALTER TABLE `kelas`
   ADD CONSTRAINT `kelas_id_wali_kelas_foreign` FOREIGN KEY (`id_wali_kelas`) REFERENCES `pengguna` (`id`);
 
 --
--- Ketidakleluasaan untuk tabel `pembayaran_insentifs`
+-- Constraints for table `pembayaran_insentifs`
 --
 ALTER TABLE `pembayaran_insentifs`
   ADD CONSTRAINT `pembayaran_insentifs_id_admin_foreign` FOREIGN KEY (`id_admin`) REFERENCES `pengguna` (`id`),
   ADD CONSTRAINT `pembayaran_insentifs_id_wali_kelas_foreign` FOREIGN KEY (`id_wali_kelas`) REFERENCES `pengguna` (`id`);
 
 --
--- Ketidakleluasaan untuk tabel `penarikan`
+-- Constraints for table `penarikan`
 --
 ALTER TABLE `penarikan`
   ADD CONSTRAINT `penarikan_id_kelas_foreign` FOREIGN KEY (`id_kelas`) REFERENCES `kelas` (`id`),
   ADD CONSTRAINT `penarikan_siswa_id_foreign` FOREIGN KEY (`siswa_id`) REFERENCES `siswa` (`id`) ON DELETE CASCADE;
 
 --
--- Ketidakleluasaan untuk tabel `penjualan`
+-- Constraints for table `penjualan`
 --
 ALTER TABLE `penjualan`
   ADD CONSTRAINT `penjualan_id_admin_foreign` FOREIGN KEY (`id_admin`) REFERENCES `pengguna` (`id`);
 
 --
--- Ketidakleluasaan untuk tabel `setoran`
+-- Constraints for table `setoran`
 --
 ALTER TABLE `setoran`
   ADD CONSTRAINT `setoran_jenis_sampah_id_foreign` FOREIGN KEY (`jenis_sampah_id`) REFERENCES `jenis_sampah` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `setoran_siswa_id_foreign` FOREIGN KEY (`siswa_id`) REFERENCES `siswa` (`id`) ON DELETE CASCADE;
 
 --
--- Ketidakleluasaan untuk tabel `siswa`
+-- Constraints for table `siswa`
 --
 ALTER TABLE `siswa`
   ADD CONSTRAINT `siswa_id_kelas_foreign` FOREIGN KEY (`id_kelas`) REFERENCES `kelas` (`id`) ON DELETE CASCADE,
