@@ -20,21 +20,20 @@ class BukuKasController extends Controller
         $startDate = Carbon::createFromFormat('Y-m', $selectedMonth)->startOfMonth();
         $endDate = Carbon::createFromFormat('Y-m', $selectedMonth)->endOfMonth();
 
-        // --- PERBAIKAN DI SINI: Mengurutkan dari yang terbaru ---
-        $bukuKas = BukuKas::whereBetween('tanggal', [$startDate, $endDate])
-            ->latest('tanggal') // Mengganti orderBy('tanggal', 'asc')
-            ->paginate(5);
+        $bukuKas = BukuKas::with('kategori') 
+            ->whereBetween('tanggal', [$startDate, $endDate])
+            ->latest('tanggal')
+            ->paginate(10);
 
-        $totalPemasukan = BukuKas::where('tipe', 'pemasukan')->sum('jumlah');
-        $totalPengeluaran = BukuKas::where('tipe', 'pengeluaran')->sum('jumlah');
-        $saldoAkhir = $totalPemasukan - $totalPengeluaran;
+        $totalPemasukan = BukuKas::whereBetween('tanggal', [$startDate, $endDate])->where('tipe', 'pemasukan')->sum('jumlah');
+        $totalPengeluaran = BukuKas::whereBetween('tanggal', [$startDate, $endDate])->where('tipe', 'pengeluaran')->sum('jumlah');
         
-        $kategori = KategoriTransaksi::all();
+        $saldoAkhir = BukuKas::where('tipe', 'pemasukan')->sum('jumlah') - BukuKas::where('tipe', 'pengeluaran')->sum('jumlah');
+        
+        $kategoriTransaksi = KategoriTransaksi::orderBy('nama_kategori')->get();
 
-        return view('pages.buku-kas.index', compact('bukuKas', 'selectedMonth', 'totalPemasukan', 'totalPengeluaran', 'saldoAkhir', 'kategori'));
+        return view('pages.buku-kas.index', compact('bukuKas', 'selectedMonth', 'totalPemasukan', 'totalPengeluaran', 'saldoAkhir', 'kategoriTransaksi'));
     }
-
-    // ... (method lainnya tidak perlu diubah) ...
 
     public function store(Request $request)
     {
@@ -42,26 +41,32 @@ class BukuKasController extends Controller
             'tanggal' => 'required|date',
             'deskripsi' => 'required|string|max:255',
             'jumlah' => 'required|numeric|min:0',
-            'tipe' => 'required|in:pemasukan,pengeluaran',
-            'id_kategori' => 'nullable|exists:kategori_transaksi,id',
+            'id_kategori' => 'nullable|exists:kategori_transaksis,id',
+            'tipe' => 'required_if:id_kategori,null|in:pemasukan,pengeluaran',
         ]);
+        
+        $tipe = $request->tipe;
+        if ($request->filled('id_kategori')) {
+            $kategori = KategoriTransaksi::find($request->id_kategori);
+            $tipe = $kategori->tipe;
+        }
 
         BukuKas::create([
             'tanggal' => $request->tanggal,
             'deskripsi' => $request->deskripsi,
             'jumlah' => $request->jumlah,
-            'tipe' => $request->tipe,
             'id_kategori' => $request->id_kategori,
             'id_admin' => Auth::id(),
+            'tipe' => $tipe,
         ]);
 
-        return redirect()->route('buku-kas.index')->with('toastr-success', 'Transaksi berhasil ditambahkan.');
+        return redirect()->route('buku-kas.index')->with('success', 'Transaksi berhasil ditambahkan.');
     }
 
     public function edit(BukuKas $bukuKa)
     {
-        $kategori = KategoriTransaksi::all();
-        return view('pages.buku-kas.edit', compact('bukuKa', 'kategori'));
+        $kategoriTransaksi = KategoriTransaksi::orderBy('nama_kategori')->get();
+        return view('pages.buku-kas.edit', ['bukuKas' => $bukuKa, 'kategoriTransaksi' => $kategoriTransaksi]);
     }
 
     public function update(Request $request, BukuKas $bukuKa)
@@ -70,31 +75,37 @@ class BukuKasController extends Controller
             'tanggal' => 'required|date',
             'deskripsi' => 'required|string|max:255',
             'jumlah' => 'required|numeric|min:0',
-            'tipe' => 'required|in:pemasukan,pengeluaran',
-            'id_kategori' => 'nullable|exists:kategori_transaksi,id',
+            'id_kategori' => 'nullable|exists:kategori_transaksis,id',
+            'tipe' => 'required_if:id_kategori,null|in:pemasukan,pengeluaran',
         ]);
         
+        $tipe = $request->tipe;
+        if ($request->filled('id_kategori')) {
+            $kategori = KategoriTransaksi::find($request->id_kategori);
+            $tipe = $kategori->tipe;
+        }
+
         $bukuKa->update([
             'tanggal' => $request->tanggal,
             'deskripsi' => $request->deskripsi,
             'jumlah' => $request->jumlah,
-            'tipe' => $request->tipe,
             'id_kategori' => $request->id_kategori,
+            'tipe' => $tipe,
         ]);
 
-        return redirect()->route('buku-kas.index')->with('toastr-success', 'Transaksi berhasil diperbarui.');
+        return redirect()->route('buku-kas.index')->with('success', 'Transaksi berhasil diperbarui.');
     }
 
     public function destroy(BukuKas $bukuKa)
     {
         $bukuKa->delete();
-        return redirect()->route('buku-kas.index')->with('toastr-success', 'Transaksi berhasil dihapus.');
+        return redirect()->route('buku-kas.index')->with('success', 'Transaksi berhasil dihapus.');
     }
 
     public function exportExcel(Request $request)
     {
         $bulan = $request->input('bulan', date('Y-m'));
-        return Excel::download(new BukuKasExport($bulan), 'buku-kas-'.$bulan.'.xlsx');
+        return Excel::download(new BukuKasExport($bulan), 'buku-kas-' . $bulan . '.xlsx');
     }
 
     public function exportPdf(Request $request)
@@ -103,15 +114,18 @@ class BukuKasController extends Controller
         $startDate = Carbon::createFromFormat('Y-m', $selectedMonth)->startOfMonth();
         $endDate = Carbon::createFromFormat('Y-m', $selectedMonth)->endOfMonth();
 
-        $bukuKas = BukuKas::whereBetween('tanggal', [$startDate, $endDate])
-            ->latest('tanggal') // Menyesuaikan urutan untuk PDF juga
+        $bukuKas = BukuKas::with('kategori')
+            ->whereBetween('tanggal', [$startDate, $endDate])
+            ->latest('tanggal')
             ->get();
             
-        $totalPemasukan = BukuKas::where('tipe', 'pemasukan')->sum('jumlah');
-        $totalPengeluaran = BukuKas::where('tipe', 'pengeluaran')->sum('jumlah');
+        $totalPemasukan = $bukuKas->where('tipe', 'pemasukan')->sum('jumlah');
+        $totalPengeluaran = $bukuKas->where('tipe', 'pengeluaran')->sum('jumlah');
+        
+        // PERBAIKAN: Mengganti nama variabel agar konsisten
         $saldoAkhir = $totalPemasukan - $totalPengeluaran;
 
         $pdf = PDF::loadView('pages.buku-kas.buku-kas-pdf', compact('bukuKas', 'selectedMonth', 'totalPemasukan', 'totalPengeluaran', 'saldoAkhir', 'startDate', 'endDate'));
-        return $pdf->download('buku-kas-'.$selectedMonth.'.pdf');
+        return $pdf->download('buku-kas-' . $selectedMonth . '.pdf');
     }
 }

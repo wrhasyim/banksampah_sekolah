@@ -29,6 +29,9 @@
                                 <x-dropdown-link :href="route('kelas.index')">Data Kelas</x-dropdown-link>
                                 <x-dropdown-link :href="route('siswa.index')">Data Siswa</x-dropdown-link>
                                 <x-dropdown-link :href="route('jenis-sampah.index')">Jenis Sampah</x-dropdown-link>
+                             <x-dropdown-link :href="route('kategori-transaksi.index')" :active="request()->routeIs('kategori-transaksi.*')">
+                {{ __('Kategori Transaksi') }}
+            </x-dropdown-link>
                             </x-slot>
                         </x-dropdown>
                     </div>

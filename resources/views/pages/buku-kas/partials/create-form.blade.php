@@ -1,31 +1,63 @@
 <form action="{{ route('buku-kas.store') }}" method="POST">
     @csrf
-    <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
-            <label for="tanggal" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Tanggal</label>
-            <input type="date" id="tanggal" name="tanggal" value="{{ old('tanggal', date('Y-m-d')) }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white" required>
-        </div>
-
-        {{-- --- PERBAIKAN DI SINI --- --}}
-        <div>
-            <label for="deskripsi" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Keterangan</label>
-            <input type="text" id="deskripsi" name="deskripsi" value="{{ old('deskripsi') }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white" required>
-        </div>
-
-        <div>
-            <label for="jumlah" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Jumlah (Rp)</label>
-            <input type="number" id="jumlah" name="jumlah" value="{{ old('jumlah') }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white" required>
+            <x-input-label for="tanggal" :value="__('Tanggal')" />
+            <x-text-input id="tanggal" class="block mt-1 w-full" type="date" name="tanggal" :value="old('tanggal', date('Y-m-d'))" required />
         </div>
         
+        {{-- Dropdown Kategori --}}
         <div>
-            <label for="tipe" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Tipe Transaksi</label>
-            <select id="tipe" name="tipe" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white">
-                <option value="pemasukan" @if(old('tipe') == 'pemasukan') selected @endif>Pemasukan</option>
-                <option value="pengeluaran" @if(old('tipe') == 'pengeluaran') selected @endif>Pengeluaran</option>
+            <x-input-label for="id_kategori" :value="__('Kategori (Opsional)')" />
+            <select name="id_kategori" id="id_kategori_create" class="block mt-1 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm">
+                <option value="">-- Tanpa Kategori --</option>
+                @foreach($kategoriTransaksi as $kategori)
+                    {{-- Tambahkan atribut data-tipe untuk JavaScript --}}
+                    <option value="{{ $kategori->id }}" data-tipe="{{ $kategori->tipe }}">{{ $kategori->nama_kategori }}</option>
+                @endforeach
+            </select>
+        </div>
+
+        <div>
+            <x-input-label for="tipe" :value="__('Tipe Transaksi')" />
+            <select name="tipe" id="tipe_create" class="block mt-1 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm">
+                <option value="pemasukan">Pemasukan</option>
+                <option value="pengeluaran">Pengeluaran</option>
             </select>
         </div>
     </div>
-    <div class="flex justify-end mt-4">
-        <button type="submit" class="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700">Simpan Transaksi</button>
+    <div class="mt-4">
+        <x-input-label for="deskripsi" :value="__('Deskripsi')" />
+        <x-text-input id="deskripsi" class="block mt-1 w-full" type="text" name="deskripsi" :value="old('deskripsi')" required />
+    </div>
+    <div class="mt-4">
+        <x-input-label for="jumlah" :value="__('Jumlah (Rp)')" />
+        <x-text-input id="jumlah" class="block mt-1 w-full" type="number" name="jumlah" :value="old('jumlah')" required />
+    </div>
+    <div class="flex items-center justify-end mt-4">
+        <x-primary-button>
+            {{ __('Simpan Transaksi') }}
+        </x-primary-button>
     </div>
 </form>
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const kategoriSelect = document.getElementById('id_kategori_create');
+        const tipeSelect = document.getElementById('tipe_create');
+
+        kategoriSelect.addEventListener('change', function () {
+            const selectedOption = this.options[this.selectedIndex];
+            const tipe = selectedOption.getAttribute('data-tipe');
+
+            if (tipe) {
+                tipeSelect.value = tipe;
+                tipeSelect.disabled = true;
+            } else {
+                tipeSelect.disabled = false;
+            }
+        });
+    });
+</script>
+@endpush

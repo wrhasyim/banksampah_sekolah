@@ -4,6 +4,7 @@
             <tr>
                 <th scope="col" class="px-6 py-3">Tanggal</th>
                 <th scope="col" class="px-6 py-3">Keterangan</th>
+                <th scope="col" class="px-6 py-3">Kategori</th>
                 <th scope="col" class="px-6 py-3">Tipe</th>
                 <th scope="col" class="px-6 py-3">Jumlah</th>
                 <th scope="col" class="px-6 py-3">Aksi</th>
@@ -13,9 +14,10 @@
             @forelse ($bukuKas as $item)
             <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
                 <td class="px-6 py-4">{{ \Carbon\Carbon::parse($item->tanggal)->format('d F Y') }}</td>
+                <td class="px-6 py-4">{{ $item->deskripsi }}</td>
                 
-                {{-- --- PERBAIKAN DI SINI --- --}}
-                <td class="px-6 py-4">{{ $item->deskripsi }}</td> 
+                {{-- Menampilkan Nama Kategori dari relasi --}}
+                <td class="px-6 py-4">{{ $item->kategori->nama_kategori ?? '-' }}</td>
                 
                 <td class="px-6 py-4">
                     @if ($item->tipe == 'pemasukan')
@@ -36,23 +38,26 @@
             </tr>
             @empty
             <tr>
-                <td colspan="5" class="px-6 py-4 text-center">Tidak ada transaksi untuk bulan ini.</td>
+                <td colspan="6" class="px-6 py-4 text-center">Tidak ada transaksi untuk bulan ini.</td>
             </tr>
             @endforelse
         </tbody>
         <tfoot class="font-semibold text-gray-900 bg-gray-50 dark:text-white dark:bg-gray-700">
             <tr>
-                <td colspan="3" class="px-6 py-3 text-right">Total Pemasukan Keseluruhan:</td>
+                <td colspan="4" class="px-6 py-3 text-right">Total Pemasukan (Bulan Ini):</td>
                 <td colspan="2" class="px-6 py-3 text-green-500">Rp. {{ number_format($totalPemasukan, 0, ',', '.') }}</td>
             </tr>
             <tr>
-                <td colspan="3" class="px-6 py-3 text-right">Total Pengeluaran Keseluruhan:</td>
+                <td colspan="4" class="px-6 py-3 text-right">Total Pengeluaran (Bulan Ini):</td>
                 <td colspan="2" class="px-6 py-3 text-red-500">Rp. {{ number_format($totalPengeluaran, 0, ',', '.') }}</td>
             </tr>
             <tr>
-                <td colspan="3" class="px-6 py-3 text-lg text-right">Saldo Akhir:</td>
+                <td colspan="4" class="px-6 py-3 text-lg text-right">Saldo Akhir (Keseluruhan):</td>
                 <td colspan="2" class="px-6 py-3 text-lg">Rp. {{ number_format($saldoAkhir, 0, ',', '.') }}</td>
             </tr>
         </tfoot>
     </table>
+</div>
+<div class="mt-4">
+    {{ $bukuKas->links() }}
 </div>
