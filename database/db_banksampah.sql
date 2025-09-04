@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Sep 04, 2025 at 10:26 AM
+-- Generation Time: Sep 04, 2025 at 11:03 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -679,7 +679,9 @@ INSERT INTO `insentifs` (`id`, `setoran_id`, `kelas_id`, `jumlah_insentif`, `sta
 (575, 809, 18, 6.40, 'belum dibayar', '2025-09-04 08:25:54', '2025-09-04 08:25:54', NULL),
 (576, 810, 18, 128.00, 'belum dibayar', '2025-09-04 08:25:54', '2025-09-04 08:25:54', NULL),
 (577, 811, 18, 19.20, 'belum dibayar', '2025-09-04 08:25:54', '2025-09-04 08:25:54', NULL),
-(578, 812, 18, 6.40, 'belum dibayar', '2025-09-04 08:25:54', '2025-09-04 08:25:54', NULL);
+(578, 812, 18, 6.40, 'belum dibayar', '2025-09-04 08:25:54', '2025-09-04 08:25:54', NULL),
+(579, 813, 24, 140.00, 'belum dibayar', '2025-09-04 09:01:10', '2025-09-04 09:01:10', NULL),
+(580, 814, 24, 119.00, 'belum dibayar', '2025-09-04 09:01:10', '2025-09-04 09:01:10', NULL);
 
 -- --------------------------------------------------------
 
@@ -703,7 +705,7 @@ CREATE TABLE `jenis_sampah` (
 --
 
 INSERT INTO `jenis_sampah` (`id`, `nama_sampah`, `status`, `satuan`, `harga_per_satuan`, `stok`, `created_at`, `updated_at`) VALUES
-(1, 'Botol Plastik', 'aktif', 'pcs', 35.00, 7033, '2025-09-01 04:23:07', '2025-09-04 08:24:28'),
+(1, 'Botol Plastik', 'aktif', 'pcs', 35.00, 7070, '2025-09-01 04:23:07', '2025-09-04 09:01:10'),
 (2, 'Gelas Plastik', 'aktif', 'pcs', 10.00, 3192, '2025-09-01 04:23:07', '2025-09-04 08:24:28'),
 (3, 'Kardus', 'aktif', 'kg', 1500.00, 0, '2025-09-01 04:23:07', '2025-09-01 06:00:58'),
 (4, 'Botol Plastik Guru', 'aktif', 'pcs', 42.00, 138, '2025-09-01 13:59:40', '2025-09-01 14:02:35'),
@@ -1801,7 +1803,7 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('buFzHPJdOgA7vdnR4vZ8UotQapcKvjQVEECUCvvr', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoibWoxZGpLbW9rM0c4Z0w0dVFqMlZQZ2xpc2dHNmxMeEluWUFxTWdmWiI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MzE6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9kYXNoYm9hcmQiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX1zOjUwOiJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI7aToxO30=', 1756974357);
+('buFzHPJdOgA7vdnR4vZ8UotQapcKvjQVEECUCvvr', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoibWoxZGpLbW9rM0c4Z0w0dVFqMlZQZ2xpc2dHNmxMeEluWUFxTWdmWiI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6Mjk6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9zZXRvcmFuIjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6MTt9', 1756976470);
 
 -- --------------------------------------------------------
 
@@ -2606,7 +2608,9 @@ INSERT INTO `setoran` (`id`, `siswa_id`, `jenis_sampah_id`, `jumlah`, `total_har
 (809, 503, 6, 2.00, 32.00, '2025-09-04 08:25:54', '2025-09-04 08:25:54', 'normal'),
 (810, 518, 6, 40.00, 640.00, '2025-09-04 08:25:54', '2025-09-04 08:25:54', 'normal'),
 (811, 519, 6, 6.00, 96.00, '2025-09-04 08:25:54', '2025-09-04 08:25:54', 'normal'),
-(812, 526, 6, 2.00, 32.00, '2025-09-04 08:25:54', '2025-09-04 08:25:54', 'normal');
+(812, 526, 6, 2.00, 32.00, '2025-09-04 08:25:54', '2025-09-04 08:25:54', 'normal'),
+(813, 681, 1, 20.00, 700.00, '2025-09-04 09:01:10', '2025-09-04 09:01:10', 'normal'),
+(814, 705, 1, 17.00, 595.00, '2025-09-04 09:01:10', '2025-09-04 09:01:10', 'normal');
 
 -- --------------------------------------------------------
 
@@ -3335,7 +3339,7 @@ INSERT INTO `siswa` (`id`, `id_pengguna`, `id_kelas`, `nis`, `saldo`, `points`, 
 (678, 679, 23, '232410152', 245.00, 0, '2025-09-01 04:27:56', '2025-09-02 04:46:01'),
 (679, 680, 23, '232410153', 0.00, 0, '2025-09-01 04:27:56', '2025-09-01 04:27:56'),
 (680, 681, 24, '232410154', 350.00, 0, '2025-09-01 04:27:57', '2025-09-01 06:11:20'),
-(681, 682, 24, '232410155', 0.00, 0, '2025-09-01 04:27:57', '2025-09-01 04:27:57'),
+(681, 682, 24, '232410155', 700.00, 0, '2025-09-01 04:27:57', '2025-09-04 09:01:10'),
 (682, 683, 24, '232410156', 150.00, 0, '2025-09-01 04:27:57', '2025-09-02 08:06:52'),
 (683, 684, 24, '232410157', 385.00, 0, '2025-09-01 04:27:57', '2025-09-01 06:11:20'),
 (684, 685, 24, '232410158', 225.00, 0, '2025-09-01 04:27:58', '2025-09-01 06:12:28'),
@@ -3359,7 +3363,7 @@ INSERT INTO `siswa` (`id`, `id_pengguna`, `id_kelas`, `nis`, `saldo`, `points`, 
 (702, 703, 24, '232410176', 350.00, 0, '2025-09-01 04:28:03', '2025-09-01 06:11:20'),
 (703, 704, 24, '232410177', 385.00, 0, '2025-09-01 04:28:03', '2025-09-01 06:11:20'),
 (704, 705, 24, '232410178', 350.00, 0, '2025-09-01 04:28:03', '2025-09-01 06:11:20'),
-(705, 706, 24, '232410179', 0.00, 0, '2025-09-01 04:28:03', '2025-09-01 04:28:03'),
+(705, 706, 24, '232410179', 595.00, 0, '2025-09-01 04:28:03', '2025-09-04 09:01:10'),
 (706, 707, 24, '232410180', 350.00, 0, '2025-09-01 04:28:04', '2025-09-01 06:11:20'),
 (707, 708, 24, '232410181', 350.00, 0, '2025-09-01 04:28:04', '2025-09-01 06:11:20'),
 (708, 709, 24, '232410182', 350.00, 0, '2025-09-01 04:28:04', '2025-09-01 06:11:20'),
@@ -3687,7 +3691,7 @@ ALTER TABLE `detail_penjualan`
 -- AUTO_INCREMENT for table `insentifs`
 --
 ALTER TABLE `insentifs`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=579;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=581;
 
 --
 -- AUTO_INCREMENT for table `jenis_sampah`
@@ -3753,7 +3757,7 @@ ALTER TABLE `personal_access_tokens`
 -- AUTO_INCREMENT for table `setoran`
 --
 ALTER TABLE `setoran`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=813;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=815;
 
 --
 -- AUTO_INCREMENT for table `settings`

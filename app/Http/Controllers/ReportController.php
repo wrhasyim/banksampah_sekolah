@@ -24,8 +24,26 @@ class ReportController extends Controller
 
         // --- BAGIAN LAPORAN TRANSAKSI (DENGAN PAGINASI) ---
         $transaksi = collect([]);
-        $transactionTypes = $request->input('transaction_type', ['setoran', 'penarikan']);
         
+        // --- BLOK YANG DIPERBAIKI ---
+        $transactionTypesInput = $request->input('transaction_type');
+        $transactionTypes = [];
+
+        // Cek jika input ada dan tidak kosong
+        if (!empty($transactionTypesInput)) {
+            // Ubah string "setoran,penarikan" menjadi array
+            $transactionTypes = is_string($transactionTypesInput) ? explode(',', $transactionTypesInput) : $transactionTypesInput;
+        } else {
+            // Jika tidak ada filter, tampilkan keduanya (default)
+            $transactionTypes = ['setoran', 'penarikan'];
+        }
+        // Pastikan hanya nilai yang valid yang ada di array
+        $transactionTypes = array_filter($transactionTypes);
+        if (empty($transactionTypes)) {
+            $transactionTypes = ['setoran', 'penarikan'];
+        }
+        // --- AKHIR BLOK PERBAIKAN ---
+
         $startDate = $request->filled('start_date') ? $request->start_date : Carbon::now()->startOfMonth()->toDateString();
         $endDate = $request->filled('end_date') ? $request->end_date : Carbon::now()->endOfMonth()->toDateString();
 
@@ -35,9 +53,9 @@ class ReportController extends Controller
                 ->when($request->filled('siswa_id'), fn($q) => $q->where('siswa_id', $request->siswa_id))
                 ->get()->map(function($item) {
                     $item->jenis_transaksi = 'Setoran';
-                    $item->nama = $item->siswa->pengguna->nama_lengkap;
-                    $item->kredit = $item->total_harga;
-                    $item->debit = 0;
+                    $item->nama = optional(optional($item->siswa)->pengguna)->nama_lengkap ?? 'Siswa Dihapus';
+                    $item->debit = $item->total_harga; // Setoran adalah DEBIT dari sudut pandang saldo siswa
+                    $item->kredit = 0;
                     $item->tanggal = $item->created_at;
                     return $item;
                 });
@@ -50,9 +68,9 @@ class ReportController extends Controller
                  ->when($request->filled('siswa_id'), fn($q) => $q->where('siswa_id', $request->siswa_id))
                 ->get()->map(function($item) {
                     $item->jenis_transaksi = 'Penarikan';
-                    $item->nama = $item->siswa->pengguna->nama_lengkap;
-                    $item->kredit = 0;
-                    $item->debit = $item->jumlah_penarikan;
+                    $item->nama = optional(optional($item->siswa)->pengguna)->nama_lengkap ?? 'Siswa Dihapus';
+                    $item->debit = 0;
+                    $item->kredit = $item->jumlah_penarikan; // Penarikan adalah KREDIT dari sudut pandang saldo siswa
                     $item->tanggal = $item->created_at;
                     return $item;
                 });
@@ -61,7 +79,7 @@ class ReportController extends Controller
         
         $transaksi = $transaksi->sortByDesc('tanggal');
         
-        $perPage = 5;
+        $perPage = 10; // Anda bisa sesuaikan jumlah per halaman
         $currentPage = $request->input('page', 1);
         $pagedData = $transaksi->slice(($currentPage - 1) * $perPage, $perPage)->all();
         $transaksiPaginated = new \Illuminate\Pagination\LengthAwarePaginator($pagedData, count($transaksi), $perPage, $currentPage, [
@@ -77,7 +95,7 @@ class ReportController extends Controller
 
         // --- BAGIAN LAPORAN LABA RUGI ---
         $startLabaRugi = $request->input('start_date_laba_rugi', Carbon::now()->startOfMonth()->toDateString());
-        $endLabaRugi = $request->input('end_date_laba_rugi', Carbon::now()->endOfMonth()->toDateString());
+        $endLabaRugi = $request->input('end_date_laba_ruti', Carbon::now()->endOfMonth()->toDateString());
 
         $totalPenjualan = Penjualan::whereBetween('tanggal_penjualan', [$startLabaRugi, $endLabaRugi])->sum('total_harga');
         $totalInsentif = DB::table('pembayaran_insentifs')->whereBetween('tanggal_pembayaran', [$startLabaRugi, $endLabaRugi])->sum('total_dibayar');
@@ -172,7 +190,6 @@ class ReportController extends Controller
         $penjualan = $query->get();
         $totalPenjualan = $penjualan->sum('total_harga');
 
-        // PERBAIKAN: Menambahkan variabel $selectedMonth ke dalam compact()
         $pdf = Pdf::loadView('pages.laporan.pdf.laporan-penjualan-pdf', compact('penjualan', 'totalPenjualan', 'selectedMonth'));
         return $pdf->stream('laporan-penjualan.pdf');
     }

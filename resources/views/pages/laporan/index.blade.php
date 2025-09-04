@@ -29,4 +29,50 @@
             </div>
         </div>
     </div>
+
+    @push('scripts')
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const filterButtons = document.querySelectorAll('.btn-filter-jenis');
+        const hiddenInput = document.getElementById('transaction_type_input');
+
+        // Style untuk tombol aktif dan tidak aktif
+        const activeClasses = 'bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 border-blue-600 dark:border-blue-500';
+        const inactiveClasses = 'bg-white text-gray-900 hover:bg-gray-100 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600 border-gray-200 dark:border-gray-600';
+
+        let selectedTypes = hiddenInput.value ? hiddenInput.value.split(',') : [];
+
+        // Inisialisasi status tombol saat halaman dimuat
+        function updateButtonStates() {
+            filterButtons.forEach(button => {
+                const value = button.getAttribute('data-value');
+                if (selectedTypes.includes(value)) {
+                    button.className = button.className.replace(new RegExp(inactiveClasses, 'g'), '') + ' ' + activeClasses;
+                } else {
+                    button.className = button.className.replace(new RegExp(activeClasses, 'g'), '') + ' ' + inactiveClasses;
+                }
+            });
+            hiddenInput.value = selectedTypes.join(',');
+        }
+
+        // Event listener untuk setiap tombol
+        filterButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const value = this.getAttribute('data-value');
+                if (selectedTypes.includes(value)) {
+                    // Hapus jika sudah ada (toggle off)
+                    selectedTypes = selectedTypes.filter(type => type !== value);
+                } else {
+                    // Tambahkan jika belum ada (toggle on)
+                    selectedTypes.push(value);
+                }
+                updateButtonStates();
+            });
+        });
+
+        // Panggil fungsi inisialisasi
+        updateButtonStates();
+    });
+    </script>
+    @endpush
 </x-app-layout>
