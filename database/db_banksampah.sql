@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Sep 04, 2025 at 11:03 AM
+-- Generation Time: Sep 04, 2025 at 11:32 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -708,8 +708,8 @@ INSERT INTO `jenis_sampah` (`id`, `nama_sampah`, `status`, `satuan`, `harga_per_
 (1, 'Botol Plastik', 'aktif', 'pcs', 35.00, 7070, '2025-09-01 04:23:07', '2025-09-04 09:01:10'),
 (2, 'Gelas Plastik', 'aktif', 'pcs', 10.00, 3192, '2025-09-01 04:23:07', '2025-09-04 08:24:28'),
 (3, 'Kardus', 'aktif', 'kg', 1500.00, 0, '2025-09-01 04:23:07', '2025-09-01 06:00:58'),
-(4, 'Botol Plastik Guru', 'aktif', 'pcs', 42.00, 138, '2025-09-01 13:59:40', '2025-09-01 14:02:35'),
-(5, 'Gelas Plastik Guru', 'aktif', 'pcs', 15.00, 23, '2025-09-01 13:59:51', '2025-09-01 14:02:35'),
+(4, 'Botol Plastik Guru', 'aktif', 'pcs', 42.00, 149, '2025-09-01 13:59:40', '2025-09-04 09:12:07'),
+(5, 'Gelas Plastik Guru', 'aktif', 'pcs', 15.00, 38, '2025-09-01 13:59:51', '2025-09-04 09:12:07'),
 (6, 'Botol Plastik (warna)', 'aktif', 'pcs', 16.00, 77, '2025-09-03 03:54:10', '2025-09-04 08:25:54'),
 (7, 'Gelas Plastik (warna)', 'tidak aktif', 'pcs', 6.00, 0, '2025-09-03 03:54:24', '2025-09-04 06:10:46');
 
@@ -1803,7 +1803,7 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('buFzHPJdOgA7vdnR4vZ8UotQapcKvjQVEECUCvvr', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoibWoxZGpLbW9rM0c4Z0w0dVFqMlZQZ2xpc2dHNmxMeEluWUFxTWdmWiI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6Mjk6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9zZXRvcmFuIjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6MTt9', 1756976470);
+('buFzHPJdOgA7vdnR4vZ8UotQapcKvjQVEECUCvvr', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoibWoxZGpLbW9rM0c4Z0w0dVFqMlZQZ2xpc2dHNmxMeEluWUFxTWdmWiI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6Mjk6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9sYXBvcmFuIjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6MTt9', 1756978310);
 
 -- --------------------------------------------------------
 
@@ -2610,7 +2610,9 @@ INSERT INTO `setoran` (`id`, `siswa_id`, `jenis_sampah_id`, `jumlah`, `total_har
 (811, 519, 6, 6.00, 96.00, '2025-09-04 08:25:54', '2025-09-04 08:25:54', 'normal'),
 (812, 526, 6, 2.00, 32.00, '2025-09-04 08:25:54', '2025-09-04 08:25:54', 'normal'),
 (813, 681, 1, 20.00, 700.00, '2025-09-04 09:01:10', '2025-09-04 09:01:10', 'normal'),
-(814, 705, 1, 17.00, 595.00, '2025-09-04 09:01:10', '2025-09-04 09:01:10', 'normal');
+(814, 705, 1, 17.00, 595.00, '2025-09-04 09:01:10', '2025-09-04 09:01:10', 'normal'),
+(815, 818, 4, 11.00, 462.00, '2025-09-04 09:12:07', '2025-09-04 09:12:07', 'normal'),
+(816, 818, 5, 15.00, 225.00, '2025-09-04 09:12:07', '2025-09-04 09:12:07', 'normal');
 
 -- --------------------------------------------------------
 
@@ -3476,7 +3478,7 @@ INSERT INTO `siswa` (`id`, `id_pengguna`, `id_kelas`, `nis`, `saldo`, `points`, 
 (815, 836, 1, '11', 0.00, 0, '2025-09-01 13:52:04', '2025-09-01 13:52:04'),
 (816, 837, 1, '12', 0.00, 0, '2025-09-01 13:52:04', '2025-09-01 13:52:04'),
 (817, 823, 1, '13', 1218.00, 1, '2025-09-01 13:52:05', '2025-09-01 14:02:35'),
-(818, 820, 1, '14', 369.00, 0, '2025-09-01 13:52:05', '2025-09-01 14:02:35'),
+(818, 820, 1, '14', 1056.00, 0, '2025-09-01 13:52:05', '2025-09-04 09:12:07'),
 (819, 838, 1, '15', 0.00, 0, '2025-09-01 13:52:05', '2025-09-01 13:52:05'),
 (820, 806, 1, '16', 0.00, 0, '2025-09-01 13:52:06', '2025-09-01 13:52:06'),
 (821, 839, 1, '17', 0.00, 0, '2025-09-01 13:52:06', '2025-09-01 13:52:06'),
@@ -3757,7 +3759,7 @@ ALTER TABLE `personal_access_tokens`
 -- AUTO_INCREMENT for table `setoran`
 --
 ALTER TABLE `setoran`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=815;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=817;
 
 --
 -- AUTO_INCREMENT for table `settings`
