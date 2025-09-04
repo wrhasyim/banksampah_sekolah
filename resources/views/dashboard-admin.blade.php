@@ -169,26 +169,37 @@
                 if (currentType === 'transaksi') {
                     chartTitle.innerText = 'Grafik Transaksi';
                     chartConfig = {
-                        type: (currentPeriod === 'monthly' || currentPeriod === '30d') ? 'bar' : 'line',
+                        type: (currentPeriod === 'today') ? 'line' : 'bar',
                         data: {
                             labels: data.labels,
                             datasets: [{
                                 label: 'Setoran',
                                 data: data.dataSetoran,
-                                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                                backgroundColor: 'rgba(54, 162, 235, 0.5)',
                                 borderColor: 'rgba(54, 162, 235, 1)',
                                 borderWidth: 1,
                                 tension: 0.1
                             }, {
                                 label: 'Penjualan',
                                 data: data.dataPenjualan,
-                                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                                backgroundColor: 'rgba(255, 99, 132, 0.5)',
                                 borderColor: 'rgba(255, 99, 132, 1)',
                                 borderWidth: 1,
                                 tension: 0.1
                             }]
                         },
-                        options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { callback: (value) => 'Rp ' + new Intl.NumberFormat('id-ID').format(value) } } } }
+                        options: { 
+                            responsive: true, 
+                            maintainAspectRatio: false, 
+                            scales: { 
+                                y: { 
+                                    beginAtZero: true, 
+                                    ticks: { 
+                                        callback: (value) => 'Rp ' + new Intl.NumberFormat('id-ID').format(value) 
+                                    } 
+                                } 
+                            } 
+                        }
                     };
                 } else if (currentType === 'sampah') {
                     chartTitle.innerText = 'Grafik Jumlah Sampah Terkumpul';
@@ -204,7 +215,19 @@
                                 borderWidth: 1
                             }]
                         },
-                        options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, title: { display: true, text: 'Jumlah (Kg/Pcs)' } } }, plugins: { legend: { display: false } } }
+                        options: { 
+                            responsive: true, 
+                            maintainAspectRatio: false, 
+                            scales: { 
+                                y: { 
+                                    beginAtZero: true, 
+                                    title: { display: true, text: 'Jumlah (Kg/Pcs)' } 
+                                } 
+                            }, 
+                            plugins: { 
+                                legend: { display: false } 
+                            } 
+                        }
                     };
                 }
                 
@@ -212,16 +235,10 @@
             };
 
             const fetchChartData = async () => {
-                let url = '';
-                // LOGIKA KRUSIAL: Menentukan URL berdasarkan tipe yang dipilih
-                if (currentType === 'transaksi') {
-                    url = `{{ route('dashboard.chart.transaksi') }}?period=${currentPeriod}`;
-                } else {
-                    url = `{{ route('dashboard.chart.sampah') }}?period=${currentPeriod}`;
-                }
+                let url = (currentType === 'transaksi') 
+                    ? `{{ route('dashboard.chart.transaksi') }}?period=${currentPeriod}`
+                    : `{{ route('dashboard.chart.sampah') }}?period=${currentPeriod}`;
                 
-                console.log("Memanggil URL:", url); // Untuk debugging di browser console
-
                 try {
                     const response = await axios.get(url);
                     renderChart(response.data);

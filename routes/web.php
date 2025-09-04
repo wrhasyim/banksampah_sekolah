@@ -125,8 +125,8 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
 
     // Data untuk Chart (API-like)
     Route::get('/dashboard/chart-data', [DashboardController::class, 'getChartData'])->name('dashboard.chart.data');
-    Route::get('/dashboard/chart/transaksi', [ChartController::class, 'getTransaksiChartData'])->name('dashboard.chart.transaksi');
-    Route::get('/dashboard/chart/sampah', [ChartController::class, 'getSampahChartData'])->name('dashboard.chart.sampah');
+    Route::get('/dashboard/chart/transaksi', [ChartController::class, 'getTransaksiData'])->name('dashboard.chart.transaksi');
+    Route::get('/dashboard/chart/sampah', [ChartController::class, 'getSampahData'])->name('dashboard.chart.sampah');
 });
 
 // API untuk frontend (misal: Ambil siswa berdasarkan kelas)
