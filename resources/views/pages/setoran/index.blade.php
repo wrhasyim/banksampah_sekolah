@@ -26,14 +26,7 @@
                                 </button>
                             </div>
 
-                            <div class="flex flex-wrap items-center gap-2">
-                                <a href="{{ route('setoran.import.form') }}" class="inline-flex items-center px-4 py-2 bg-indigo-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-600 active:bg-indigo-700 focus:outline-none focus:border-indigo-700 focus:ring ring-indigo-300 disabled:opacity-25 transition ease-in-out duration-150">
-                                     <i class="fas fa-upload mr-2"></i>Impor
-                                </a>
-                                <a href="{{ route('setoran.export') }}" class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 active:bg-gray-900 focus:outline-none focus:border-gray-900 focus:ring ring-gray-300 disabled:opacity-25 transition ease-in-out duration-150">
-                                    <i class="fas fa-download mr-2"></i>Ekspor
-                                </a>
-                            </div>
+                            
                         </div>
 
                         {{-- Tabel Data Setoran --}}
