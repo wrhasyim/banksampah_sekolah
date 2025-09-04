@@ -233,11 +233,34 @@ class SetoranController extends Controller
         ],[
             'setoran_ids.required' => 'Pilih setidaknya satu data untuk diedit.'
         ]);
-
+    
         $setoranIds = $request->input('setoran_ids');
-        $setorans = Setoran::with(['siswa', 'jenisSampah'])->whereIn('id', $setoranIds)->get();
-        $jenisSampahs = JenisSampah::where('status', 'aktif')->orderBy('nama_sampah')->get();
-
+        // Memuat relasi siswa beserta pengguna untuk cek role
+        $setorans = Setoran::with(['siswa.pengguna', 'jenisSampah'])->whereIn('id', $setoranIds)->get();
+    
+        if ($setorans->isEmpty()) {
+            return redirect()->route('setoran.index')->with('error', 'Data setoran tidak ditemukan atau tidak ada data yang dipilih.');
+        }
+    
+        // Ambil role dari data pertama yang dipilih (asumsi semua data yang diedit massal memiliki role yang sama)
+        $role = $setorans->first()->siswa->pengguna->role ?? 'siswa';
+    
+        // Ambil semua jenis sampah yang aktif
+        $allJenisSampahs = JenisSampah::where('status', 'aktif')->orderBy('nama_sampah')->get();
+    
+        // Lakukan filter berdasarkan role
+        if ($role === 'guru') {
+            // Jika yang diedit adalah guru, tampilkan hanya jenis sampah untuk guru
+            $jenisSampahs = $allJenisSampahs->filter(function ($value) {
+                return strpos(strtolower($value->nama_sampah), 'guru') !== false;
+            });
+        } else {
+            // Jika yang diedit adalah siswa (atau role lainnya), tampilkan jenis sampah yang BUKAN untuk guru
+            $jenisSampahs = $allJenisSampahs->filter(function ($value) {
+                return strpos(strtolower($value->nama_sampah), 'guru') === false;
+            });
+        }
+    
         return view('pages.setoran.edit-massal', compact('setorans', 'jenisSampahs', 'setoranIds'));
     }
 
