@@ -12,6 +12,7 @@ use App\Models\Insentif;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Imports\SetoranImport;
+use App\Exports\SetoranExport;
 use App\Exports\SetoranSampleExport;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Auth;
@@ -92,6 +93,11 @@ class SetoranController extends Controller
         });
 
         return redirect()->route('setoran.index')->with('success', 'Setoran berhasil ditambahkan.');
+    }
+
+    public function export()
+    {
+        return Excel::download(new SetoranExport, 'setoran.xlsx');
     }
 
     public function getSiswa(Request $request)
@@ -235,27 +241,21 @@ class SetoranController extends Controller
         ]);
     
         $setoranIds = $request->input('setoran_ids');
-        // Memuat relasi siswa beserta pengguna untuk cek role
         $setorans = Setoran::with(['siswa.pengguna', 'jenisSampah'])->whereIn('id', $setoranIds)->get();
     
         if ($setorans->isEmpty()) {
             return redirect()->route('setoran.index')->with('error', 'Data setoran tidak ditemukan atau tidak ada data yang dipilih.');
         }
     
-        // Ambil role dari data pertama yang dipilih (asumsi semua data yang diedit massal memiliki role yang sama)
         $role = $setorans->first()->siswa->pengguna->role ?? 'siswa';
     
-        // Ambil semua jenis sampah yang aktif
         $allJenisSampahs = JenisSampah::where('status', 'aktif')->orderBy('nama_sampah')->get();
     
-        // Lakukan filter berdasarkan role
         if ($role === 'guru') {
-            // Jika yang diedit adalah guru, tampilkan hanya jenis sampah untuk guru
             $jenisSampahs = $allJenisSampahs->filter(function ($value) {
                 return strpos(strtolower($value->nama_sampah), 'guru') !== false;
             });
         } else {
-            // Jika yang diedit adalah siswa (atau role lainnya), tampilkan jenis sampah yang BUKAN untuk guru
             $jenisSampahs = $allJenisSampahs->filter(function ($value) {
                 return strpos(strtolower($value->nama_sampah), 'guru') === false;
             });
@@ -290,28 +290,22 @@ class SetoranController extends Controller
                     continue;
                 }
 
-                // --- 1. KOREKSI SALDO SISWA ---
                 $siswa->decrement('saldo', $setoran->total_harga);
 
-                // --- 2. KOREKSI STOK SAMPAH ---
                 if ($jenisSampahLama) {
                     $jenisSampahLama->decrement('stok', $setoran->jumlah);
                 }
                 $jenisSampahBaru->increment('stok', $setoran->jumlah);
                 
-                // --- 3. HITUNG ULANG TOTAL HARGA ---
                 $totalHargaBaru = $setoran->jumlah * $jenisSampahBaru->harga_per_satuan;
 
-                // --- 4. UPDATE DATA SETORAN ---
                 $setoran->update([
                     'jenis_sampah_id' => $newJenisSampahId,
                     'total_harga' => $totalHargaBaru,
                 ]);
 
-                // --- 5. KEMBALIKAN SALDO SISWA DENGAN NILAI BARU ---
                 $siswa->increment('saldo', $totalHargaBaru);
 
-                // --- 6. KOREKSI INSENTIF ---
                 Insentif::where('setoran_id', $setoran->id)->delete();
                 
                 if ($setoran->status !== 'terlambat') {
@@ -327,28 +321,9 @@ class SetoranController extends Controller
                         }
                     }
                 }
-                
-                // --- 7. KOREKSI BUKU KAS (SESUAI STRUKTUR TABEL ANDA) ---
-                // a. Keluarkan nominal lama
-                BukuKas::create([
-                    'tanggal'    => now(),
-                    'deskripsi'  => "Koreksi setoran siswa: {$siswa->pengguna->nama_lengkap} (ID Setoran: {$setoran->id})",
-                    'tipe'       => 'pengeluaran',
-                    'jumlah'     => $setoran->total_harga,
-                    'id_admin'   => Auth::id(),
-                ]);
-
-                // b. Masukkan nominal baru
-                BukuKas::create([
-                    'tanggal'    => now(),
-                    'deskripsi'  => "Hasil Koreksi setoran siswa: {$siswa->pengguna->nama_lengkap} (ID Setoran: {$setoran->id})",
-                    'tipe'       => 'pemasukan',
-                    'jumlah'     => $totalHargaBaru,
-                    'id_admin'   => Auth::id(),
-                ]);
             }
         });
 
-        return redirect()->route('setoran.index')->with('success', 'Data setoran berhasil diperbarui secara massal dan semua data terkait telah disesuaikan.');
+        return redirect()->route('setoran.index')->with('success', 'Data setoran berhasil diperbarui secara massal.');
     }
 }
