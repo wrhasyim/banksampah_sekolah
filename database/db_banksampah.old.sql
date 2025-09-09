@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Sep 09, 2025 at 11:26 AM
+-- Generation Time: Sep 09, 2025 at 11:04 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -343,6 +343,8 @@ INSERT INTO `insentifs` (`id`, `setoran_id`, `kelas_id`, `jumlah_insentif`, `sta
 (209, 214, 19, 24.00, 'belum dibayar', '2025-09-02 04:36:11', '2025-09-02 04:36:11', NULL),
 (210, 215, 19, 70.00, 'belum dibayar', '2025-09-02 04:36:11', '2025-09-02 04:36:11', NULL),
 (211, 216, 19, 30.00, 'belum dibayar', '2025-09-02 04:36:11', '2025-09-02 04:36:11', NULL),
+(212, 217, 19, 91.00, 'belum dibayar', '2025-09-02 04:36:11', '2025-09-02 04:36:11', NULL),
+(213, 218, 19, 24.00, 'belum dibayar', '2025-09-02 04:36:11', '2025-09-02 04:36:11', NULL),
 (214, 219, 23, 119.00, 'belum dibayar', '2025-09-02 04:46:01', '2025-09-02 04:46:01', NULL),
 (215, 220, 23, 70.00, 'belum dibayar', '2025-09-02 04:46:01', '2025-09-02 04:46:01', NULL),
 (216, 221, 23, 70.00, 'belum dibayar', '2025-09-02 04:46:01', '2025-09-02 04:46:01', NULL),
@@ -686,10 +688,10 @@ INSERT INTO `insentifs` (`id`, `setoran_id`, `kelas_id`, `jumlah_insentif`, `sta
 (584, 820, 22, 77.00, 'belum dibayar', '2025-09-08 07:59:23', '2025-09-08 07:59:23', NULL),
 (585, 821, 22, 2.00, 'belum dibayar', '2025-09-08 07:59:23', '2025-09-08 07:59:23', NULL),
 (586, 822, 22, 77.00, 'belum dibayar', '2025-09-08 07:59:23', '2025-09-08 07:59:23', NULL),
-(587, 823, 22, 77.00, 'belum dibayar', '2025-09-08 07:59:23', '2025-09-08 07:59:23', NULL),
-(588, 824, 22, 70.00, 'belum dibayar', '2025-09-08 07:59:23', '2025-09-08 07:59:23', NULL),
-(589, 825, 22, 35.00, 'belum dibayar', '2025-09-08 07:59:23', '2025-09-08 07:59:23', NULL);
+(587, 823, 22, 77.00, 'belum dibayar', '2025-09-08 07:59:23', '2025-09-08 07:59:23', NULL);
 INSERT INTO `insentifs` (`id`, `setoran_id`, `kelas_id`, `jumlah_insentif`, `status_pembayaran`, `created_at`, `updated_at`, `pembayaran_insentif_id`) VALUES
+(588, 824, 22, 70.00, 'belum dibayar', '2025-09-08 07:59:23', '2025-09-08 07:59:23', NULL),
+(589, 825, 22, 35.00, 'belum dibayar', '2025-09-08 07:59:23', '2025-09-08 07:59:23', NULL),
 (590, 826, 22, 3.20, 'belum dibayar', '2025-09-08 07:59:23', '2025-09-08 07:59:23', NULL),
 (591, 827, 22, 8.00, 'belum dibayar', '2025-09-08 07:59:23', '2025-09-08 07:59:23', NULL),
 (592, 828, 22, 70.00, 'belum dibayar', '2025-09-08 07:59:23', '2025-09-08 07:59:23', NULL),
@@ -1892,6 +1894,7 @@ INSERT INTO `pengguna` (`id`, `nama_lengkap`, `username`, `password`, `role`, `c
 (550, 'RIYAN', '232410023', '$2y$12$bVuirGrmaLo.M9kBJv7yd.ummExsQQc4aKlOXHx9wlBp8Z3XjGxRG', 'siswa', '2025-09-01 04:27:22', '2025-09-01 04:27:22'),
 (551, 'SINDI ARISKA', '232410024', '$2y$12$fI1sVMNExdt5b.pZQ3SmvubbZvA5mJHPdGzwbfyAJOvmzLs9n.SEC', 'siswa', '2025-09-01 04:27:22', '2025-09-01 04:27:22'),
 (552, 'SITI NURAENI', '232410025', '$2y$12$Q0jlSJIblxGFeOBzdUz5pe7mtvaGxN7wOMQCr.J/.aUwQamEpuKgG', 'siswa', '2025-09-01 04:27:22', '2025-09-01 04:27:22'),
+(553, 'TRI NOVITA SARI', '232410026', '$2y$12$a5lby96Bt6ksW1MpFLct3OKUxiEv3QI7/PBP9XFmAYCbPU6fItXg6', 'siswa', '2025-09-01 04:27:23', '2025-09-01 04:27:23'),
 (554, 'ALVIANI', '232410027', '$2y$12$rKqnethdxyr2ZipKaF4rbeauh3NunZAxFwVZjXonj1Gk5KoSEROke', 'siswa', '2025-09-01 04:27:23', '2025-09-01 04:27:23'),
 (555, 'DECA LESMANASARI', '232410028', '$2y$12$4DClaqEsgz6.L9Iiq8OkkORNFsft00G2W09hyUgkholzC382qLGae', 'siswa', '2025-09-01 04:27:23', '2025-09-01 04:27:23'),
 (556, 'GINA HERAWATI', '232410029', '$2y$12$rt3nobZblQsXi8gHcq7d.OAwFVxLlPAJpWExe4M9kbpgdZHG7Bsyu', 'siswa', '2025-09-01 04:27:23', '2025-09-01 04:27:23'),
@@ -1982,9 +1985,9 @@ INSERT INTO `pengguna` (`id`, `nama_lengkap`, `username`, `password`, `role`, `c
 (641, 'RIDWAN FADILAH', '232410114', '$2y$12$/EgGEnqMVVBe/ki7RVY5/uYhsneTx2lCu1vj8PFEGQSCgEWrwNxlK', 'siswa', '2025-09-01 04:27:46', '2025-09-01 04:27:46'),
 (642, 'SISKA AULIA', '232410115', '$2y$12$t3Vrp6wm6ZmBRa9BY28scu5vtWxUSuNQtSnMoGaxGezT0H2bMgY9y', 'siswa', '2025-09-01 04:27:46', '2025-09-01 04:27:46'),
 (643, 'SUHENDAR', '232410116', '$2y$12$a2eZnYvmQWRrLVhPX1SifuujNIolZvrZihVrn7jgHKs5aCe60Bn26', 'siswa', '2025-09-01 04:27:46', '2025-09-01 04:27:46'),
-(644, 'TOMI', '232410117', '$2y$12$8ERKdcWsgnk2lSH1SoDh7uSqGjfCLg/La3eYnZFHapFI587KsnskC', 'siswa', '2025-09-01 04:27:47', '2025-09-01 04:27:47'),
-(645, 'WARTA', '232410118', '$2y$12$KXMBMO5g8GUfs7Fo7PSdROv/DIGCx91PWAX5qxMvQYv1jMW9N8yby', 'siswa', '2025-09-01 04:27:47', '2025-09-01 04:27:47');
+(644, 'TOMI', '232410117', '$2y$12$8ERKdcWsgnk2lSH1SoDh7uSqGjfCLg/La3eYnZFHapFI587KsnskC', 'siswa', '2025-09-01 04:27:47', '2025-09-01 04:27:47');
 INSERT INTO `pengguna` (`id`, `nama_lengkap`, `username`, `password`, `role`, `created_at`, `updated_at`) VALUES
+(645, 'WARTA', '232410118', '$2y$12$KXMBMO5g8GUfs7Fo7PSdROv/DIGCx91PWAX5qxMvQYv1jMW9N8yby', 'siswa', '2025-09-01 04:27:47', '2025-09-01 04:27:47'),
 (646, 'ADAM MARIANSYAH', '232410119', '$2y$12$0uDxUNhs3X8ju.UIVD/Y5uMXPXTMYpG.1W0ht/pp63Zw2FgRO7Twa', 'siswa', '2025-09-01 04:27:47', '2025-09-01 04:27:47'),
 (647, 'AJIJAH LESTARI', '232410120', '$2y$12$S6PT3mcEJh8e.45crBmIz.NyO.ELCpFLV21vDbHNvuctlAwttGzDy', 'siswa', '2025-09-01 04:27:47', '2025-09-01 04:27:47'),
 (648, 'ANDRIAN', '232410121', '$2y$12$Y0yRIZviQg6kSpKM6cZLN.1ouRzwrozkQ8kjZ/BIKUIPODs/KV12m', 'siswa', '2025-09-01 04:27:48', '2025-09-01 04:27:48'),
@@ -2238,7 +2241,7 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('zKB1FNMWmEV4qYQ1fSY0E6lb50mrPwwaRu1rJ0tF', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiNGFhdXRXV25jNzR4SVc1ajZBWUI0RG90YVRvS1dpT1YyVmJHaXI0UCI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MzE6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9kYXNoYm9hcmQiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX1zOjUwOiJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI7aToxO30=', 1757409975);
+('zKB1FNMWmEV4qYQ1fSY0E6lb50mrPwwaRu1rJ0tF', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiNGFhdXRXV25jNzR4SVc1ajZBWUI0RG90YVRvS1dpT1YyVmJHaXI0UCI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MzE6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9kYXNoYm9hcmQiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX1zOjUwOiJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI7aToxO30=', 1757408583);
 
 -- --------------------------------------------------------
 
@@ -2478,6 +2481,8 @@ INSERT INTO `setoran` (`id`, `siswa_id`, `jenis_sampah_id`, `jumlah`, `total_har
 (214, 549, 2, 12.00, 120.00, '2025-09-02 04:36:11', '2025-09-02 04:36:11', 'normal'),
 (215, 550, 1, 10.00, 350.00, '2025-09-02 04:36:11', '2025-09-02 04:36:11', 'normal'),
 (216, 550, 2, 15.00, 150.00, '2025-09-02 04:36:11', '2025-09-02 04:36:11', 'normal'),
+(217, 552, 1, 13.00, 455.00, '2025-09-02 04:36:11', '2025-09-02 04:36:11', 'normal'),
+(218, 552, 2, 12.00, 120.00, '2025-09-02 04:36:11', '2025-09-02 04:36:11', 'normal'),
 (219, 646, 1, 17.00, 595.00, '2025-09-02 04:46:01', '2025-09-02 04:46:01', 'normal'),
 (220, 647, 1, 10.00, 350.00, '2025-09-02 04:46:01', '2025-09-02 04:46:01', 'normal'),
 (221, 649, 1, 10.00, 350.00, '2025-09-02 04:46:01', '2025-09-02 04:46:01', 'normal'),
@@ -2856,10 +2861,10 @@ INSERT INTO `setoran` (`id`, `siswa_id`, `jenis_sampah_id`, `jumlah`, `total_har
 (625, 165, 1, 10.00, 350.00, '2025-09-04 06:16:24', '2025-09-04 06:16:24', 'normal'),
 (626, 166, 2, 22.00, 220.00, '2025-09-04 06:16:24', '2025-09-04 06:16:24', 'normal'),
 (627, 167, 1, 15.00, 525.00, '2025-09-04 06:16:24', '2025-09-04 06:16:24', 'normal'),
-(628, 168, 1, 10.00, 350.00, '2025-09-04 06:16:24', '2025-09-04 06:16:24', 'normal'),
-(629, 169, 2, 20.00, 200.00, '2025-09-04 06:16:24', '2025-09-04 06:16:24', 'normal'),
-(630, 170, 1, 10.00, 350.00, '2025-09-04 06:16:24', '2025-09-04 06:16:24', 'normal');
+(628, 168, 1, 10.00, 350.00, '2025-09-04 06:16:24', '2025-09-04 06:16:24', 'normal');
 INSERT INTO `setoran` (`id`, `siswa_id`, `jenis_sampah_id`, `jumlah`, `total_harga`, `created_at`, `updated_at`, `status`) VALUES
+(629, 169, 2, 20.00, 200.00, '2025-09-04 06:16:24', '2025-09-04 06:16:24', 'normal'),
+(630, 170, 1, 10.00, 350.00, '2025-09-04 06:16:24', '2025-09-04 06:16:24', 'normal'),
 (631, 171, 2, 40.00, 400.00, '2025-09-04 06:16:24', '2025-09-04 06:16:24', 'normal'),
 (632, 172, 2, 12.00, 120.00, '2025-09-04 06:16:24', '2025-09-04 06:16:24', 'normal'),
 (633, 173, 2, 26.00, 260.00, '2025-09-04 06:16:24', '2025-09-04 06:16:24', 'normal'),
@@ -3452,10 +3457,10 @@ INSERT INTO `setoran` (`id`, `siswa_id`, `jenis_sampah_id`, `jumlah`, `total_har
 (1220, 555, 1, 2.00, 70.00, '2025-09-09 08:58:08', '2025-09-09 08:58:08', 'normal'),
 (1221, 555, 2, 23.00, 230.00, '2025-09-09 08:58:08', '2025-09-09 08:58:08', 'normal'),
 (1222, 556, 1, 8.00, 280.00, '2025-09-09 08:58:08', '2025-09-09 08:58:08', 'normal'),
-(1223, 556, 2, 4.00, 40.00, '2025-09-09 08:58:08', '2025-09-09 08:58:08', 'normal'),
-(1224, 557, 1, 10.00, 350.00, '2025-09-09 08:58:08', '2025-09-09 08:58:08', 'normal'),
-(1225, 557, 2, 1.00, 10.00, '2025-09-09 08:58:08', '2025-09-09 08:58:08', 'normal');
+(1223, 556, 2, 4.00, 40.00, '2025-09-09 08:58:08', '2025-09-09 08:58:08', 'normal');
 INSERT INTO `setoran` (`id`, `siswa_id`, `jenis_sampah_id`, `jumlah`, `total_harga`, `created_at`, `updated_at`, `status`) VALUES
+(1224, 557, 1, 10.00, 350.00, '2025-09-09 08:58:08', '2025-09-09 08:58:08', 'normal'),
+(1225, 557, 2, 1.00, 10.00, '2025-09-09 08:58:08', '2025-09-09 08:58:08', 'normal'),
 (1226, 558, 1, 16.00, 560.00, '2025-09-09 08:58:08', '2025-09-09 08:58:08', 'normal'),
 (1227, 559, 1, 10.00, 350.00, '2025-09-09 08:58:08', '2025-09-09 08:58:08', 'normal'),
 (1228, 560, 1, 31.00, 1085.00, '2025-09-09 08:58:08', '2025-09-09 08:58:08', 'normal'),
@@ -4082,6 +4087,7 @@ INSERT INTO `siswa` (`id`, `id_pengguna`, `id_kelas`, `nis`, `saldo`, `points`, 
 (549, 550, 19, '232410023', 820.00, 0, '2025-09-01 04:27:22', '2025-09-09 08:54:26'),
 (550, 551, 19, '232410024', 850.00, 0, '2025-09-01 04:27:22', '2025-09-09 08:54:26'),
 (551, 552, 19, '232410025', 925.00, 0, '2025-09-01 04:27:22', '2025-09-09 08:54:26'),
+(552, 553, 19, '232410026', 575.00, 0, '2025-09-01 04:27:23', '2025-09-02 04:36:11'),
 (553, 554, 20, '232410027', 1400.00, 0, '2025-09-01 04:27:23', '2025-09-09 08:58:08'),
 (554, 555, 20, '232410028', 1015.00, 0, '2025-09-01 04:27:23', '2025-09-09 08:58:08'),
 (555, 556, 20, '232410029', 860.00, 0, '2025-09-01 04:27:23', '2025-09-09 08:58:08'),
@@ -4130,9 +4136,9 @@ INSERT INTO `siswa` (`id`, `id_pengguna`, `id_kelas`, `nis`, `saldo`, `points`, 
 (598, 599, 21, '232410072', 445.00, 0, '2025-09-01 04:27:35', '2025-09-08 08:06:42'),
 (599, 600, 21, '232410073', 1085.00, 0, '2025-09-01 04:27:35', '2025-09-08 08:06:42'),
 (600, 601, 21, '232410074', 785.00, 0, '2025-09-01 04:27:35', '2025-09-08 08:06:42'),
-(601, 602, 21, '232410075', 700.00, 0, '2025-09-01 04:27:36', '2025-09-08 08:06:42'),
-(602, 603, 21, '232410076', 465.00, 0, '2025-09-01 04:27:36', '2025-09-08 08:06:42');
+(601, 602, 21, '232410075', 700.00, 0, '2025-09-01 04:27:36', '2025-09-08 08:06:42');
 INSERT INTO `siswa` (`id`, `id_pengguna`, `id_kelas`, `nis`, `saldo`, `points`, `created_at`, `updated_at`) VALUES
+(602, 603, 21, '232410076', 465.00, 0, '2025-09-01 04:27:36', '2025-09-08 08:06:42'),
 (603, 604, 21, '232410077', 470.00, 0, '2025-09-01 04:27:36', '2025-09-08 08:06:42'),
 (604, 605, 21, '232410078', 535.00, 0, '2025-09-01 04:27:36', '2025-09-08 08:06:42'),
 (605, 606, 21, '232410079', 735.00, 0, '2025-09-01 04:27:37', '2025-09-08 08:06:42'),
