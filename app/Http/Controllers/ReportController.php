@@ -23,12 +23,12 @@ class ReportController extends Controller
      */
     public function index(Request $request)
     {
-        // Filter berdasarkan nama_siswa, bukan lagi siswa_id
+        // Filter diubah dari siswa_id menjadi nama_siswa
         $filters = $request->only(['start_date', 'end_date', 'nama_siswa', 'transaction_type']);
 
         // --- BAGIAN LAPORAN TRANSAKSI (DENGAN PAGINASI) ---
         $transaksi = collect([]);
-
+        
         $transactionTypesInput = $request->input('transaction_type');
         $transactionTypes = [];
 
@@ -48,7 +48,7 @@ class ReportController extends Controller
         if (in_array('setoran', $transactionTypes)) {
             $setoran = Setoran::with('siswa.pengguna')
                 ->whereBetween(DB::raw('DATE(created_at)'), [$startDate, $endDate])
-                // Ganti filter dari siswa_id menjadi pencarian nama_siswa
+                // Filter diubah ke pencarian nama siswa
                 ->when($request->filled('nama_siswa'), function ($query) use ($request) {
                     $query->whereHas('siswa.pengguna', function ($q) use ($request) {
                         $q->where('nama_lengkap', 'like', '%' . $request->nama_siswa . '%');
@@ -68,7 +68,7 @@ class ReportController extends Controller
         if (in_array('penarikan', $transactionTypes)) {
             $penarikan = Penarikan::with('siswa.pengguna')
                 ->whereBetween(DB::raw('DATE(created_at)'), [$startDate, $endDate])
-                // Ganti filter dari siswa_id menjadi pencarian nama_siswa
+                // Filter diubah ke pencarian nama siswa
                 ->when($request->filled('nama_siswa'), function ($query) use ($request) {
                     $query->whereHas('siswa.pengguna', function ($q) use ($request) {
                         $q->where('nama_lengkap', 'like', '%' . $request->nama_siswa . '%');
@@ -84,9 +84,9 @@ class ReportController extends Controller
                 });
             $transaksi = $transaksi->concat($penarikan);
         }
-
+        
         $transaksi = $transaksi->sortByDesc('tanggal');
-
+        
         $perPage = 10;
         $currentPage = $request->input('page', 1);
         $pagedData = $transaksi->slice(($currentPage - 1) * $perPage, $perPage)->all();
@@ -105,18 +105,14 @@ class ReportController extends Controller
         $startLabaRugi = $request->input('start_date_laba_rugi', Carbon::now()->startOfMonth()->toDateString());
         $endLabaRugi = $request->input('end_date_laba_ruti', Carbon::now()->endOfMonth()->toDateString());
 
-        $totalPenjualan = Penjualan::whereBetween('tanggal_penjualan', [$startLabaRugi, $endLabaRugi])->sum('total_harga');
-        $totalInsentif = DB::table('pembayaran_insentifs')->whereBetween('tanggal_pembayaran', [$startLabaRugi, $endLabaRugi])->sum('total_dibayar');
-        $pengeluaranLain = DB::table('buku_kas')->where('tipe', 'pengeluaran')->whereBetween('tanggal', [$startLabaRugi, $endLabaRugi])->sum('jumlah');
+        $totalPenjualan = Penjualan::whereBetween('tanggal_penjualan', [$startDate, $endDate])->sum('total_harga');
+        $totalInsentif = DB::table('pembayaran_insentifs')->whereBetween('tanggal_pembayaran', [$startDate, $endDate])->sum('total_dibayar');
+        $pengeluaranLain = DB::table('buku_kas')->where('tipe', 'pengeluaran')->whereBetween('tanggal', [$startDate, $endDate])->sum('jumlah');
         $labaRugi = $totalPenjualan - ($totalInsentif + $pengeluaranLain);
-
-        // siswaList tidak lagi diperlukan untuk filter utama, tapi mungkin masih digunakan di tempat lain.
-        $siswaList = Siswa::with('pengguna')->get()->sortBy('pengguna.nama_lengkap');
 
         return view('pages.laporan.index', [
             'transaksi' => $transaksiPaginated,
             'penjualan' => $penjualan,
-            'siswaList' => $siswaList,
             'filters' => $filters,
             'selectedMonth' => $selectedMonth,
             'totalPenjualan' => $totalPenjualan,
@@ -125,8 +121,8 @@ class ReportController extends Controller
             'labaRugi' => $labaRugi,
         ]);
     }
-
-    public function exportTransaksiExcel(Request $request)
+    
+    public function exportTransaksiExcel(Request $request) 
     {
         return Excel::download(new LaporanTransaksiExport($request->all()), 'laporan-transaksi.xlsx');
     }
@@ -136,14 +132,14 @@ class ReportController extends Controller
         $kelasList = Kelas::with('siswa')->orderBy('nama_kelas')->get();
         $jenisSampahList = JenisSampah::orderBy('nama_sampah')->get();
         $dataLaporan = [];
-
+    
         foreach ($kelasList as $kelas) {
             $dataKelas = [
                 'nama_kelas' => $kelas->nama_kelas,
                 'siswa' => [],
                 'total_per_sampah' => array_fill_keys($jenisSampahList->pluck('id')->toArray(), 0)
             ];
-
+    
             foreach ($kelas->siswa as $siswa) {
                 $setoranSiswa = Setoran::where('siswa_id', $siswa->id)
                     ->when($request->filled('start_date'), function ($q) use ($request) {
@@ -155,29 +151,29 @@ class ReportController extends Controller
                     ->select('jenis_sampah_id', DB::raw('SUM(jumlah) as total_jumlah'))
                     ->groupBy('jenis_sampah_id')
                     ->pluck('total_jumlah', 'jenis_sampah_id');
-
+    
                 if ($setoranSiswa->isNotEmpty()) {
                     $dataSiswa = [
                         'nama_siswa' => $siswa->pengguna->nama_lengkap,
                         'setoran' => array_fill_keys($jenisSampahList->pluck('id')->toArray(), 0)
                     ];
-
+    
                     foreach ($setoranSiswa as $jenis_sampah_id => $total_jumlah) {
                         if(isset($dataSiswa['setoran'][$jenis_sampah_id])) {
                             $dataSiswa['setoran'][$jenis_sampah_id] = $total_jumlah;
                             $dataKelas['total_per_sampah'][$jenis_sampah_id] += $total_jumlah;
                         }
                     }
-
+                    
                     $dataKelas['siswa'][] = $dataSiswa;
                 }
             }
-
+            
             if (!empty($dataKelas['siswa'])) {
                 $dataLaporan[] = $dataKelas;
             }
         }
-
+    
         $pdf = Pdf::loadView('pages.laporan.pdf.laporan-transaksi-pdf', compact('dataLaporan', 'jenisSampahList'));
         $pdf->setPaper('a4', 'landscape');
         return $pdf->stream('laporan-transaksi-per-kelas.pdf');
@@ -194,7 +190,7 @@ class ReportController extends Controller
         $query = Penjualan::with('detailPenjualan.jenisSampah')
             ->whereYear('tanggal_penjualan', '=', Carbon::parse($selectedMonth)->year)
             ->whereMonth('tanggal_penjualan', '=', Carbon::parse($selectedMonth)->month);
-
+        
         $penjualan = $query->get();
         $totalPenjualan = $penjualan->sum('total_harga');
 
@@ -208,11 +204,11 @@ class ReportController extends Controller
         $endDate = $request->end_date_laba_rugi;
 
         $totalPenjualan = Penjualan::whereBetween('tanggal_penjualan', [$startDate, $endDate])->sum('total_harga');
-
+        
         $totalInsentif = DB::table('pembayaran_insentifs')
             ->whereBetween('tanggal_pembayaran', [$startDate, $endDate])
             ->sum('total_dibayar');
-
+            
         $pengeluaranLain = DB::table('buku_kas')
             ->where('tipe', 'pengeluaran')
             ->whereBetween('tanggal', [$startDate, $endDate])
