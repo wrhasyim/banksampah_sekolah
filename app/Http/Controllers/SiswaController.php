@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Pengguna;
 use App\Models\Siswa;
 use App\Models\Kelas;
+use App\Models\Insentif;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
@@ -15,11 +16,21 @@ use App\Exports\SiswaSampleExport;
 
 class SiswaController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $siswas = Siswa::with(['pengguna', 'kelas'])->latest()->paginate(10);
-        return view('pages.siswa.index', compact('siswas'));
+        $kelas = Kelas::orderBy('nama_kelas')->get();
+        
+        $query = Siswa::with(['pengguna', 'kelas']);
+
+        if ($request->filled('id_kelas')) {
+            $query->where('id_kelas', $request->id_kelas);
+        }
+
+        $siswas = $query->latest()->paginate(10);
+
+        return view('pages.siswa.index', compact('siswas', 'kelas'));
     }
+
 
     public function create()
     {
@@ -63,29 +74,25 @@ class SiswaController extends Controller
 
     public function update(Request $request, Siswa $siswa)
     {
-        // PERBAIKAN: Validasi yang sesuai dengan form edit
         $request->validate([
             'nama_lengkap' => ['required', 'string', 'max:255'],
             'username' => ['required', 'string', 'max:255', 'unique:pengguna,username,' . $siswa->pengguna->id],
             'nis' => ['required', 'string', 'max:20', 'unique:siswa,nis,' . $siswa->id],
             'id_kelas' => ['required', 'exists:kelas,id'],
-            'password' => ['nullable', 'string', 'min:8'], // Password tidak wajib diisi saat update
+            'password' => ['nullable', 'string', 'min:8'],
         ]);
 
         DB::transaction(function () use ($request, $siswa) {
-            // Update data di tabel pengguna
             $siswa->pengguna->update([
                 'nama_lengkap' => $request->nama_lengkap,
                 'username' => $request->username,
             ]);
 
-            // Update data di tabel siswa
             $siswa->update([
                 'id_kelas' => $request->id_kelas,
                 'nis' => $request->nis,
             ]);
 
-            // Jika password diisi, maka update passwordnya
             if ($request->filled('password')) {
                 $siswa->pengguna->update(['password' => Hash::make($request->password)]);
             }
@@ -94,16 +101,41 @@ class SiswaController extends Controller
         return redirect()->route('siswa.index')->with('toastr-success', 'Siswa berhasil diperbarui!');
     }
 
+    /**
+     * PERBAIKAN: Fungsi destroy diubah untuk memastikan semua data terkait terhapus dengan benar.
+     */
     public function destroy(Siswa $siswa)
     {
         try {
             DB::transaction(function () use ($siswa) {
-                $siswa->pengguna()->delete(); // Hapus pengguna dulu
-                $siswa->delete(); // Baru hapus siswanya
+                // Simpan data pengguna sebelum siswa dihapus
+                $pengguna = $siswa->pengguna;
+
+                // 1. Hapus semua setoran dan kurangi stok sampah
+                foreach ($siswa->setoran as $setoran) {
+                    if ($setoran->jenisSampah) {
+                        $setoran->jenisSampah->decrement('stok', $setoran->jumlah);
+                    }
+                    $setoran->delete();
+                }
+
+                // 2. Hapus semua penarikan siswa
+                $siswa->penarikan()->delete();
+
+                // 3. Hapus data siswa itu sendiri
+                $siswa->delete();
+
+                // 4. Hapus data pengguna yang terkait
+                if ($pengguna) {
+                    $pengguna->delete();
+                }
             });
-            return redirect()->route('siswa.index')->with('toastr-success', 'Siswa berhasil dihapus.');
+
+            return redirect()->route('siswa.index')->with('toastr-success', 'Siswa dan semua data terkait berhasil dihapus.');
         } catch (\Exception $e) {
-            return redirect()->route('siswa.index')->with('toastr-error', 'Gagal menghapus siswa, kemungkinan masih ada data terkait.');
+            // Untuk debugging, Anda bisa melihat error di file log Laravel
+            \Log::error('Gagal menghapus siswa: ' . $e->getMessage());
+            return redirect()->route('siswa.index')->with('toastr-error', 'Gagal menghapus siswa karena masih ada data yang terkait.');
         }
     }
 

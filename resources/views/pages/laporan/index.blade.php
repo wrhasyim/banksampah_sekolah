@@ -10,6 +10,16 @@
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
                     <h3 class="text-lg font-semibold mb-4">Laporan Transaksi (Setoran & Penarikan)</h3>
+
+                    <form action="{{ route('laporan.index') }}" method="GET" class="mb-4">
+                        <div class="flex items-center">
+                            <input type="text" name="nama_siswa" class="w-full px-3 py-2 border rounded-md" placeholder="Cari berdasarkan nama siswa..." value="{{ request('nama_siswa') }}">
+                            <button type="submit" class="ml-2 px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700">
+                                Cari
+                            </button>
+                        </div>
+                    </form>
+
                     @include('pages.laporan.partials.tabel-transaksi')
                 </div>
             </div>
