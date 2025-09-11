@@ -34,7 +34,8 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
 
 // Grup rute yang hanya bisa diakses oleh admin
 Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
-    
+     Route::post('settings/backup', [App\Http\Controllers\SettingController::class, 'backup'])->name('settings.backup');
+    Route::post('settings/restore', [App\Http\Controllers\SettingController::class, 'restore'])->name('settings.restore');
     // Master Data
     Route::resource('kelas', KelasController::class);
     Route::resource('jenis-sampah', JenisSampahController::class);
