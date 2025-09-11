@@ -11,18 +11,12 @@ use ZipArchive;
 
 class SettingController extends Controller
 {
-    /**
-     * Menampilkan halaman pengaturan.
-     */
     public function index()
     {
         $settings = Setting::pluck('value', 'key');
         return view('pages.settings.index', compact('settings'));
     }
 
-    /**
-     * Memperbarui pengaturan website dan honor.
-     */
     public function update(Request $request)
     {
         $request->validate([
@@ -59,44 +53,36 @@ class SettingController extends Controller
     }
 
     /**
-     * Menangani proses backup database (Versi Perbaikan).
+     * Menangani proses backup database.
      */
     public function backup()
     {
         try {
-            // Bersihkan cache config untuk memastikan pengaturan backup terbaru yang dibaca
+            // Tingkatkan batas waktu eksekusi skrip menjadi 5 menit (300 detik)
+            set_time_limit(300);
+            
             Artisan::call('config:clear');
-
-            // Jalankan perintah backup hanya untuk database
             Artisan::call('backup:run', ['--only-db' => true]);
 
-            // Dapatkan nama disk dari file konfigurasi backup
             $diskName = config('backup.backup.destination.disks')[0];
             $disk = Storage::disk($diskName);
-
-            // Dapatkan semua file dari direktori backup
             $files = $disk->allFiles(config('backup.backup.name'));
 
             if (empty($files)) {
-                return back()->with('toastr-error', 'Backup berhasil diproses, tetapi tidak ada file yang ditemukan di direktori penyimpanan. Periksa konfigurasi disk Anda.');
+                return back()->with('toastr-error', 'Backup berhasil diproses, tetapi tidak ada file yang ditemukan. Pastikan XAMPP dijalankan sebagai Administrator.');
             }
 
-            // Urutkan file berdasarkan waktu modifikasi untuk menemukan yang paling baru
             usort($files, function ($a, $b) use ($disk) {
                 return $disk->lastModified($b) <=> $disk->lastModified($a);
             });
 
-            // Ambil file yang paling baru (elemen pertama setelah diurutkan)
             $latestFile = $files[0];
-
-            // Unduh file backup terbaru
             return $disk->download($latestFile);
 
         } catch (\Exception $e) {
             return back()->with('toastr-error', 'Gagal membuat backup: ' . $e->getMessage());
         }
     }
-
 
     /**
      * Menangani proses restore database.
@@ -108,38 +94,64 @@ class SettingController extends Controller
         ]);
 
         $file = $request->file('backup_file');
-        $path = $file->storeAs('temp', $file->getClientOriginalName());
+        
+        // Periksa ukuran file. Jika terlalu kecil (kurang dari 200 byte), kemungkinan besar rusak.
+        if ($file->getSize() < 200) {
+             return back()->with('toastr-error', 'Gagal restore: File backup yang Anda unggah tampaknya kosong atau rusak. Coba buat file backup yang baru.');
+        }
+
+        $path = $file->storeAs('temp', 'restore-' . uniqid() . '.' . $file->getClientOriginalExtension());
         $storagePath = storage_path('app/' . $path);
 
         $zip = new ZipArchive;
-        if ($zip->open($storagePath) === TRUE) {
-            $zip->extractTo(storage_path('app/temp/unzipped'));
-            $zip->close();
+        if ($zip->open($storagePath) !== TRUE) {
+            Storage::delete($path);
+            return back()->with('toastr-error', 'Gagal membuka file backup. File mungkin rusak atau bukan format ZIP yang valid.');
+        }
 
-            $sqlFiles = glob(storage_path('app/temp/unzipped/db-dumps/*.sql'));
-            if (!empty($sqlFiles)) {
-                $sqlFile = $sqlFiles[0];
+        $unzipPath = storage_path('app/temp/unzipped-restore-' . uniqid());
+        $zip->extractTo($unzipPath);
+        $zip->close();
 
-                try {
-                    DB::statement('SET FOREIGN_KEY_CHECKS=0;');
-                    $tables = DB::select('SHOW TABLES');
-                    $dbName = DB::getDatabaseName();
-                    $tablesInDbKey = "Tables_in_{$dbName}";
-                    foreach($tables as $table){
-                        DB::statement('DROP TABLE IF EXISTS '. $table->$tablesInDbKey);
-                    }
-                    DB::unprepared(file_get_contents($sqlFile));
-                    DB::statement('SET FOREIGN_KEY_CHECKS=1;');
-                    Storage::deleteDirectory('temp');
-                    return back()->with('toastr-success', 'Database berhasil dipulihkan!');
-                } catch (\Exception $e) {
-                    Storage::deleteDirectory('temp');
-                    return back()->with('toastr-error', 'Terjadi kesalahan saat restore: ' . $e->getMessage());
-                }
+        $sqlFile = null;
+        $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($unzipPath));
+        foreach ($iterator as $f) { // Variabel diubah menjadi $f untuk menghindari konflik
+            if (strtolower($f->getExtension()) == 'sql') {
+                $sqlFile = $f->getPathname();
+                break;
             }
         }
 
-        Storage::deleteDirectory('temp');
-        return back()->with('toastr-error', 'Gagal memulihkan database. Pastikan file backup valid.');
+        if ($sqlFile === null) {
+            Storage::delete($path);
+            Storage::deleteDirectory(str_replace(storage_path('app/'), '', $unzipPath));
+            return back()->with('toastr-error', 'File .sql tidak ditemukan di dalam arsip backup.');
+        }
+
+        try {
+            $sqlContent = file_get_contents($sqlFile);
+            if (empty(trim($sqlContent))) {
+                throw new \Exception("File SQL di dalam backup kosong. Ini menandakan proses backup sebelumnya gagal. Coba buat file backup yang baru.");
+            }
+
+            DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+            $tables = DB::select('SHOW TABLES');
+            $dbName = DB::getDatabaseName();
+            $tablesInDbKey = "Tables_in_{$dbName}";
+            foreach ($tables as $table) {
+                DB::statement('DROP TABLE IF EXISTS ' . $table->$tablesInDbKey);
+            }
+            DB::unprepared($sqlContent);
+            DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+
+            Storage::delete($path);
+            Storage::deleteDirectory(str_replace(storage_path('app/'), '', $unzipPath));
+
+            return back()->with('toastr-success', 'Database berhasil dipulihkan!');
+        } catch (\Exception $e) {
+            Storage::delete($path);
+            Storage::deleteDirectory(str_replace(storage_path('app/'), '', $unzipPath));
+            return back()->with('toastr-error', 'Terjadi kesalahan saat restore: ' . $e->getMessage());
+        }
     }
 }
