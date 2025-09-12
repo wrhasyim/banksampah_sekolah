@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use ZipArchive;
+use Illuminate\Support\Facades\File;
 
 class SettingController extends Controller
 {
@@ -52,15 +53,10 @@ class SettingController extends Controller
         return redirect()->route('settings.index')->with('toastr-success', 'Pengaturan berhasil diperbarui.');
     }
 
-    /**
-     * Menangani proses backup database.
-     */
     public function backup()
     {
         try {
-            // Tingkatkan batas waktu eksekusi skrip menjadi 5 menit (300 detik)
             set_time_limit(300);
-            
             Artisan::call('config:clear');
             Artisan::call('backup:run', ['--only-db' => true]);
 
@@ -84,29 +80,44 @@ class SettingController extends Controller
         }
     }
 
-    /**
-     * Menangani proses restore database.
-     */
     public function restore(Request $request)
     {
-        $request->validate([
-            'backup_file' => 'required|file|mimes:zip',
-        ]);
+        $request->validate(['backup_file' => 'required|file|mimes:zip']);
 
         $file = $request->file('backup_file');
         
-        // Periksa ukuran file. Jika terlalu kecil (kurang dari 200 byte), kemungkinan besar rusak.
-        if ($file->getSize() < 200) {
-             return back()->with('toastr-error', 'Gagal restore: File backup yang Anda unggah tampaknya kosong atau rusak. Coba buat file backup yang baru.');
+        // --- DIAGNOSTIK DAN PERBAIKAN OTOMATIS ---
+        $tempPath = storage_path('app/temp');
+        $uploadError = $file->getError();
+
+        // 1. Periksa apakah ada error saat upload dari sisi PHP
+        if ($uploadError !== UPLOAD_ERR_OK) {
+            return back()->with('toastr-error', 'DIAGNOSIS: Terjadi error upload PHP, kode: ' . $uploadError . '. Periksa pengaturan post_max_size dan upload_max_filesize di php.ini.');
         }
 
-        $path = $file->storeAs('temp', 'restore-' . uniqid() . '.' . $file->getClientOriginalExtension());
+        // 2. Buat folder temp jika tidak ada
+        if (!File::isDirectory($tempPath)) {
+            File::makeDirectory($tempPath, 0777, true, true);
+        }
+
+        // 3. Coba simpan file
+        try {
+            $path = $file->storeAs('temp', 'restore.zip');
+        } catch (\Exception $e) {
+             return back()->with('toastr-error', 'DIAGNOSIS: Gagal menyimpan file. Pesan: ' . $e->getMessage() . '. Pastikan folder C:\xampp\tmp dan storage\app\temp memiliki izin "Full Control".');
+        }
+
         $storagePath = storage_path('app/' . $path);
 
+        if (!file_exists($storagePath)) {
+             return back()->with('toastr-error', 'DIAGNOSIS: File gagal disimpan ke server di path: ' . $storagePath . '. Ini adalah masalah izin folder yang kritis. Jalankan XAMPP sebagai Admin dan berikan izin Full Control ke folder storage.');
+        }
+
+        // --- PROSES RESTORE NORMAL (jika semua di atas berhasil) ---
         $zip = new ZipArchive;
         if ($zip->open($storagePath) !== TRUE) {
             Storage::delete($path);
-            return back()->with('toastr-error', 'Gagal membuka file backup. File mungkin rusak atau bukan format ZIP yang valid.');
+            return back()->with('toastr-error', 'Gagal membuka file backup. File mungkin rusak.');
         }
 
         $unzipPath = storage_path('app/temp/unzipped-restore-' . uniqid());
@@ -115,7 +126,7 @@ class SettingController extends Controller
 
         $sqlFile = null;
         $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($unzipPath));
-        foreach ($iterator as $f) { // Variabel diubah menjadi $f untuk menghindari konflik
+        foreach ($iterator as $f) {
             if (strtolower($f->getExtension()) == 'sql') {
                 $sqlFile = $f->getPathname();
                 break;
@@ -124,14 +135,14 @@ class SettingController extends Controller
 
         if ($sqlFile === null) {
             Storage::delete($path);
-            Storage::deleteDirectory(str_replace(storage_path('app/'), '', $unzipPath));
+            File::deleteDirectory($unzipPath);
             return back()->with('toastr-error', 'File .sql tidak ditemukan di dalam arsip backup.');
         }
 
         try {
             $sqlContent = file_get_contents($sqlFile);
             if (empty(trim($sqlContent))) {
-                throw new \Exception("File SQL di dalam backup kosong. Ini menandakan proses backup sebelumnya gagal. Coba buat file backup yang baru.");
+                throw new \Exception("File SQL di dalam backup kosong. Coba buat file backup baru.");
             }
 
             DB::statement('SET FOREIGN_KEY_CHECKS=0;');
@@ -145,12 +156,12 @@ class SettingController extends Controller
             DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
             Storage::delete($path);
-            Storage::deleteDirectory(str_replace(storage_path('app/'), '', $unzipPath));
-
+            File::deleteDirectory($unzipPath);
             return back()->with('toastr-success', 'Database berhasil dipulihkan!');
+
         } catch (\Exception $e) {
             Storage::delete($path);
-            Storage::deleteDirectory(str_replace(storage_path('app/'), '', $unzipPath));
+            File::deleteDirectory($unzipPath);
             return back()->with('toastr-error', 'Terjadi kesalahan saat restore: ' . $e->getMessage());
         }
     }
