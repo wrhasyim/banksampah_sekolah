@@ -31,9 +31,9 @@
         <a href="{{ route('laporan.index') }}" class="ml-2 text-white bg-gray-500 hover:bg-gray-600 focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-gray-400 dark:hover:bg-gray-500 focus:outline-none dark:focus:ring-gray-600">
             Reset
         </a>
-        <a href="{{ route('laporan.transaksi.export.excel', request()->query()) }}" class="ml-2 text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-green-600 dark:hover:bg-green-700 focus:outline-none dark:focus:ring-green-800">
-            Excel
-        </a>
+        <a href="{{ route('laporan.transaksi.export.pdf', ['month' => $selectedMonth]) }}" class="ml-2 text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-green-600 dark:hover:bg-green-700 focus:outline-none dark:focus:ring-green-800">
+                Export PDF
+            </a>
     </div>
 </form>
 
