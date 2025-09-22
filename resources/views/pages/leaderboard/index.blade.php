@@ -31,10 +31,18 @@
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <p class="text-sm font-semibold text-gray-900 truncate dark:text-white">
-                                        {{-- PERBAIKAN: Memanggil nama_lengkap dan menggunakan fallback --}}
                                         {{ $siswa->pengguna->nama_lengkap ?? 'Siswa Telah Dihapus' }}
                                     </p>
-                                    
+                                    @if(isset($siswa->sampah_details) && $siswa->sampah_details->isNotEmpty())
+                                        <div class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                                            <ul class="list-disc list-inside">
+                                                @foreach($siswa->sampah_details as $detail)
+                                                    {{-- PERUBAHAN: Mengganti 'Kg' dengan satuan dinamis --}}
+                                                    <li>{{ $detail->nama_jenis }}: <strong>{{ number_format($detail->total_jumlah, 2, ',', '.') }} {{ $detail->satuan }}</strong></li>
+                                                @endforeach
+                                            </ul>
+                                        </div>
+                                    @endif
                                 </div>
                                 <div class="inline-flex items-center text-base font-semibold text-gray-900 dark:text-white">
                                     Rp {{ number_format($siswa->setoran_sum_total_harga, 0, ',', '.') }}
@@ -58,6 +66,16 @@
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <p class="text-sm font-semibold text-gray-900 truncate dark:text-white">{{ $kelas->nama_kelas }}</p>
+                                    @if(isset($kelas->sampah_details) && $kelas->sampah_details->isNotEmpty())
+                                        <div class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                                            <ul class="list-disc list-inside">
+                                                @foreach($kelas->sampah_details as $detail)
+                                                     {{-- PERUBAHAN: Mengganti 'Kg' dengan satuan dinamis --}}
+                                                    <li>{{ $detail->nama_jenis }}: <strong>{{ number_format($detail->total_jumlah, 2, ',', '.') }} {{ $detail->satuan }}</strong></li>
+                                                @endforeach
+                                            </ul>
+                                        </div>
+                                    @endif
                                 </div>
                                 <div class="inline-flex items-center text-base font-semibold text-gray-900 dark:text-white">
                                     Rp {{ number_format($kelas->setoran_sum_total_harga, 0, ',', '.') }}

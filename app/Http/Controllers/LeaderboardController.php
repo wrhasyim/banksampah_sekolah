@@ -15,9 +15,7 @@ class LeaderboardController extends Controller
         $filter = $request->input('filter', 'minggu_ini');
         $dateRange = $this->getDateRange($filter);
 
-        // --- REVISI PERINGKAT SISWA ---
-        // 1. Memfilter pengguna dengan role 'siswa'.
-        // 2. Memfilter agar siswa yang ada di kelas 'Guru' tidak ikut tampil.
+        // --- Peringkat Siswa ---
         $topSiswa = Siswa::whereHas('pengguna', function ($query) {
                 $query->where('role', 'siswa');
             })
@@ -29,12 +27,24 @@ class LeaderboardController extends Controller
                 $query->whereBetween('created_at', $dateRange);
             }], 'total_harga')
             ->orderByDesc('setoran_sum_total_harga')
-            ->take(10)
+            // PERUBAHAN: Mengubah dari 10 menjadi 5
+            ->take(5)
             ->get();
 
-        // --- REVISI PERINGKAT KELAS ---
-        // 1. Tidak menampilkan kelas 'Guru'.
-        // 2. Memastikan total setoran kelas hanya dihitung dari setoran milik siswa.
+        // -- Ambil detail sampah untuk setiap siswa teratas --
+        $topSiswa->each(function ($siswa) use ($dateRange) {
+            $siswa->sampah_details = DB::table('setoran')
+                ->join('jenis_sampah', 'setoran.jenis_sampah_id', '=', 'jenis_sampah.id')
+                ->where('setoran.siswa_id', $siswa->id)
+                ->whereBetween('setoran.created_at', $dateRange)
+                ->select('jenis_sampah.nama_sampah as nama_jenis', 'jenis_sampah.satuan', DB::raw('SUM(setoran.jumlah) as total_jumlah'))
+                ->groupBy('jenis_sampah.nama_sampah', 'jenis_sampah.satuan')
+                ->havingRaw('SUM(setoran.jumlah) >= 1')
+                ->orderBy('jenis_sampah.nama_sampah')
+                ->get();
+        });
+
+        // --- Peringkat Kelas ---
         $topKelas = Kelas::where('nama_kelas', '!=', 'Guru')
             ->withSum(['setoran' => function ($query) use ($dateRange) {
                 $query->whereBetween('setoran.created_at', $dateRange)
@@ -43,9 +53,24 @@ class LeaderboardController extends Controller
                       });
             }], 'total_harga')
             ->orderByDesc('setoran_sum_total_harga')
-            ->take(10)
+            // PERUBAHAN: Mengubah dari 10 menjadi 5
+            ->take(5)
             ->get();
             
+        // -- Ambil detail sampah untuk setiap kelas teratas --
+        $topKelas->each(function ($kelas) use ($dateRange) {
+            $kelas->sampah_details = DB::table('setoran')
+                ->join('jenis_sampah', 'setoran.jenis_sampah_id', '=', 'jenis_sampah.id')
+                ->join('siswa', 'setoran.siswa_id', '=', 'siswa.id')
+                ->where('siswa.id_kelas', $kelas->id)
+                ->whereBetween('setoran.created_at', $dateRange)
+                ->select('jenis_sampah.nama_sampah as nama_jenis', 'jenis_sampah.satuan', DB::raw('SUM(setoran.jumlah) as total_jumlah'))
+                ->groupBy('jenis_sampah.nama_sampah', 'jenis_sampah.satuan')
+                ->havingRaw('SUM(setoran.jumlah) >= 1')
+                ->orderBy('jenis_sampah.nama_sampah')
+                ->get();
+        });
+
         $badges = Badge::orderBy('min_points', 'asc')->get();
 
         return view('pages.leaderboard.index', [
