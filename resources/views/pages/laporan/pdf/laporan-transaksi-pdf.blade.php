@@ -4,8 +4,10 @@
     <title>Laporan Transaksi Per Kelas</title>
     <style>
         body { font-family: sans-serif; margin: 20px; }
-        h1, h2 { text-align: center; }
-        h2 { margin-top: 30px; border-top: 1px solid #ccc; padding-top: 20px;}
+        h1, h2, h4 { text-align: center; }
+        h1 { font-size: 18px; margin-bottom: 5px; }
+        h4 { font-size: 14px; font-weight: normal; margin-top: 0; margin-bottom: 20px; }
+        h2 { margin-top: 30px; border-top: 1px solid #ccc; padding-top: 20px; font-size: 16px; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 10px; }
         th, td { border: 1px solid #000; padding: 6px; text-align: left; }
         th { background-color: #f2f2f2; }
@@ -16,8 +18,10 @@
 </head>
 <body>
     <h1>Laporan Rekapitulasi Setoran Sampah</h1>
+    {{-- PERUBAHAN: Menambahkan periode tanggal --}}
+    <h4>Periode: {{ \Carbon\Carbon::parse($startDate)->isoFormat('D MMMM Y') }} - {{ \Carbon\Carbon::parse($endDate)->isoFormat('D MMMM Y') }}</h4>
 
-    @foreach ($dataLaporan as $dataKelas)
+    @forelse ($dataLaporan as $dataKelas)
         <h2>Kelas: {{ $dataKelas['nama_kelas'] }}</h2>
         <table>
             <thead>
@@ -41,7 +45,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="{{ count($jenisSampahList) + 1 }}" class="no-data">Tidak ada data setoran di kelas ini.</td>
+                        <td colspan="{{ count($jenisSampahList) + 1 }}" class="no-data">Tidak ada data setoran di kelas ini pada periode yang dipilih.</td>
                     </tr>
                 @endforelse
             </tbody>
@@ -62,7 +66,9 @@
         @if (!$loop->last)
             <div class="page-break"></div>
         @endif
-    @endforeach
+    @empty
+        <p class="no-data">Tidak ada data setoran untuk ditampilkan pada periode yang dipilih.</p>
+    @endforelse
 
 </body>
 </html>

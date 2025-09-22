@@ -1,39 +1,41 @@
-<form action="{{ route('laporan.index') }}" method="GET">
+{{-- Menggunakan ID unik untuk form agar JS tidak bentrok --}}
+<form action="{{ route('laporan.index') }}" method="GET" id="filter-transaksi-form">
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
         <div>
             <label for="start_date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Dari Tanggal</label>
-            <input type="date" id="start_date" name="start_date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" value="{{ request('start_date', \Carbon\Carbon::now()->startOfMonth()->toDateString()) }}">
+            <input type="date" id="start_date" name="start_date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" value="{{ $filters['start_date'] ?? \Carbon\Carbon::now()->startOfMonth()->toDateString() }}">
         </div>
         <div>
             <label for="end_date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Sampai Tanggal</label>
-            <input type="date" id="end_date" name="end_date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" value="{{ request('end_date', \Carbon\Carbon::now()->endOfMonth()->toDateString()) }}">
+            <input type="date" id="end_date" name="end_date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" value="{{ $filters['end_date'] ?? \Carbon\Carbon::now()->endOfMonth()->toDateString() }}">
         </div>
         
         <div class="md:col-span-1">
             <label for="nama_siswa_filter" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Cari Siswa</label>
-            <input type="text" id="nama_siswa_filter" name="nama_siswa" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="Ketik nama siswa..." value="{{ request('nama_siswa') }}">
+            <input type="text" id="nama_siswa_filter" name="nama_siswa" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="Ketik nama siswa..." value="{{ $filters['nama_siswa'] ?? '' }}">
         </div>
 
         <div>
             <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Jenis Transaksi</label>
             <div class="flex items-center space-x-2">
-                <input type="hidden" name="transaction_type" id="transaction_type_input" value="{{ request('transaction_type', 'setoran,penarikan') }}">
+                <input type="hidden" name="transaction_type" id="transaction_type_input" value="{{ $filters['transaction_type'] ?? 'setoran,penarikan' }}">
                 <button type="button" class="btn-filter-jenis w-full p-2.5 text-sm font-medium text-center border rounded-lg" data-value="setoran">Setoran</button>
                 <button type="button" class="btn-filter-jenis w-full p-2.5 text-sm font-medium text-center border rounded-lg" data-value="penarikan">Penarikan</button>
             </div>
         </div>
     </div>
 
-    <div class="flex justify-end items-center mb-4">
+    <div class="flex justify-end items-center mb-4 space-x-2">
         <button type="submit" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">
             Filter
         </button>
-        <a href="{{ route('laporan.index') }}" class="ml-2 text-white bg-gray-500 hover:bg-gray-600 focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-gray-400 dark:hover:bg-gray-500 focus:outline-none dark:focus:ring-gray-600">
+        <a href="{{ route('laporan.index') }}" class="text-white bg-gray-500 hover:bg-gray-600 focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-gray-400 dark:hover:bg-gray-500 focus:outline-none dark:focus:ring-gray-600">
             Reset
         </a>
-        <a href="{{ route('laporan.transaksi.export.pdf', ['month' => $selectedMonth]) }}" class="ml-2 text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-green-600 dark:hover:bg-green-700 focus:outline-none dark:focus:ring-green-800">
-                Export PDF
-            </a>
+        {{-- PERBAIKAN: Tautan Export PDF membawa semua filter yang aktif --}}
+        <a href="{{ route('laporan.transaksi.export.pdf', $filters) }}" class="text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-red-600 dark:hover:bg-red-700 focus:outline-none dark:focus:ring-red-800">
+            Export PDF
+        </a>
     </div>
 </form>
 
@@ -71,5 +73,5 @@
 </div>
 
 <div class="mt-4">
-    {{ $transaksi->links() }}
+    {{ $transaksi->appends($filters)->links() }}
 </div>

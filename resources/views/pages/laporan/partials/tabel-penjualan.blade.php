@@ -1,16 +1,14 @@
 <div>
-    <form method="GET" action="{{ route('laporan.index') }}" class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">
-            Laporan Penjualan Bulan:
-        </h3>
-        <div class="flex items-center gap-4">
-            <input type="month" name="month" value="{{ $selectedMonth }}" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600">
-            <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-600">Filter</button>
-            <a href="{{ route('laporan.penjualan.export.pdf', ['month' => $selectedMonth]) }}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">
-                Export PDF
-            </a>
-        </div>
-    </form>
+    {{-- PERBAIKAN: Form filter dipindahkan ke tabel-transaksi, di sini hanya menampilkan data --}}
+    <div class="flex items-center justify-between mb-4">
+        <p class="text-sm text-gray-600 dark:text-gray-400">
+            Menampilkan data penjualan untuk bulan: <strong>{{ \Carbon\Carbon::parse($selectedMonth)->isoFormat('MMMM YYYY') }}</strong>
+        </p>
+        {{-- PERBAIKAN: Tautan Export PDF membawa filter bulan yang aktif --}}
+        <a href="{{ route('laporan.penjualan.export.pdf', ['month' => $selectedMonth]) }}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:ring-4 focus:ring-red-300 dark:bg-red-500 dark:hover:bg-red-600">
+            Export PDF
+        </a>
+    </div>
 
     <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
         <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
@@ -22,7 +20,6 @@
                 </tr>
             </thead>
             <tbody>
-                {{-- PERBAIKAN: Mengganti $penjualans menjadi $penjualan --}}
                 @forelse ($penjualan as $item)
                 <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
                     <td class="px-6 py-4">{{ \Carbon\Carbon::parse($item->tanggal_penjualan)->format('d-m-Y') }}</td>

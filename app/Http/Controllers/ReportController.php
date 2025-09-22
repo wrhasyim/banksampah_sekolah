@@ -18,96 +18,36 @@ use Carbon\Carbon;
 
 class ReportController extends Controller
 {
-    /**
-     * PERUBAHAN: Method index diubah untuk mendukung pencarian berdasarkan nama siswa.
-     */
     public function index(Request $request)
     {
-        // Filter diubah dari siswa_id menjadi nama_siswa
-        $filters = $request->only(['start_date', 'end_date', 'nama_siswa', 'transaction_type']);
-
-        // --- BAGIAN LAPORAN TRANSAKSI (DENGAN PAGINASI) ---
-        $transaksi = collect([]);
-        
-        $transactionTypesInput = $request->input('transaction_type');
-        $transactionTypes = [];
-
-        if (!empty($transactionTypesInput)) {
-            $transactionTypes = is_string($transactionTypesInput) ? explode(',', $transactionTypesInput) : $transactionTypesInput;
-        } else {
-            $transactionTypes = ['setoran', 'penarikan'];
-        }
-        $transactionTypes = array_filter($transactionTypes);
-        if (empty($transactionTypes)) {
-            $transactionTypes = ['setoran', 'penarikan'];
-        }
-
+        // --- FILTER UTAMA ---
+        $filters = $request->only(['start_date', 'end_date', 'nama_siswa', 'transaction_type', 'month', 'start_date_laba_rugi', 'end_date_laba_rugi']);
         $startDate = $request->filled('start_date') ? $request->start_date : Carbon::now()->startOfMonth()->toDateString();
         $endDate = $request->filled('end_date') ? $request->end_date : Carbon::now()->endOfMonth()->toDateString();
 
-        if (in_array('setoran', $transactionTypes)) {
-            $setoran = Setoran::with('siswa.pengguna')
-                ->whereBetween(DB::raw('DATE(created_at)'), [$startDate, $endDate])
-                // Filter diubah ke pencarian nama siswa
-                ->when($request->filled('nama_siswa'), function ($query) use ($request) {
-                    $query->whereHas('siswa.pengguna', function ($q) use ($request) {
-                        $q->where('nama_lengkap', 'like', '%' . $request->nama_siswa . '%');
-                    });
-                })
-                ->get()->map(function($item) {
-                    $item->jenis_transaksi = 'Setoran';
-                    $item->nama = optional(optional($item->siswa)->pengguna)->nama_lengkap ?? 'Siswa Dihapus';
-                    $item->debit = $item->total_harga;
-                    $item->kredit = 0;
-                    $item->tanggal = $item->created_at;
-                    return $item;
-                });
-            $transaksi = $transaksi->concat($setoran);
-        }
+        // --- DATA LAPORAN TRANSAKSI ---
+        $transaksi = $this->getTransaksiData($request, $startDate, $endDate);
+        $transaksiPaginated = new \Illuminate\Pagination\LengthAwarePaginator(
+            $transaksi->forPage($request->input('page', 1), 10),
+            $transaksi->count(),
+            10,
+            $request->input('page', 1),
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
 
-        if (in_array('penarikan', $transactionTypes)) {
-            $penarikan = Penarikan::with('siswa.pengguna')
-                ->whereBetween(DB::raw('DATE(created_at)'), [$startDate, $endDate])
-                // Filter diubah ke pencarian nama siswa
-                ->when($request->filled('nama_siswa'), function ($query) use ($request) {
-                    $query->whereHas('siswa.pengguna', function ($q) use ($request) {
-                        $q->where('nama_lengkap', 'like', '%' . $request->nama_siswa . '%');
-                    });
-                })
-                ->get()->map(function($item) {
-                    $item->jenis_transaksi = 'Penarikan';
-                    $item->nama = optional(optional($item->siswa)->pengguna)->nama_lengkap ?? 'Siswa Dihapus';
-                    $item->debit = 0;
-                    $item->kredit = $item->jumlah_penarikan;
-                    $item->tanggal = $item->created_at;
-                    return $item;
-                });
-            $transaksi = $transaksi->concat($penarikan);
-        }
-        
-        $transaksi = $transaksi->sortByDesc('tanggal');
-        
-        $perPage = 10;
-        $currentPage = $request->input('page', 1);
-        $pagedData = $transaksi->slice(($currentPage - 1) * $perPage, $perPage)->all();
-        $transaksiPaginated = new \Illuminate\Pagination\LengthAwarePaginator($pagedData, count($transaksi), $perPage, $currentPage, [
-            'path' => $request->url(), 'query' => $request->query()
-        ]);
-
-        // --- BAGIAN LAPORAN PENJUALAN ---
+        // --- DATA LAPORAN PENJUALAN ---
         $selectedMonth = $request->input('month', Carbon::now()->format('Y-m'));
         $penjualan = Penjualan::with('detailPenjualan.jenisSampah')
             ->whereYear('tanggal_penjualan', '=', Carbon::parse($selectedMonth)->year)
             ->whereMonth('tanggal_penjualan', '=', Carbon::parse($selectedMonth)->month)
             ->get();
 
-        // --- BAGIAN LAPORAN LABA RUGI ---
+        // --- DATA LAPORAN LABA RUGI ---
         $startLabaRugi = $request->input('start_date_laba_rugi', Carbon::now()->startOfMonth()->toDateString());
-        $endLabaRugi = $request->input('end_date_laba_ruti', Carbon::now()->endOfMonth()->toDateString());
-
-        $totalPenjualan = Penjualan::whereBetween('tanggal_penjualan', [$startDate, $endDate])->sum('total_harga');
-        $totalInsentif = DB::table('pembayaran_insentifs')->whereBetween('tanggal_pembayaran', [$startDate, $endDate])->sum('total_dibayar');
-        $pengeluaranLain = DB::table('buku_kas')->where('tipe', 'pengeluaran')->whereBetween('tanggal', [$startDate, $endDate])->sum('jumlah');
+        $endLabaRugi = $request->input('end_date_laba_rugi', Carbon::now()->endOfMonth()->toDateString());
+        $totalPenjualan = Penjualan::whereBetween('tanggal_penjualan', [$startLabaRugi, $endLabaRugi])->sum('total_harga');
+        $totalInsentif = DB::table('pembayaran_insentifs')->whereBetween('tanggal_pembayaran', [$startLabaRugi, $endLabaRugi])->sum('total_dibayar');
+        $pengeluaranLain = DB::table('buku_kas')->where('tipe', 'pengeluaran')->whereBetween('tanggal', [$startLabaRugi, $endLabaRugi])->sum('jumlah');
         $labaRugi = $totalPenjualan - ($totalInsentif + $pengeluaranLain);
 
         return view('pages.laporan.index', [
@@ -119,7 +59,48 @@ class ReportController extends Controller
             'totalInsentif' => $totalInsentif,
             'pengeluaranLain' => $pengeluaranLain,
             'labaRugi' => $labaRugi,
+            'startLabaRugi' => $startLabaRugi,
+            'endLabaRugi' => $endLabaRugi,
         ]);
+    }
+
+    // Helper function untuk mengambil data transaksi (digunakan di index dan export)
+    private function getTransaksiData(Request $request, $startDate, $endDate) {
+        $transaksi = collect([]);
+        $transactionTypesInput = $request->input('transaction_type');
+        $transactionTypes = (!empty($transactionTypesInput) && is_string($transactionTypesInput)) ? explode(',', $transactionTypesInput) : ['setoran', 'penarikan'];
+        if (empty(array_filter($transactionTypes))) {
+            $transactionTypes = ['setoran', 'penarikan'];
+        }
+
+        if (in_array('setoran', $transactionTypes)) {
+            $setoran = Setoran::with('siswa.pengguna')
+                ->whereBetween(DB::raw('DATE(created_at)'), [$startDate, $endDate])
+                ->when($request->filled('nama_siswa'), function ($query) use ($request) {
+                    $query->whereHas('siswa.pengguna', fn($q) => $q->where('nama_lengkap', 'like', '%' . $request->nama_siswa . '%'));
+                })->get()->map(function($item) {
+                    $item->jenis_transaksi = 'Setoran';
+                    $item->nama = optional(optional($item->siswa)->pengguna)->nama_lengkap ?? 'Siswa Dihapus';
+                    $item->debit = $item->total_harga; $item->kredit = 0; $item->tanggal = $item->created_at;
+                    return $item;
+                });
+            $transaksi = $transaksi->concat($setoran);
+        }
+
+        if (in_array('penarikan', $transactionTypes)) {
+            $penarikan = Penarikan::with('siswa.pengguna')
+                ->whereBetween(DB::raw('DATE(created_at)'), [$startDate, $endDate])
+                ->when($request->filled('nama_siswa'), function ($query) use ($request) {
+                    $query->whereHas('siswa.pengguna', fn($q) => $q->where('nama_lengkap', 'like', '%' . $request->nama_siswa . '%'));
+                })->get()->map(function($item) {
+                    $item->jenis_transaksi = 'Penarikan';
+                    $item->nama = optional(optional($item->siswa)->pengguna)->nama_lengkap ?? 'Siswa Dihapus';
+                    $item->debit = 0; $item->kredit = $item->jumlah_penarikan; $item->tanggal = $item->created_at;
+                    return $item;
+                });
+            $transaksi = $transaksi->concat($penarikan);
+        }
+        return $transaksi->sortByDesc('tanggal');
     }
     
     public function exportTransaksiExcel(Request $request) 
@@ -129,54 +110,37 @@ class ReportController extends Controller
 
     public function exportTransaksiPdf(Request $request)
     {
-        $kelasList = Kelas::with('siswa')->orderBy('nama_kelas')->get();
+        $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->toDateString());
+        $endDate = $request->input('end_date', Carbon::now()->endOfMonth()->toDateString());
+
+        $kelasList = Kelas::with(['siswa.pengguna'])->orderBy('nama_kelas')->get();
         $jenisSampahList = JenisSampah::orderBy('nama_sampah')->get();
         $dataLaporan = [];
     
         foreach ($kelasList as $kelas) {
-            $dataKelas = [
-                'nama_kelas' => $kelas->nama_kelas,
-                'siswa' => [],
-                'total_per_sampah' => array_fill_keys($jenisSampahList->pluck('id')->toArray(), 0)
-            ];
-    
+            $dataKelas = ['nama_kelas' => $kelas->nama_kelas, 'siswa' => [], 'total_per_sampah' => array_fill_keys($jenisSampahList->pluck('id')->toArray(), 0)];
             foreach ($kelas->siswa as $siswa) {
                 $setoranSiswa = Setoran::where('siswa_id', $siswa->id)
-                    ->when($request->filled('start_date'), function ($q) use ($request) {
-                        $q->whereDate('created_at', '>=', $request->start_date);
-                    })
-                    ->when($request->filled('end_date'), function ($q) use ($request) {
-                        $q->whereDate('created_at', '<=', $request->end_date);
-                    })
+                    ->whereBetween(DB::raw('DATE(created_at)'), [$startDate, $endDate])
                     ->select('jenis_sampah_id', DB::raw('SUM(jumlah) as total_jumlah'))
-                    ->groupBy('jenis_sampah_id')
-                    ->pluck('total_jumlah', 'jenis_sampah_id');
-    
+                    ->groupBy('jenis_sampah_id')->pluck('total_jumlah', 'jenis_sampah_id');
                 if ($setoranSiswa->isNotEmpty()) {
-                    $dataSiswa = [
-                        'nama_siswa' => $siswa->pengguna->nama_lengkap,
-                        'setoran' => array_fill_keys($jenisSampahList->pluck('id')->toArray(), 0)
-                    ];
-    
+                    $dataSiswa = ['nama_siswa' => $siswa->pengguna->nama_lengkap, 'setoran' => array_fill_keys($jenisSampahList->pluck('id')->toArray(), 0)];
                     foreach ($setoranSiswa as $jenis_sampah_id => $total_jumlah) {
                         if(isset($dataSiswa['setoran'][$jenis_sampah_id])) {
                             $dataSiswa['setoran'][$jenis_sampah_id] = $total_jumlah;
                             $dataKelas['total_per_sampah'][$jenis_sampah_id] += $total_jumlah;
                         }
                     }
-                    
                     $dataKelas['siswa'][] = $dataSiswa;
                 }
             }
-            
-            if (!empty($dataKelas['siswa'])) {
-                $dataLaporan[] = $dataKelas;
-            }
+            if (!empty($dataKelas['siswa'])) { $dataLaporan[] = $dataKelas; }
         }
     
-        $pdf = Pdf::loadView('pages.laporan.pdf.laporan-transaksi-pdf', compact('dataLaporan', 'jenisSampahList'));
+        $pdf = Pdf::loadView('pages.laporan.pdf.laporan-transaksi-pdf', compact('dataLaporan', 'jenisSampahList', 'startDate', 'endDate'));
         $pdf->setPaper('a4', 'landscape');
-        return $pdf->stream('laporan-transaksi-per-kelas.pdf');
+        return $pdf->stream('laporan-transaksi-'.$startDate.'-'.$endDate.'.pdf');
     }
 
     public function exportPenjualanExcel(Request $request)
@@ -187,36 +151,28 @@ class ReportController extends Controller
     public function exportPenjualanPdf(Request $request)
     {
         $selectedMonth = $request->input('month', Carbon::now()->format('Y-m'));
-        $query = Penjualan::with('detailPenjualan.jenisSampah')
+        $penjualan = Penjualan::with('detailPenjualan.jenisSampah')
             ->whereYear('tanggal_penjualan', '=', Carbon::parse($selectedMonth)->year)
-            ->whereMonth('tanggal_penjualan', '=', Carbon::parse($selectedMonth)->month);
+            ->whereMonth('tanggal_penjualan', '=', Carbon::parse($selectedMonth)->month)
+            ->get();
         
-        $penjualan = $query->get();
         $totalPenjualan = $penjualan->sum('total_harga');
 
         $pdf = Pdf::loadView('pages.laporan.pdf.laporan-penjualan-pdf', compact('penjualan', 'totalPenjualan', 'selectedMonth'));
-        return $pdf->stream('laporan-penjualan.pdf');
+        return $pdf->stream('laporan-penjualan-'.$selectedMonth.'.pdf');
     }
 
     public function exportLabaRugiPdf(Request $request)
     {
-        $startDate = $request->start_date_laba_rugi;
-        $endDate = $request->end_date_laba_rugi;
+        $startDate = $request->input('start_date_laba_rugi', Carbon::now()->startOfMonth()->toDateString());
+        $endDate = $request->input('end_date_laba_rugi', Carbon::now()->endOfMonth()->toDateString());
 
         $totalPenjualan = Penjualan::whereBetween('tanggal_penjualan', [$startDate, $endDate])->sum('total_harga');
-        
-        $totalInsentif = DB::table('pembayaran_insentifs')
-            ->whereBetween('tanggal_pembayaran', [$startDate, $endDate])
-            ->sum('total_dibayar');
-            
-        $pengeluaranLain = DB::table('buku_kas')
-            ->where('tipe', 'pengeluaran')
-            ->whereBetween('tanggal', [$startDate, $endDate])
-            ->sum('jumlah');
-
+        $totalInsentif = DB::table('pembayaran_insentifs')->whereBetween('tanggal_pembayaran', [$startDate, $endDate])->sum('total_dibayar');
+        $pengeluaranLain = DB::table('buku_kas')->where('tipe', 'pengeluaran')->whereBetween('tanggal', [$startDate, $endDate])->sum('jumlah');
         $labaRugi = $totalPenjualan - ($totalInsentif + $pengeluaranLain);
 
         $pdf = Pdf::loadView('pages.laporan.pdf.laporan-laba-rugi-pdf', compact('totalPenjualan', 'totalInsentif', 'pengeluaranLain', 'labaRugi', 'startDate', 'endDate'));
-        return $pdf->stream('laporan-laba-rugi.pdf');
+        return $pdf->stream('laporan-laba-rugi-'.$startDate.'-'.$endDate.'.pdf');
     }
 }

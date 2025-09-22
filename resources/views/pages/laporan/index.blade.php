@@ -10,9 +10,6 @@
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
                     <h3 class="text-lg font-semibold mb-4">Laporan Transaksi (Setoran & Penarikan)</h3>
-
-                    
-
                     @include('pages.laporan.partials.tabel-transaksi')
                 </div>
             </div>
@@ -36,45 +33,44 @@
     @push('scripts')
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const filterButtons = document.querySelectorAll('.btn-filter-jenis');
-        const hiddenInput = document.getElementById('transaction_type_input');
+        // Skrip ini berlaku untuk form di dalam tabel-transaksi.blade.php
+        const form = document.querySelector('#filter-transaksi-form');
+        if (form) {
+            const filterButtons = form.querySelectorAll('.btn-filter-jenis');
+            const hiddenInput = form.querySelector('#transaction_type_input');
 
-        // Style untuk tombol aktif dan tidak aktif
-        const activeClasses = 'bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 border-blue-600 dark:border-blue-500';
-        const inactiveClasses = 'bg-white text-gray-900 hover:bg-gray-100 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600 border-gray-200 dark:border-gray-600';
+            const activeClasses = 'bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 border-blue-600 dark:border-blue-500';
+            const inactiveClasses = 'bg-white text-gray-900 hover:bg-gray-100 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600 border-gray-200 dark:border-gray-600';
 
-        let selectedTypes = hiddenInput.value ? hiddenInput.value.split(',') : [];
+            let selectedTypes = hiddenInput.value ? hiddenInput.value.split(',') : [];
 
-        // Inisialisasi status tombol saat halaman dimuat
-        function updateButtonStates() {
+            function updateButtonStates() {
+                filterButtons.forEach(button => {
+                    const value = button.getAttribute('data-value');
+                    button.className = button.className.replace(new RegExp(activeClasses, 'g'), '').replace(new RegExp(inactiveClasses, 'g'), '');
+                    if (selectedTypes.includes(value)) {
+                        button.classList.add(...activeClasses.split(' '));
+                    } else {
+                        button.classList.add(...inactiveClasses.split(' '));
+                    }
+                });
+                hiddenInput.value = selectedTypes.join(',');
+            }
+
             filterButtons.forEach(button => {
-                const value = button.getAttribute('data-value');
-                if (selectedTypes.includes(value)) {
-                    button.className = button.className.replace(new RegExp(inactiveClasses, 'g'), '') + ' ' + activeClasses;
-                } else {
-                    button.className = button.className.replace(new RegExp(activeClasses, 'g'), '') + ' ' + inactiveClasses;
-                }
+                button.addEventListener('click', function() {
+                    const value = this.getAttribute('data-value');
+                    if (selectedTypes.includes(value)) {
+                        selectedTypes = selectedTypes.filter(type => type !== value);
+                    } else {
+                        selectedTypes.push(value);
+                    }
+                    updateButtonStates();
+                });
             });
-            hiddenInput.value = selectedTypes.join(',');
+
+            updateButtonStates();
         }
-
-        // Event listener untuk setiap tombol
-        filterButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                const value = this.getAttribute('data-value');
-                if (selectedTypes.includes(value)) {
-                    // Hapus jika sudah ada (toggle off)
-                    selectedTypes = selectedTypes.filter(type => type !== value);
-                } else {
-                    // Tambahkan jika belum ada (toggle on)
-                    selectedTypes.push(value);
-                }
-                updateButtonStates();
-            });
-        });
-
-        // Panggil fungsi inisialisasi
-        updateButtonStates();
     });
     </script>
     @endpush
