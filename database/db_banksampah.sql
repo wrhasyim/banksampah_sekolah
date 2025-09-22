@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Waktu pembuatan: 22 Sep 2025 pada 17.11
+-- Waktu pembuatan: 22 Sep 2025 pada 19.21
 -- Versi server: 10.4.32-MariaDB
 -- Versi PHP: 8.2.12
 
@@ -1593,6 +1593,7 @@ CREATE TABLE `jenis_sampah` (
   `status` enum('aktif','tidak aktif') NOT NULL DEFAULT 'aktif',
   `satuan` varchar(255) NOT NULL DEFAULT 'pcs',
   `harga_per_satuan` decimal(10,2) NOT NULL,
+  `harga_jual` decimal(10,2) NOT NULL DEFAULT 0.00 COMMENT 'Harga jual ke pengepul',
   `stok` int(11) NOT NULL DEFAULT 0,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
@@ -1602,13 +1603,13 @@ CREATE TABLE `jenis_sampah` (
 -- Dumping data untuk tabel `jenis_sampah`
 --
 
-INSERT INTO `jenis_sampah` (`id`, `nama_sampah`, `status`, `satuan`, `harga_per_satuan`, `stok`, `created_at`, `updated_at`) VALUES
-(1, 'Botol Plastik', 'aktif', 'pcs', 35.00, 15727, '2025-09-13 05:16:58', '2025-09-22 10:07:18'),
-(2, 'Gelas Plastik', 'aktif', 'pcs', 4.00, 8066, '2025-09-13 05:16:58', '2025-09-22 10:12:08'),
-(3, 'Kardus', 'aktif', 'kg', 1500.00, 0, '2025-09-13 05:16:58', '2025-09-13 05:40:17'),
-(4, 'Botol Plastik (Warna)', 'aktif', 'pcs', 16.00, 357, '2025-09-13 05:40:44', '2025-09-22 10:12:08'),
-(5, 'Botol Plastik Guru', 'aktif', 'pcs', 40.00, 0, '2025-09-13 05:41:44', '2025-09-13 05:41:50'),
-(6, 'Gelas Plastik Guru', 'aktif', 'pcs', 5.00, 0, '2025-09-13 05:41:59', '2025-09-13 05:41:59');
+INSERT INTO `jenis_sampah` (`id`, `nama_sampah`, `status`, `satuan`, `harga_per_satuan`, `harga_jual`, `stok`, `created_at`, `updated_at`) VALUES
+(1, 'Botol Plastik', 'aktif', 'pcs', 35.00, 67.00, 15727, '2025-09-13 05:16:58', '2025-09-22 16:19:18'),
+(2, 'Gelas Plastik', 'aktif', 'pcs', 4.00, 7.00, 8066, '2025-09-13 05:16:58', '2025-09-22 16:19:02'),
+(3, 'Kardus', 'tidak aktif', 'kg', 1500.00, 0.00, 0, '2025-09-13 05:16:58', '2025-09-22 16:21:40'),
+(4, 'Botol Plastik (Warna)', 'aktif', 'pcs', 16.00, 11.00, 357, '2025-09-13 05:40:44', '2025-09-22 16:20:47'),
+(5, 'Botol Plastik Guru', 'aktif', 'pcs', 40.00, 67.00, 0, '2025-09-13 05:41:44', '2025-09-22 16:21:20'),
+(6, 'Gelas Plastik Guru', 'aktif', 'pcs', 5.00, 7.00, 0, '2025-09-13 05:41:59', '2025-09-22 16:21:09');
 
 -- --------------------------------------------------------
 
@@ -1734,7 +1735,8 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (28, '2025_09_02_072425_add_status_to_setoran_table', 1),
 (29, '2025_09_02_075146_add_id_wali_kelas_to_pembayaran_insentifs_table', 1),
 (30, '2025_09_02_075314_add_jumlah_pembayaran_to_pembayaran_insentifs_table', 1),
-(31, '2025_09_02_081823_cleanup_pembayaran_insentifs_table', 1);
+(31, '2025_09_02_081823_cleanup_pembayaran_insentifs_table', 1),
+(32, '2025_09_22_224418_add_harga_jual_to_jenis_sampah_table', 2);
 
 -- --------------------------------------------------------
 
@@ -2717,8 +2719,7 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('duFtRzLsomX37LdYbI9kkgoN1uo0oXPv8CwWUypA', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiT2s0Q0VwVXpobTZCYmZvbmNJVlE0ZEVVVndlMGpReE9hM1hPN0JXaSI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6Mzc6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9zZXRvcmFuP3BhZ2U9MzciO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX1zOjUwOiJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI7aToxO30=', 1758536314),
-('LjWsP8VgKplbMnbuM3EawfO5GDpwrfqNHfDk96Dp', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiTGNsUm9ISHpNZ1J1ZHRzY05XNUY5d3VrbGtIaENGMnlHWW9UUGFwRyI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6NDI6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9hcGkvc2lzd2EtYnkta2VsYXMvMSI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fXM6NTA6ImxvZ2luX3dlYl81OWJhMzZhZGRjMmIyZjk0MDE1ODBmMDE0YzdmNThlYTRlMzA5ODlkIjtpOjE7fQ==', 1758553860);
+('LjWsP8VgKplbMnbuM3EawfO5GDpwrfqNHfDk96Dp', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiTGNsUm9ISHpNZ1J1ZHRzY05XNUY5d3VrbGtIaENGMnlHWW9UUGFwRyI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MzA6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9wZW5nZ3VuYSI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fXM6NTA6ImxvZ2luX3dlYl81OWJhMzZhZGRjMmIyZjk0MDE1ODBmMDE0YzdmNThlYTRlMzA5ODlkIjtpOjE7fQ==', 1758561506);
 
 -- --------------------------------------------------------
 
@@ -5332,7 +5333,7 @@ ALTER TABLE `kelas`
 -- AUTO_INCREMENT untuk tabel `migrations`
 --
 ALTER TABLE `migrations`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
 
 --
 -- AUTO_INCREMENT untuk tabel `pembayaran_insentifs`
