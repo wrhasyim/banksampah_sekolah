@@ -140,25 +140,44 @@ class SetoranController extends Controller
     }
 
     public function createMassal()
-    {
-        $kelasList = Kelas::orderBy('nama_kelas', 'asc')->get();
+{
+    // Mengambil daftar kelas dan diurutkan berdasarkan nama
+    $kelasList = Kelas::orderBy('nama_kelas', 'asc')->get();
 
-        $allJenisSampah = JenisSampah::where('status', 'aktif')->orderBy('nama_sampah', 'asc')->get();
+    // Mengambil semua jenis sampah yang aktif dan diurutkan
+    $allJenisSampah = JenisSampah::where('status', 'aktif')->orderBy('nama_sampah', 'asc')->get();
 
-        $jenisSampahSiswa = $allJenisSampah->filter(function ($value, $key) {
-            return strpos(strtolower($value->nama_sampah), 'guru') === false;
-        });
+    // Memisahkan jenis sampah untuk siswa
+    $jenisSampahSiswa = $allJenisSampah->filter(function ($value) {
+        return strpos(strtolower($value->nama_sampah), 'guru') === false;
+    });
 
-        $jenisSampahGuru = $allJenisSampah->filter(function ($value, $key) {
-            return strpos(strtolower($value->nama_sampah), 'guru') !== false;
-        });
+    // Memisahkan jenis sampah untuk guru
+    $jenisSampahGuru = $allJenisSampah->filter(function ($value) {
+        return strpos(strtolower($value->nama_sampah), 'guru') !== false;
+    });
+    
+    // Mengambil ID kelas yang dipilih dari URL
+    $selectedKelasId = request('kelas_id');
+    $siswa = [];
 
-        return view('pages.setoran.create-massal', compact(
-            'kelasList',
-            'jenisSampahSiswa',
-            'jenisSampahGuru'
-        ));
+    // Jika ada kelas yang dipilih, ambil data siswanya
+    if ($selectedKelasId) {
+        // Ambil data siswa dan URUTKAN berdasarkan nama (A-Z)
+        $siswa = Siswa::where('kelas_id', $selectedKelasId)
+                      ->orderBy('nama_siswa', 'asc')
+                      ->get();
     }
+
+    // Kirim semua data yang dibutuhkan ke view
+    return view('pages.setoran.create-massal', compact(
+        'kelasList',
+        'jenisSampahSiswa',
+        'jenisSampahGuru',
+        'siswa',
+        'selectedKelasId'
+    ));
+}
 
     public function storeMassal(Request $request)
     {
