@@ -51,6 +51,8 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     });
     Route::resource('siswa', SiswaController::class);
 
+Route::get('/dashboard/chart/bubble', [DashboardController::class, 'getBubbleChartData'])->name('dashboard.chart.bubble');
+
     // Transaksi Setoran
     Route::prefix('setoran')->name('setoran.')->group(function () {
         Route::get('/export', [SetoranController::class, 'export'])->name('export');
