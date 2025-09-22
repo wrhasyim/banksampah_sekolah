@@ -49,7 +49,6 @@ class DashboardController extends Controller
 
     public function getChartData(Request $request)
     {
-        // Method ini HANYA untuk chart Transaksi (Line Chart)
         $period = $request->input('period', 'monthly');
         $labels = [];
         $dataSetoran = [];
@@ -83,14 +82,16 @@ class DashboardController extends Controller
         $data = JenisSampah::where('stok', '>', 0)
             ->get()
             ->map(function ($sampah) {
-                // Skala radius agar tidak terlalu besar/kecil
-                $radius = ($sampah->stok / 5) + 5; 
+                // MODIFIKASI KUNCI: Formula penskalaan radius yang baru dan lebih aman
+                $radius = (sqrt($sampah->stok) * 1.5) + 5;
+                $maxRadius = 75; // Batas maksimal ukuran gelembung
+
                 return [
-                    'x' => $sampah->harga_per_satuan, // Harga Beli
-                    'y' => $sampah->harga_jual,       // Harga Jual
-                    'r' => $radius,                   // Stok
-                    'label' => $sampah->nama_sampah,
-                    'stok' => $sampah->stok,
+                    'x'      => (float) $sampah->harga_per_satuan,
+                    'y'      => (float) $sampah->harga_jual,
+                    'r'      => min($radius, $maxRadius), // Mencegah gelembung terlalu besar
+                    'label'  => $sampah->nama_sampah,
+                    'stok'   => (float) $sampah->stok,
                     'satuan' => $sampah->satuan
                 ];
             });

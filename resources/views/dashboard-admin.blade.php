@@ -81,7 +81,6 @@
                             @endif
                         </ul>
                     </div>
-                    {{-- DIKEMBALIKAN: Panel Komposisi Stok (Pie Chart) --}}
                     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6">
                         <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">♻️ Komposisi Stok</h3>
                         <canvas id="stockPieChart" class="max-h-64 mx-auto"></canvas>
@@ -138,18 +137,21 @@
                     };
                 } else if (currentType === 'sampah') {
                     chartTitle.innerText = 'Grafik Analisis Profitabilitas Stok';
-                    const response = await axios.get(`{{ route('dashboard.chart.bubble') }}`); // DIPERBARUI ke route bubble
+                    const response = await axios.get(`{{ route('dashboard.chart.bubble') }}`);
                     const data = response.data;
                     const colors = ['#4ade80', '#60a5fa', '#facc15', '#fb923c', '#a78bfa', '#f87171', '#2dd4bf'];
                     chartConfig = {
                         type: 'bubble',
                         data: {
-                            datasets: data.map((item, index) => ({
-                                label: item.label,
-                                data: [{ x: item.x, y: item.y, r: item.r }],
-                                backgroundColor: colors[index % colors.length] + 'BF',
-                                borderColor: colors[index % colors.length],
-                            }))
+                            datasets: [{
+                                label: 'Stok Sampah',
+                                data: data.map(item => ({
+                                    x: item.x, y: item.y, r: item.r,
+                                    label: item.label, stok: item.stok, satuan: item.satuan
+                                })),
+                                backgroundColor: data.map((item, index) => colors[index % colors.length] + 'BF'),
+                                borderColor: data.map((item, index) => colors[index % colors.length]),
+                            }]
                         },
                         options: {
                             responsive: true, maintainAspectRatio: false,
@@ -162,7 +164,7 @@
                                 tooltip: {
                                     callbacks: {
                                         label: (ctx) => {
-                                            const item = data[ctx.datasetIndex];
+                                            const item = ctx.raw;
                                             return [
                                                 `${item.label}`,
                                                 `Stok: ${new Intl.NumberFormat('id-ID').format(item.stok)} ${item.satuan}`,
@@ -188,9 +190,9 @@
                 });
             });
             
-            renderChart(); // Render chart awal saat halaman dimuat
+            renderChart();
 
-            // Script untuk Pie Chart Komposisi Stok (DIKEMBALIKAN)
+            // Script untuk Pie Chart Komposisi Stok
             const ctxPie = document.getElementById('stockPieChart').getContext('2d');
             const stokData = @json($stokPerJenis->where('stok', '>', 0)->values());
             new Chart(ctxPie, {
