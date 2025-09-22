@@ -18,53 +18,64 @@
 </head>
 <body>
     <h1>Laporan Rekapitulasi Setoran Sampah</h1>
-    {{-- PERUBAHAN: Menambahkan periode tanggal --}}
     <h4>Periode: {{ \Carbon\Carbon::parse($startDate)->isoFormat('D MMMM Y') }} - {{ \Carbon\Carbon::parse($endDate)->isoFormat('D MMMM Y') }}</h4>
 
     @forelse ($dataLaporan as $dataKelas)
-        <h2>Kelas: {{ $dataKelas['nama_kelas'] }}</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th style="width: 20%;">Nama Siswa</th>
-                    @foreach ($jenisSampahList as $jenisSampah)
-                        <th style="text-align: center;">{{ $jenisSampah->nama_sampah }} ({{ $jenisSampah->satuan }})</th>
-                    @endforeach
-                </tr>
-            </thead>
-            <tbody>
-                @forelse ($dataKelas['siswa'] as $dataSiswa)
+        {{-- PERUBAHAN: Logika untuk memfilter jenis sampah yang aktif untuk kelas ini --}}
+        @php
+            $activeJenisSampah = collect($jenisSampahList)->filter(function($jenis) use ($dataKelas) {
+                return ($dataKelas['total_per_sampah'][$jenis->id] ?? 0) >= 1;
+            });
+        @endphp
+
+        {{-- Hanya tampilkan tabel jika ada jenis sampah yang aktif --}}
+        @if($activeJenisSampah->isNotEmpty())
+            <h2>Kelas: {{ $dataKelas['nama_kelas'] }}</h2>
+            <table>
+                <thead>
                     <tr>
-                        <td>{{ $dataSiswa['nama_siswa'] }}</td>
-                        @foreach ($jenisSampahList as $jenisSampah)
-                            @php
-                                $jumlah = $dataSiswa['setoran'][$jenisSampah->id] ?? 0;
-                            @endphp
-                            <td style="text-align: center;">{{ $jumlah > 0 ? number_format($jumlah, 2, ',', '.') : '-' }}</td>
+                        <th style="width: 20%;">Nama Siswa</th>
+                        {{-- Gunakan $activeJenisSampah untuk membuat header --}}
+                        @foreach ($activeJenisSampah as $jenisSampah)
+                            <th style="text-align: center;">{{ $jenisSampah->nama_sampah }} ({{ $jenisSampah->satuan }})</th>
                         @endforeach
                     </tr>
-                @empty
-                    <tr>
-                        <td colspan="{{ count($jenisSampahList) + 1 }}" class="no-data">Tidak ada data setoran di kelas ini pada periode yang dipilih.</td>
+                </thead>
+                <tbody>
+                    @forelse ($dataKelas['siswa'] as $dataSiswa)
+                        <tr>
+                            <td>{{ $dataSiswa['nama_siswa'] }}</td>
+                            {{-- Gunakan $activeJenisSampah untuk menampilkan data --}}
+                            @foreach ($activeJenisSampah as $jenisSampah)
+                                @php
+                                    $jumlah = $dataSiswa['setoran'][$jenisSampah->id] ?? 0;
+                                @endphp
+                                <td style="text-align: center;">{{ $jumlah > 0 ? number_format($jumlah, 2, ',', '.') : '-' }}</td>
+                            @endforeach
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="{{ $activeJenisSampah->count() + 1 }}" class="no-data">Tidak ada data setoran di kelas ini.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+                <tfoot>
+                    <tr class="total-row">
+                        <td>TOTAL PER JENIS SAMPAH</td>
+                        {{-- Gunakan $activeJenisSampah untuk menampilkan total --}}
+                        @foreach ($activeJenisSampah as $jenisSampah)
+                            @php
+                                $total = $dataKelas['total_per_sampah'][$jenisSampah->id] ?? 0;
+                            @endphp
+                            <td style="text-align: center;">{{ number_format($total, 2, ',', '.') }}</td>
+                        @endforeach
                     </tr>
-                @endforelse
-            </tbody>
-            <tfoot>
-                <tr class="total-row">
-                    <td>TOTAL PER JENIS SAMPAH</td>
-                    @foreach ($jenisSampahList as $jenisSampah)
-                        @php
-                            $total = $dataKelas['total_per_sampah'][$jenisSampah->id] ?? 0;
-                        @endphp
-                        <td style="text-align: center;">{{ number_format($total, 2, ',', '.') }}</td>
-                    @endforeach
-                </tr>
-            </tfoot>
-        </table>
+                </tfoot>
+            </table>
 
-        {{-- Hindari page break setelah item terakhir --}}
-        @if (!$loop->last)
-            <div class="page-break"></div>
+            @if (!$loop->last)
+                <div class="page-break"></div>
+            @endif
         @endif
     @empty
         <p class="no-data">Tidak ada data setoran untuk ditampilkan pada periode yang dipilih.</p>

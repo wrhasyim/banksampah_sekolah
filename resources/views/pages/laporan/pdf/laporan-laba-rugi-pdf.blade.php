@@ -2,72 +2,144 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Laporan Laba Rugi</title>
     <style>
-        body {
-            font-family: 'sans-serif';
-            font-size: 12px;
+        /* Menggunakan font yang lebih modern dan mudah dibaca */
+        body { 
+            font-family: 'DejaVu Sans', 'Helvetica', 'Arial', sans-serif; 
+            color: #333;
+            font-size: 11px;
+        }
+        @page {
+            margin: 45px;
+        }
+        .container {
+            width: 100%;
         }
         .header {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
+            border-bottom: 3px solid #4A90E2;
+            padding-bottom: 15px;
         }
         .header h1 {
             margin: 0;
-            font-size: 18px;
+            font-size: 22px;
+            color: #4A90E2;
         }
-        .header p {
-            margin: 0;
+        .header h3 {
+            margin: 5px 0 0;
             font-size: 14px;
+            font-weight: normal;
+            color: #555;
         }
-        .content table {
+        .report-table {
             width: 100%;
             border-collapse: collapse;
         }
-        .content th, .content td {
-            padding: 8px;
-            border: 1px solid #ddd;
+        .report-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eaeaea;
         }
-        .content .label {
-            font-weight: bold;
+        /* Style untuk baris item, menggunakan indentasi */
+        .report-table .item-row td:first-child {
+            padding-left: 30px;
         }
-        .content .total {
-            font-weight: bold;
-            background-color: #f2f2f2;
-        }
-        .text-right {
+        .report-table .amount {
             text-align: right;
+        }
+        /* Header untuk setiap seksi (Pendapatan/Pengeluaran) */
+        .section-header {
+            font-weight: bold;
+            font-size: 14px;
+            background-color: #f7faff;
+            color: #4A90E2;
+        }
+        /* Baris untuk subtotal */
+        .subtotal-row {
+            font-weight: bold;
+            background-color: #f7f7f7;
+            border-top: 2px solid #ddd;
+        }
+        /* Baris untuk hasil akhir (Laba/Rugi) */
+        .final-total-row {
+            font-weight: bold;
+            font-size: 16px;
+            border-top: 3px solid #4A90E2;
+            border-bottom: 3px solid #4A90E2;
+        }
+        /* Pewarnaan untuk laba (hijau) dan rugi (merah) */
+        .profit {
+            color: #28a745;
+        }
+        .loss {
+            color: #dc3545;
+        }
+        .footer {
+            position: fixed;
+            bottom: -20px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 9px;
+            color: #999;
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>Laporan Laba Rugi</h1>
-        <p>Periode: {{ \Carbon\Carbon::parse($startDate)->format('d F Y') }} - {{ \Carbon\Carbon::parse($endDate)->format('d F Y') }}</p>
-    </div>
+    <div class="container">
+        <div class="header">
+            <h1>Laporan Laba Rugi</h1>
+            <h3>Periode: {{ \Carbon\Carbon::parse($startDate)->isoFormat('D MMMM Y') }} - {{ \Carbon\Carbon::parse($endDate)->isoFormat('D MMMM Y') }}</h3>
+        </div>
 
-    <div class="content">
-        <table>
-            <tr>
-                <td class="label">Total Penjualan (Pendapatan)</td>
-                {{-- PERBAIKAN: Mengganti $pendapatan menjadi $totalPenjualan --}}
-                <td class="text-right">Rp. {{ number_format($totalPenjualan, 0, ',', '.') }}</td>
-            </tr>
-            <tr>
-                <td class="label">Total Insentif Terbayar</td>
-                <td class="text-right">Rp. {{ number_format($totalInsentif, 0, ',', '.') }}</td>
-            </tr>
-            <tr>
-                <td class="label">Pengeluaran Lainnya (dari Buku Kas)</td>
-                <td class="text-right">Rp. {{ number_format($pengeluaranLain, 0, ',', '.') }}</td>
-            </tr>
-            <tr class="total">
-                <td class="label">Laba / Rugi Bersih</td>
-                <td class="text-right">Rp. {{ number_format($labaRugi, 0, ',', '.') }}</td>
-            </tr>
+        <table class="report-table">
+            <tbody>
+                <tr class="section-header">
+                    <td>Pendapatan</td>
+                    <td class="amount"></td>
+                </tr>
+                <tr class="item-row">
+                    <td>Total Penjualan Sampah</td>
+                    <td class="amount">Rp {{ number_format($totalPenjualan, 0, ',', '.') }}</td>
+                </tr>
+                <tr class="subtotal-row">
+                    <td>Total Pendapatan</td>
+                    <td class="amount">Rp {{ number_format($totalPenjualan, 0, ',', '.') }}</td>
+                </tr>
+
+                <tr class="section-header">
+                    <td>Pengeluaran</td>
+                    <td class="amount"></td>
+                </tr>
+                <tr class="item-row">
+                    <td>Total Insentif Terbayar</td>
+                    <td class="amount">Rp {{ number_format($totalInsentif, 0, ',', '.') }}</td>
+                </tr>
+                <tr class="item-row">
+                    <td>Pengeluaran Lainnya (dari Buku Kas)</td>
+                    <td class="amount">Rp {{ number_format($pengeluaranLain, 0, ',', '.') }}</td>
+                </tr>
+                @php
+                    $totalPengeluaran = $totalInsentif + $pengeluaranLain;
+                @endphp
+                <tr class="subtotal-row">
+                    <td>Total Pengeluaran</td>
+                    <td class="amount">Rp {{ number_format($totalPengeluaran, 0, ',', '.') }}</td>
+                </tr>
+
+                <tr class="final-total-row">
+                    <td>LABA / RUGI BERSIH</td>
+                    <td class="amount {{ $labaRugi >= 0 ? 'profit' : 'loss' }}">
+                        Rp {{ number_format($labaRugi, 0, ',', '.') }}
+                    </td>
+                </tr>
+            </tbody>
         </table>
     </div>
 
+    <div class="footer">
+        Dicetak pada: {{ \Carbon\Carbon::now()->isoFormat('D MMMM YYYY, HH:mm') }} - Bank Sampah Sekolah
+    </div>
 </body>
 </html>

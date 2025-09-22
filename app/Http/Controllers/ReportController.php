@@ -20,12 +20,10 @@ class ReportController extends Controller
 {
     public function index(Request $request)
     {
-        // --- FILTER UTAMA ---
         $filters = $request->only(['start_date', 'end_date', 'nama_siswa', 'transaction_type', 'month', 'start_date_laba_rugi', 'end_date_laba_rugi']);
         $startDate = $request->filled('start_date') ? $request->start_date : Carbon::now()->startOfMonth()->toDateString();
         $endDate = $request->filled('end_date') ? $request->end_date : Carbon::now()->endOfMonth()->toDateString();
 
-        // --- DATA LAPORAN TRANSAKSI ---
         $transaksi = $this->getTransaksiData($request, $startDate, $endDate);
         $transaksiPaginated = new \Illuminate\Pagination\LengthAwarePaginator(
             $transaksi->forPage($request->input('page', 1), 10),
@@ -35,14 +33,12 @@ class ReportController extends Controller
             ['path' => $request->url(), 'query' => $request->query()]
         );
 
-        // --- DATA LAPORAN PENJUALAN ---
         $selectedMonth = $request->input('month', Carbon::now()->format('Y-m'));
         $penjualan = Penjualan::with('detailPenjualan.jenisSampah')
             ->whereYear('tanggal_penjualan', '=', Carbon::parse($selectedMonth)->year)
             ->whereMonth('tanggal_penjualan', '=', Carbon::parse($selectedMonth)->month)
             ->get();
 
-        // --- DATA LAPORAN LABA RUGI ---
         $startLabaRugi = $request->input('start_date_laba_rugi', Carbon::now()->startOfMonth()->toDateString());
         $endLabaRugi = $request->input('end_date_laba_rugi', Carbon::now()->endOfMonth()->toDateString());
         $totalPenjualan = Penjualan::whereBetween('tanggal_penjualan', [$startLabaRugi, $endLabaRugi])->sum('total_harga');
@@ -64,7 +60,6 @@ class ReportController extends Controller
         ]);
     }
 
-    // Helper function untuk mengambil data transaksi (digunakan di index dan export)
     private function getTransaksiData(Request $request, $startDate, $endDate) {
         $transaksi = collect([]);
         $transactionTypesInput = $request->input('transaction_type');
@@ -120,10 +115,14 @@ class ReportController extends Controller
         foreach ($kelasList as $kelas) {
             $dataKelas = ['nama_kelas' => $kelas->nama_kelas, 'siswa' => [], 'total_per_sampah' => array_fill_keys($jenisSampahList->pluck('id')->toArray(), 0)];
             foreach ($kelas->siswa as $siswa) {
+                // PERUBAHAN: Menambahkan 'having' untuk memfilter jumlah >= 1
                 $setoranSiswa = Setoran::where('siswa_id', $siswa->id)
                     ->whereBetween(DB::raw('DATE(created_at)'), [$startDate, $endDate])
                     ->select('jenis_sampah_id', DB::raw('SUM(jumlah) as total_jumlah'))
-                    ->groupBy('jenis_sampah_id')->pluck('total_jumlah', 'jenis_sampah_id');
+                    ->groupBy('jenis_sampah_id')
+                    ->having(DB::raw('SUM(jumlah)'), '>=', 1) // Hanya ambil yang totalnya 1 atau lebih
+                    ->pluck('total_jumlah', 'jenis_sampah_id');
+                
                 if ($setoranSiswa->isNotEmpty()) {
                     $dataSiswa = ['nama_siswa' => $siswa->pengguna->nama_lengkap, 'setoran' => array_fill_keys($jenisSampahList->pluck('id')->toArray(), 0)];
                     foreach ($setoranSiswa as $jenis_sampah_id => $total_jumlah) {
