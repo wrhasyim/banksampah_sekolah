@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Sep 23, 2025 at 11:58 AM
+-- Generation Time: Sep 23, 2025 at 12:26 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -70,6 +70,14 @@ CREATE TABLE `buku_kas` (
   `id_kategori` bigint(20) UNSIGNED DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `buku_kas`
+--
+
+INSERT INTO `buku_kas` (`id`, `tanggal`, `deskripsi`, `tipe`, `jumlah`, `id_admin`, `created_at`, `updated_at`, `deleted_at`, `id_kategori`) VALUES
+(1, '2025-09-23', 'Hasil Penjualan ke Pengepul: H. Ratam (ID: 1)', 'pemasukan', 1072000.00, 1, '2025-09-23 10:25:39', '2025-09-23 10:25:39', NULL, NULL),
+(2, '2025-09-23', 'Honor Sekolah dari Penjualan #1', 'pengeluaran', 32160.00, 1, '2025-09-23 10:25:39', '2025-09-23 10:25:39', NULL, NULL);
+
 -- --------------------------------------------------------
 
 --
@@ -109,6 +117,13 @@ CREATE TABLE `detail_penjualan` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `detail_penjualan`
+--
+
+INSERT INTO `detail_penjualan` (`id`, `id_penjualan`, `id_jenis_sampah`, `jumlah`, `subtotal_harga`, `created_at`, `updated_at`) VALUES
+(1, 1, 1, 13255, 1072000.00, '2025-09-23 10:25:39', '2025-09-23 10:25:39');
 
 -- --------------------------------------------------------
 
@@ -2091,7 +2106,7 @@ CREATE TABLE `jenis_sampah` (
 --
 
 INSERT INTO `jenis_sampah` (`id`, `nama_sampah`, `status`, `satuan`, `harga_per_satuan`, `harga_jual`, `stok`, `created_at`, `updated_at`) VALUES
-(1, 'Botol Plastik', 'aktif', 'pcs', 35.00, 67.00, 18415, '2025-09-13 05:16:58', '2025-09-23 09:57:12'),
+(1, 'Botol Plastik', 'aktif', 'pcs', 35.00, 67.00, 5160, '2025-09-13 05:16:58', '2025-09-23 10:25:39'),
 (2, 'Gelas Plastik', 'aktif', 'pcs', 4.00, 7.00, 9986, '2025-09-13 05:16:58', '2025-09-23 09:57:12'),
 (3, 'Kardus', 'tidak aktif', 'kg', 1500.00, 0.00, 0, '2025-09-13 05:16:58', '2025-09-22 16:21:40'),
 (4, 'Botol Plastik (Warna)', 'aktif', 'pcs', 16.00, 20.00, 498, '2025-09-13 05:40:44', '2025-09-23 09:57:12'),
@@ -3168,6 +3183,13 @@ CREATE TABLE `penjualan` (
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `penjualan`
+--
+
+INSERT INTO `penjualan` (`id`, `id_admin`, `nama_pengepul`, `tanggal_penjualan`, `total_harga`, `created_at`, `updated_at`) VALUES
+(1, 1, 'H. Ratam', '2025-09-23', 1072000.00, '2025-09-23 10:25:39', '2025-09-23 10:25:39');
+
 -- --------------------------------------------------------
 
 --
@@ -3207,7 +3229,7 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('Vk9nSNxpv8kgvdbJ2lEXBewGJJ9qXZSTs6JOzFsl', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoiMDhRcGl0YU5yY3E5WHpwU1dBUlNjQVcwbmpBR3lMVTUxTTNSZWlSSyI7czozOiJ1cmwiO2E6MDp7fXM6OToiX3ByZXZpb3VzIjthOjE6e3M6MzoidXJsIjtzOjQzOiJodHRwOi8vMTI3LjAuMC4xOjgwMDAvc2V0b3Jhbi9jcmVhdGUtbWFzc2FsIjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6MTt9', 1758621443);
+('Vk9nSNxpv8kgvdbJ2lEXBewGJJ9qXZSTs6JOzFsl', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoiMDhRcGl0YU5yY3E5WHpwU1dBUlNjQVcwbmpBR3lMVTUxTTNSZWlSSyI7czozOiJ1cmwiO2E6MDp7fXM6OToiX3ByZXZpb3VzIjthOjE6e3M6MzoidXJsIjtzOjMxOiJodHRwOi8vMTI3LjAuMC4xOjgwMDAvZGFzaGJvYXJkIjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6MTt9', 1758623169);
 
 -- --------------------------------------------------------
 
@@ -6285,13 +6307,13 @@ ALTER TABLE `badge_siswa`
 -- AUTO_INCREMENT for table `buku_kas`
 --
 ALTER TABLE `buku_kas`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `detail_penjualan`
 --
 ALTER TABLE `detail_penjualan`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `insentifs`
@@ -6351,7 +6373,7 @@ ALTER TABLE `pengguna`
 -- AUTO_INCREMENT for table `penjualan`
 --
 ALTER TABLE `penjualan`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `personal_access_tokens`
