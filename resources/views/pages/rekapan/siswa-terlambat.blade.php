@@ -1,53 +1,70 @@
 <x-app-layout>
-    <div class="py-12">
-        <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
-            {{-- Judul dan Tombol Ekspor --}}
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-                    {{ __('Rekapan Siswa Terlambat') }}
-                </h2>
-                <a href="{{ route('rekapan.siswa.terlambat.exportPdf') }}" class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-500 focus:outline-none focus:border-red-700 focus:ring focus:ring-red-200 active:bg-red-600 disabled:opacity-25 transition">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                    </svg>
-                    Export PDF
-                </a>
-            </div>
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            {{ __('Laporan Rinci Setoran Terlambat') }}
+        </h2>
+    </x-slot>
 
-            <div class="overflow-hidden bg-white shadow-sm dark:bg-gray-800 sm:rounded-lg">
-                <div class="p-6 text-gray-900 dark:text-gray-100">
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full bg-white divide-y divide-gray-200 dark:bg-gray-800">
-                            <thead class="bg-gray-50 dark:bg-gray-700">
-                                <tr>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">Tanggal</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">Nama Siswa</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">Kelas</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">Jenis Sampah</th>
-                                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">Total Harga</th>
+    <div class="py-12">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
+
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-gray-800">Daftar Transaksi Setoran Terlambat</h3>
+                    {{-- Tombol Ekspor mengarah ke route yang benar --}}
+                    <a href="{{ route('rekapan.siswa.terlambat.exportPdf') }}" class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-500 active:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition ease-in-out duration-150">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        Export PDF
+                    </a>
+                </div>
+
+                <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
+                    <table class="w-full text-sm text-left text-gray-500">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3">No</th>
+                                <th class="px-6 py-3">Tanggal</th>
+                                <th class="px-6 py-3">Nama Siswa</th>
+                                <th class="px-6 py-3">Kelas</th>
+                                <th class="px-6 py-3">Jenis Sampah</th>
+                                <th class="px-6 py-3">Jumlah</th>
+                                <th class="px-6 py-3 text-right">Total Harga</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse ($setoranTerlambat as $item)
+                                <tr class="bg-white border-b hover:bg-gray-50">
+                                    {{-- Nomor urut disesuaikan dengan paginasi --}}
+                                    <th class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                                        {{ $loop->iteration + $setoranTerlambat->firstItem() - 1 }}
+                                    </th>
+                                    <td class="px-6 py-4">{{ \Carbon\Carbon::parse($item->created_at)->isoFormat('D MMM YYYY, HH:mm') }}</td>
+                                    <td class="px-6 py-4">{{ $item->siswa->pengguna->nama_lengkap }}</td>
+                                    <td class="px-6 py-4">{{ $item->siswa->kelas->nama_kelas ?? 'N/A' }}</td>
+                                    <td class="px-6 py-4">{{ $item->jenisSampah->nama_sampah }}</td>
+                                    <td class="px-6 py-4">{{ $item->jumlah }} {{ $item->jenisSampah->satuan }}</td>
+                                    <td class="px-6 py-4 text-right">Rp {{ number_format($item->total_harga, 0, ',', '.') }}</td>
                                 </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                                @forelse ($setoranTerlambat as $setoran)
-                                    <tr>
-                                        <td class="px-6 py-4 whitespace-nowrap">{{ \Carbon\Carbon::parse($setoran->created_at)->format('d-m-Y H:i') }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap">{{ $setoran->siswa->pengguna->nama_lengkap }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap">{{ $setoran->siswa->kelas->nama_kelas ?? 'N/A' }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap">{{ $setoran->jenisSampah->nama_sampah }}</td>
-                                        <td class="px-6 py-4 text-right whitespace-nowrap">Rp {{ number_format($setoran->total_harga, 0, ',', '.') }}</td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="5" class="px-6 py-4 text-center">Tidak ada data setoran siswa terlambat.</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
+                            @empty
+                                <tr>
+                                    <td colspan="7" class="px-6 py-12 text-center text-gray-500">
+                                        Tidak ada data setoran terlambat.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+
+                {{-- Link Paginasi --}}
+                @if ($setoranTerlambat->hasPages())
                     <div class="mt-4">
                         {{ $setoranTerlambat->links() }}
                     </div>
-                </div>
+                @endif
+                
             </div>
         </div>
     </div>
