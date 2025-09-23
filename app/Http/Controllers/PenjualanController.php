@@ -66,6 +66,8 @@ class PenjualanController extends Controller
                     $jenisSampah->decrement('stok', $item['jumlah']);
                 }
 
+                // --- INTEGRASI BUKU KAS ---
+                
                 $kategoriPemasukan = KategoriTransaksi::firstOrCreate(
                     ['nama_kategori' => 'Hasil Penjualan Sampah'],
                     ['tipe' => 'pemasukan']
@@ -79,23 +81,26 @@ class PenjualanController extends Controller
                     'id_kategori' => $kategoriPemasukan->id,
                 ]);
 
-                // =================== PERBAIKAN LOGIKA DI SINI ===================
-                // Mengambil nilai persentase honor secara spesifik dari database
-                $settingHonor = Setting::where('key', 'persentase_honor')->first();
-                $persentaseHonor = $settingHonor ? (float)$settingHonor->value : 0;
                 // ================================================================
-
-                if ($persentaseHonor > 0) {
-                    $jumlahHonor = $totalPenjualan * ($persentaseHonor / 100);
+                // PERBAIKAN FINAL LOGIKA PENGAMBILAN HONOR
+                // ================================================================
+                $settings = Setting::pluck('value', 'key');
+                // Menjumlahkan persentase untuk pengelola dan sekolah
+                $persentasePengelola = (float)($settings['persentase_pengelola'] ?? 0);
+                $persentaseSekolah = (float)($settings['persentase_sekolah'] ?? 0);
+                $totalPersentaseHonor = $persentasePengelola + $persentaseSekolah;
+                
+                if ($totalPersentaseHonor > 0) {
+                    $jumlahHonor = $totalPenjualan * ($totalPersentaseHonor / 100);
 
                     if ($jumlahHonor > 0) {
                         $kategoriPengeluaran = KategoriTransaksi::firstOrCreate(
-                            ['nama_kategori' => 'Honor Penjualan'],
+                            ['nama_kategori' => 'Honor Penjualan (Sekolah & Pengelola)'],
                             ['tipe' => 'pengeluaran']
                         );
                         BukuKas::create([
                             'tanggal' => $request->tanggal_penjualan,
-                            'deskripsi' => 'Honor ' . $persentaseHonor . '% dari Penjualan (Inv: #' . $penjualan->id . ')',
+                            'deskripsi' => 'Honor ' . $totalPersentaseHonor . '% dari Penjualan (Inv: #' . $penjualan->id . ')',
                             'tipe' => 'pengeluaran',
                             'jumlah' => $jumlahHonor,
                             'id_admin' => Auth::id(),
@@ -103,6 +108,9 @@ class PenjualanController extends Controller
                         ]);
                     }
                 }
+                // ================================================================
+                // AKHIR PERBAIKAN
+                // ================================================================
             });
 
         } catch (\Exception $e) {
