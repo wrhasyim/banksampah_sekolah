@@ -2,22 +2,20 @@
 
 namespace App\Http\Controllers;
 
-// ... (use statements) ...
-use App\Models\Setting;
-use App\Models\BukuKas;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
-use App\Models\Penjualan;
-use App\Models\JenisSampah;
 use Illuminate\Http\Request;
+use App\Models\Penjualan;
+use App\Models\DetailPenjualan;
+use App\Models\JenisSampah;
+use App\Models\BukuKas;
+use App\Models\KategoriTransaksi;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class PenjualanController extends Controller
 {
-    // ... (method index dan create) ...
     public function index()
     {
-        $penjualan = Penjualan::with('admin')->latest('tanggal_penjualan')->get();
+        $penjualan = Penjualan::latest()->paginate(10);
         return view('pages.penjualan.index', compact('penjualan'));
     }
 
@@ -26,111 +24,78 @@ class PenjualanController extends Controller
         $jenisSampah = JenisSampah::where('stok', '>', 0)->get();
         return view('pages.penjualan.create', compact('jenisSampah'));
     }
+
     public function store(Request $request)
     {
         $request->validate([
+            'tanggal_penjualan' => 'required|date',
             'nama_pengepul' => 'required|string|max:255',
-            'items' => 'required|array|min:1',
-            'items.*.id_jenis_sampah' => 'required|exists:jenis_sampah,id',
-            'items.*.jumlah' => 'required|numeric|min:0.01',
-            'items.*.subtotal_harga' => 'required|numeric|min:0',
+            'sampah' => 'required|array|min:1',
+            'sampah.*.id' => 'required|exists:jenis_sampah,id',
+            'sampah.*.jumlah' => 'required|numeric|min:0.01',
         ]);
 
         try {
             DB::transaction(function () use ($request) {
-                // ... (logika pembuatan penjualan dan detail penjualan) ...
-                 $totalHarga = 0;
+                $totalPenjualan = 0;
+
+                foreach ($request->sampah as $item) {
+                    $jenisSampah = JenisSampah::find($item['id']);
+                    if ($item['jumlah'] > $jenisSampah->stok) {
+                        throw new \Exception('Stok untuk ' . $jenisSampah->nama_sampah . ' tidak mencukupi.');
+                    }
+                    $totalPenjualan += $item['jumlah'] * $jenisSampah->harga_jual;
+                }
 
                 $penjualan = Penjualan::create([
-                    'id_admin' => Auth::id(),
+                    'tanggal_penjualan' => $request->tanggal_penjualan,
                     'nama_pengepul' => $request->nama_pengepul,
-                    'tanggal_penjualan' => now(),
-                    'total_harga' => 0,
+                    'total_harga' => $totalPenjualan,
+                    'id_admin' => Auth::id(),
                 ]);
 
-                foreach ($request->items as $item) {
-                    $jenisSampah = JenisSampah::findOrFail($item['id_jenis_sampah']);
-
-                    if ($jenisSampah->stok < $item['jumlah']) {
-                        throw ValidationException::withMessages([
-                            'items' => 'Stok untuk ' . $jenisSampah->nama_sampah . ' tidak mencukupi. Sisa stok: ' . $jenisSampah->stok . ' ' . $jenisSampah->satuan,
-                        ]);
-                    }
-
-                    $totalHarga += $item['subtotal_harga'];
-
-                    $penjualan->detailPenjualan()->create([
-                        'id_jenis_sampah' => $item['id_jenis_sampah'],
+                foreach ($request->sampah as $item) {
+                    $jenisSampah = JenisSampah::find($item['id']);
+                    
+                    // --- PERBAIKAN UTAMA DI SINI ---
+                    DetailPenjualan::create([
+                        // Menggunakan 'id_penjualan' sesuai Model Anda
+                        'id_penjualan' => $penjualan->id, 
+                        // Menggunakan 'id_jenis_sampah' sesuai Model Anda
+                        'id_jenis_sampah' => $item['id'], 
                         'jumlah' => $item['jumlah'],
-                        'subtotal_harga' => $item['subtotal_harga'],
+                        // Menggunakan 'subtotal_harga' sesuai Model Anda
+                        'subtotal_harga' => $item['jumlah'] * $jenisSampah->harga_jual, 
                     ]);
 
                     $jenisSampah->decrement('stok', $item['jumlah']);
                 }
 
-                $penjualan->update(['total_harga' => $totalHarga]);
+                $kategori = KategoriTransaksi::firstOrCreate(
+                    ['nama_kategori' => 'Hasil Penjualan Sampah'],
+                    ['tipe' => 'pemasukan']
+                );
 
-
-                // 1. Catat total penjualan sebagai PEMASUKAN di Buku Kas
                 BukuKas::create([
-                    'tanggal' => now(),
-                    'deskripsi' => 'Hasil Penjualan ke Pengepul: ' . $request->nama_pengepul . ' (ID: ' . $penjualan->id . ')',
+                    'tanggal' => $request->tanggal_penjualan,
+                    'deskripsi' => 'Hasil Penjualan Sampah ke ' . $request->nama_pengepul,
                     'tipe' => 'pemasukan',
-                    'jumlah' => $totalHarga,
+                    'jumlah' => $totalPenjualan,
                     'id_admin' => Auth::id(),
+                    'id_kategori' => $kategori->id,
                 ]);
-
-                // 2. Ambil persentase honor dari settings
-                $settings = Setting::pluck('value', 'key');
-                $persentasePengelola = $settings['persentase_pengelola'] ?? 0;
-                $persentaseSekolah = $settings['persentase_sekolah'] ?? 0;
-
-                // 3. Hitung dan catat honor untuk Pengelola
-                $honorPengelola = $totalHarga * ($persentasePengelola / 100);
-                if ($honorPengelola > 0) {
-                    BukuKas::create([
-                        'tanggal' => now(),
-                        'deskripsi' => 'Honor Pengelola dari Penjualan #' . $penjualan->id,
-                        'tipe' => 'pengeluaran',
-                        'jumlah' => $honorPengelola,
-                        'id_admin' => Auth::id(),
-                    ]);
-                }
-
-                // 4. Hitung dan catat honor untuk Sekolah
-                $honorSekolah = $totalHarga * ($persentaseSekolah / 100);
-                if ($honorSekolah > 0) {
-                    BukuKas::create([
-                        'tanggal' => now(),
-                        'deskripsi' => 'Honor Sekolah dari Penjualan #' . $penjualan->id,
-                        'tipe' => 'pengeluaran',
-                        'jumlah' => $honorSekolah,
-                        'id_admin' => Auth::id(),
-                    ]);
-                }
-
-                // 5. HAPUS BAGIAN INI: Logika insentif wali kelas telah dipindahkan
-                /*
-                $persentaseWaliKelas = $settings['persentase_wali_kelas'] ?? 0;
-                $totalHonorWaliKelas = $totalHarga * ($persentaseWaliKelas / 100);
-                if ($totalHonorWaliKelas > 0) {
-                    // ... (kode lama yang menghitung proporsi) ...
-                }
-                */
-
             });
-        } catch (ValidationException $e) {
-            return redirect()->back()->withErrors($e->errors())->withInput();
+
         } catch (\Exception $e) {
-            return redirect()->back()->with('toastr-error', 'Terjadi kesalahan: ' . $e->getMessage())->withInput();
+            return redirect()->back()->with('error', 'Gagal menyimpan penjualan: ' . $e->getMessage())->withInput();
         }
 
-        return redirect()->route('penjualan.index')->with('toastr-success', 'Transaksi penjualan berhasil disimpan!');
+        return redirect()->route('penjualan.index')->with('success', 'Data penjualan berhasil disimpan.');
     }
-    // ... (method show) ...
+
     public function show(Penjualan $penjualan)
     {
-        $penjualan->load('detailPenjualan.jenisSampah', 'admin');
+        $penjualan->load('detailPenjualans.jenisSampah', 'admin');
         return view('pages.penjualan.show', compact('penjualan'));
     }
 }

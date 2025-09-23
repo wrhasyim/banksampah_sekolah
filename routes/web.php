@@ -41,6 +41,8 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::resource('kategori-transaksi', KategoriTransaksiController::class);
     Route::resource('pengguna', PenggunaController::class)->except(['show']);
 
+Route::get('/api/bukukas-chart-data', [\App\Http\Controllers\BukuKasController::class, 'getChartData'])->name('bukukas.chart.data');
+
 // Rute BARU untuk Penyesuaian Stok
     Route::get('/stok/create', [\App\Http\Controllers\StokMasukController::class, 'create'])->name('stok.create');
     Route::post('/stok', [\App\Http\Controllers\StokMasukController::class, 'store'])->name('stok.store');

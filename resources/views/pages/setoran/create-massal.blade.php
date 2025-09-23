@@ -22,6 +22,26 @@
 
                     <form action="{{ route('setoran.store.massal') }}" method="POST">
                         @csrf
+
+                        {{-- PERUBAHAN: Container untuk dua master checkbox --}}
+                        <div id="master-checkbox-container" class="my-4 space-y-2 hidden">
+                            {{-- Master Checkbox untuk Tanpa Wali Kelas --}}
+                            <div class="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                                <label for="semua_tanpa_wali_kelas" class="inline-flex items-center">
+                                    <input id="semua_tanpa_wali_kelas" type="checkbox" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" name="semua_tanpa_wali_kelas" value="1">
+                                    <span class="ml-2 text-sm text-yellow-800 font-medium">{{ __('Tandai semua TANPA WALI KELAS (Tidak ada insentif)') }}</span>
+                                </label>
+                            </div>
+                            {{-- Master Checkbox untuk Terlambat --}}
+                            <div class="p-3 bg-red-50 border border-red-200 rounded-md">
+                                <label for="semua_terlambat" class="inline-flex items-center">
+                                    <input id="semua_terlambat" type="checkbox" class="rounded border-gray-300 text-red-600 shadow-sm focus:ring-red-500" name="semua_terlambat" value="1">
+                                    <span class="ml-2 text-sm text-red-800 font-medium">{{ __('Tandai semua TERLAMBAT (Dana masuk ke Kesiswaan)') }}</span>
+                                </label>
+                            </div>
+                        </div>
+
+
                         <div class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
@@ -29,7 +49,7 @@
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
                                     <tr>
-                                        <td id="initial-message" class="text-center p-4">
+                                        <td id="initial-message" class="text-center p-4" colspan="100%">
                                             Silakan pilih kelas terlebih dahulu untuk menampilkan siswa.
                                         </td>
                                     </tr>
@@ -37,7 +57,7 @@
                             </table>
                         </div>
 
-                        <div class="flex items-center justify-end mt-4">
+                        <div id="submit-button-container" class="flex items-center justify-end mt-4 hidden">
                             <x-primary-button>
                                 {{ __('Simpan Semua Setoran') }}
                             </x-primary-button>
@@ -54,7 +74,8 @@
             const kelasFilter = document.getElementById('kelas_filter');
             const tableHead = document.querySelector('thead');
             const tableBody = document.querySelector('tbody');
-            const initialMessage = document.getElementById('initial-message');
+            const masterCheckboxContainer = document.getElementById('master-checkbox-container');
+            const submitButtonContainer = document.getElementById('submit-button-container');
 
             const jenisSampahSiswa = @json($jenisSampahSiswa->values());
             const jenisSampahGuru = @json($jenisSampahGuru->values());
@@ -67,11 +88,13 @@
                 const isGuruClass = namaKelas && namaKelas.toLowerCase().includes('guru');
                 const activeJenisSampah = isGuruClass ? jenisSampahGuru : jenisSampahSiswa;
                 
-                // ===== PERUBAHAN 1: Menyesuaikan colspan untuk pesan (+3 dari sebelumnya +2) =====
-                const colspanValue = activeJenisSampah.length + 3; 
+                const colspanValue = activeJenisSampah.length + 1; 
 
                 tableHead.innerHTML = '';
                 tableBody.innerHTML = `<tr><td colspan="${colspanValue}" class="text-center p-4">Memuat data siswa...</td></tr>`;
+                masterCheckboxContainer.classList.add('hidden');
+                submitButtonContainer.classList.add('hidden');
+
 
                 if (kelasId) {
                     let headerRow = '<tr>';
@@ -80,9 +103,6 @@
                         headerRow += `<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">${sampah.nama_sampah} (${sampah.satuan})</th>`;
                     });
                     
-                    // ===== PERUBAHAN 2: Tambahkan header kolom "Tanpa Wali Kelas" =====
-                    headerRow += '<th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Terlambat</th>';
-                    headerRow += '<th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Tanpa Wali Kelas</th>';
                     headerRow += '</tr>';
                     tableHead.innerHTML = headerRow;
 
@@ -91,6 +111,9 @@
                         .then(data => {
                             tableBody.innerHTML = ''; 
                             if (data.length > 0) {
+                                masterCheckboxContainer.classList.remove('hidden');
+                                submitButtonContainer.classList.remove('hidden');
+
                                 data.forEach(siswa => {
                                     let bodyRow = '<tr>';
                                     bodyRow += `<td class="px-6 py-4 whitespace-nowrap sticky left-0 bg-white z-10">${siswa.pengguna.nama_lengkap}</td>`;
@@ -104,13 +127,6 @@
                                                     </td>`;
                                     });
 
-                                    // ===== PERUBAHAN 3: Tambahkan sel untuk checkbox "Tanpa Wali Kelas" =====
-                                    bodyRow += `<td class="px-6 py-4 whitespace-nowrap text-center">
-                                                    <input type="checkbox" name="terlambat[]" value="${siswa.id}" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500">
-                                                </td>`;
-                                    bodyRow += `<td class="px-6 py-4 whitespace-nowrap text-center">
-                                                    <input type="checkbox" name="tanpa_wali_kelas[]" value="${siswa.id}" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500">
-                                                </td>`;
                                     bodyRow += '</tr>';
                                     tableBody.innerHTML += bodyRow;
                                 });
@@ -124,7 +140,7 @@
                         });
                 } else {
                     tableHead.innerHTML = '';
-                    tableBody.innerHTML = `<tr><td class="text-center p-4">Silakan pilih kelas terlebih dahulu.</td></tr>`;
+                    tableBody.innerHTML = `<tr><td class="text-center p-4" colspan="100%">Silakan pilih kelas terlebih dahulu.</td></tr>`;
                 }
             });
         });

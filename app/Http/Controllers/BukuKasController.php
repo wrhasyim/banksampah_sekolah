@@ -20,11 +20,13 @@ class BukuKasController extends Controller
         $startDate = Carbon::createFromFormat('Y-m', $selectedMonth)->startOfMonth();
         $endDate = Carbon::createFromFormat('Y-m', $selectedMonth)->endOfMonth();
 
+        // PERBAIKAN: Menggunakan relasi 'kategori'
         $bukuKas = BukuKas::with('kategori') 
             ->whereBetween('tanggal', [$startDate, $endDate])
             ->latest('tanggal')
             ->paginate(10);
 
+        // PERBAIKAN: Menggunakan tipe 'pemasukan' dan 'pengeluaran'
         $totalPemasukan = BukuKas::whereBetween('tanggal', [$startDate, $endDate])->where('tipe', 'pemasukan')->sum('jumlah');
         $totalPengeluaran = BukuKas::whereBetween('tanggal', [$startDate, $endDate])->where('tipe', 'pengeluaran')->sum('jumlah');
         
@@ -37,11 +39,12 @@ class BukuKasController extends Controller
 
     public function store(Request $request)
     {
+        // PERBAIKAN: Menggunakan 'deskripsi' dan 'id_kategori'
         $request->validate([
             'tanggal' => 'required|date',
             'deskripsi' => 'required|string|max:255',
             'jumlah' => 'required|numeric|min:0',
-            'id_kategori' => 'nullable|exists:kategori_transaksis,id',
+            'id_kategori' => 'nullable|exists:kategori_transaksi,id',
             'tipe' => 'required_if:id_kategori,null|in:pemasukan,pengeluaran',
         ]);
         
@@ -75,7 +78,7 @@ class BukuKasController extends Controller
             'tanggal' => 'required|date',
             'deskripsi' => 'required|string|max:255',
             'jumlah' => 'required|numeric|min:0',
-            'id_kategori' => 'nullable|exists:kategori_transaksis,id',
+            'id_kategori' => 'nullable|exists:kategori_transaksi,id',
             'tipe' => 'required_if:id_kategori,null|in:pemasukan,pengeluaran',
         ]);
         
@@ -122,10 +125,52 @@ class BukuKasController extends Controller
         $totalPemasukan = $bukuKas->where('tipe', 'pemasukan')->sum('jumlah');
         $totalPengeluaran = $bukuKas->where('tipe', 'pengeluaran')->sum('jumlah');
         
-        // PERBAIKAN: Mengganti nama variabel agar konsisten
-        $saldoAkhir = $totalPemasukan - $totalPengeluaran;
+        $saldoAwalBulan = BukuKas::where('tanggal', '<', $startDate)->where('tipe', 'pemasukan')->sum('jumlah') - BukuKas::where('tanggal', '<', $startDate)->where('tipe', 'pengeluaran')->sum('jumlah');
+        $saldoAkhir = $saldoAwalBulan + $totalPemasukan - $totalPengeluaran;
 
-        $pdf = PDF::loadView('pages.buku-kas.buku-kas-pdf', compact('bukuKas', 'selectedMonth', 'totalPemasukan', 'totalPengeluaran', 'saldoAkhir', 'startDate', 'endDate'));
+        $pdf = PDF::loadView('pages.buku-kas.buku-kas-pdf', compact('bukuKas', 'selectedMonth', 'totalPemasukan', 'totalPengeluaran', 'saldoAkhir', 'saldoAwalBulan'));
         return $pdf->download('buku-kas-' . $selectedMonth . '.pdf');
+    }
+
+    public function getChartData()
+    {
+        $data = BukuKas::select(
+                DB::raw('YEAR(tanggal) as year'),
+                DB::raw('MONTH(tanggal) as month'),
+                DB::raw("SUM(CASE WHEN tipe = 'pemasukan' THEN jumlah ELSE 0 END) as pemasukan"),
+                DB::raw("SUM(CASE WHEN tipe = 'pengeluaran' THEN jumlah ELSE 0 END) as pengeluaran")
+            )
+            ->where('tanggal', '>=', Carbon::now()->subMonths(11)->startOfMonth())
+            ->groupBy('year', 'month')
+            ->orderBy('year', 'asc')
+            ->orderBy('month', 'asc')
+            ->get();
+
+        $labels = [];
+        $pemasukanData = [];
+        $pengeluaranData = [];
+
+        $date = Carbon::now()->subMonths(11)->startOfMonth();
+        for ($i = 0; $i < 12; $i++) {
+            $monthLabel = $date->isoFormat('MMM YYYY');
+            $labels[] = $monthLabel;
+            $pemasukanData[$monthLabel] = 0;
+            $pengeluaranData[$monthLabel] = 0;
+            $date->addMonth();
+        }
+        
+        foreach ($data as $row) {
+            $monthLabel = Carbon::createFromDate($row->year, $row->month, 1)->isoFormat('MMM YYYY');
+            if (isset($pemasukanData[$monthLabel])) {
+                $pemasukanData[$monthLabel] = $row->pemasukan;
+                $pengeluaranData[$monthLabel] = $row->pengeluaran;
+            }
+        }
+        
+        return response()->json([
+            'labels' => $labels,
+            'pemasukan' => array_values($pemasukanData),
+            'pengeluaran' => array_values($pengeluaranData),
+        ]);
     }
 }

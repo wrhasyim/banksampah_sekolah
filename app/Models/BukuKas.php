@@ -10,10 +10,11 @@ class BukuKas extends Model
 {
     use HasFactory, SoftDeletes;
 
+    protected $table = 'buku_kas';
+
     /**
      * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
+     * Sesuai dengan skema tabel Anda.
      */
     protected $fillable = [
         'tanggal',
@@ -25,9 +26,7 @@ class BukuKas extends Model
     ];
 
     /**
-     * Get the kategori that owns the BukuKas
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * Relasi ke KategoriTransaksi dengan nama 'kategori'.
      */
     public function kategori()
     {
@@ -35,9 +34,7 @@ class BukuKas extends Model
     }
 
     /**
-     * Get the admin that owns the BukuKas
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * Relasi ke Admin/Pengguna.
      */
     public function admin()
     {
