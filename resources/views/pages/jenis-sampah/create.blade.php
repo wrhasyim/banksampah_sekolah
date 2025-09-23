@@ -15,6 +15,14 @@
                             <x-input-error :messages="$errors->get('nama_sampah')" class="mt-2" />
                         </div>
                         <div class="md:col-span-1">
+    <x-input-label for="kategori" :value="__('Kategori Sampah')" />
+    <select id="kategori" name="kategori" class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+        <option value="Siswa" {{ old('kategori') == 'Siswa' ? 'selected' : '' }}>Siswa (Untuk Setoran)</option>
+        <option value="Pengelola" {{ old('kategori') == 'Pengelola' ? 'selected' : '' }}>Pengelola (Internal)</option>
+    </select>
+    <x-input-error :messages="$errors->get('kategori')" class="mt-2" />
+</div>
+                        <div class="md:col-span-1">
                             <x-input-label for="satuan" value="Satuan" />
                             <select name="satuan" id="satuan" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm" required>
                                 <option value="pcs" {{ old('satuan') == 'pcs' ? 'selected' : '' }}>Pcs (Buah)</option>

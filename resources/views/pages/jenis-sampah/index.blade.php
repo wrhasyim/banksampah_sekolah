@@ -15,9 +15,11 @@
                             <tr>
                                 <th class="px-6 py-3">No</th>
                                 <th class="px-6 py-3">Nama Sampah</th>
+                                <th class="px-6 py-3">Kategori</th>
                                 <th class="px-6 py-3">Harga</th>
                                 <th class="px-6 py-3">Stok</th>
                                 <th class="px-6 py-3">Aksi</th>
+
                             </tr>
                         </thead>
                         <tbody>
@@ -25,6 +27,17 @@
                             <tr class="bg-white border-b hover:bg-gray-50">
                                 <th class="px-6 py-4">{{ $loop->iteration + $jenisSampah->firstItem() - 1 }}</th>
                                 <td class="px-6 py-4">{{ $item->nama_sampah }}</td>
+                                <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
+    @if($item->kategori == 'Pengelola')
+        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+            Pengelola
+        </span>
+    @else
+        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+            Siswa
+        </span>
+    @endif
+</td>
                                 <td class="px-6 py-4">Rp {{ number_format($item->harga_per_satuan, 0, ',', '.') }} / {{ $item->satuan }}</td>
                                 <td class="px-6 py-4 font-bold">{{ $item->stok }} {{ $item->satuan }}</td>
                                 <td class="px-6 py-4 flex items-center space-x-2">

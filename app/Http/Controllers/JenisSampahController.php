@@ -12,6 +12,7 @@ class JenisSampahController extends Controller
      */
     public function index()
     {
+        // Menggunakan nama kolom yang benar 'nama_sampah' untuk sorting jika diperlukan
         $jenisSampah = JenisSampah::where('status', 'aktif')->latest()->paginate(10);
         return view('pages.jenis-sampah.index', compact('jenisSampah'));
     }
@@ -29,23 +30,25 @@ class JenisSampahController extends Controller
      */
     public function store(Request $request)
     {
-        // MODIFIKASI: Menambahkan 'harga_jual' pada validasi
+        // PERBAIKAN: Menggunakan nama kolom 'nama_sampah' dan 'harga_per_satuan'
         $request->validate([
-            'nama_sampah' => 'required|string|max:50',
-            'satuan' => 'required|in:pcs,kg',
+            'nama_sampah' => 'required|string|max:255',
+            'kategori' => 'required|string|in:Siswa,Pengelola',
             'harga_per_satuan' => 'required|numeric|min:0',
-            'harga_jual' => 'required|numeric|min:0', // Ditambahkan
+            'harga_jual' => 'required|numeric|min:0',
+            'satuan' => 'required|string',
+            // 'deskripsi' tidak ada di tabel Anda, jadi saya hapus dari validasi
         ]);
 
-        // MODIFIKASI: Menambahkan 'harga_jual' pada data yang disimpan
         JenisSampah::create([
             'nama_sampah' => $request->nama_sampah,
-            'satuan' => $request->satuan,
+            'kategori' => $request->kategori,
             'harga_per_satuan' => $request->harga_per_satuan,
-            'harga_jual' => $request->harga_jual, // Ditambahkan
+            'harga_jual' => $request->harga_jual,
+            'satuan' => $request->satuan,
         ]);
         
-        return redirect()->route('jenis-sampah.index')->with('toastr-success', 'Jenis sampah berhasil ditambahkan!');
+        return redirect()->route('jenis-sampah.index')->with('success', 'Jenis sampah berhasil ditambahkan!');
     }
 
     /**
@@ -53,7 +56,8 @@ class JenisSampahController extends Controller
      */
     public function edit(JenisSampah $jenisSampah)
     {
-        return view('pages.jenis-sampah.edit', ['item' => $jenisSampah]);
+        // PERBAIKAN: Mengirim variabel dengan nama 'jenisSampah' ke view
+        return view('pages.jenis-sampah.edit', compact('jenisSampah'));
     }
 
     /**
@@ -61,23 +65,24 @@ class JenisSampahController extends Controller
      */
     public function update(Request $request, JenisSampah $jenisSampah)
     {
-        // MODIFIKASI: Menambahkan 'harga_jual' pada validasi
+        // PERBAIKAN: Menggunakan nama kolom 'nama_sampah' dan 'harga_per_satuan'
         $request->validate([
-            'nama_sampah' => 'required|string|max:50',
-            'satuan' => 'required|in:pcs,kg',
+            'nama_sampah' => 'required|string|max:255',
+            'kategori' => 'required|string|in:Siswa,Pengelola',
             'harga_per_satuan' => 'required|numeric|min:0',
-            'harga_jual' => 'required|numeric|min:0', // Ditambahkan
+            'harga_jual' => 'required|numeric|min:0',
+            'satuan' => 'required|string',
         ]);
 
-        // MODIFIKASI: Memperbarui data termasuk 'harga_jual'
         $jenisSampah->update([
             'nama_sampah' => $request->nama_sampah,
-            'satuan' => $request->satuan,
+            'kategori' => $request->kategori,
             'harga_per_satuan' => $request->harga_per_satuan,
-            'harga_jual' => $request->harga_jual, // Ditambahkan
+            'harga_jual' => $request->harga_jual,
+            'satuan' => $request->satuan,
         ]);
 
-        return redirect()->route('jenis-sampah.index')->with('toastr-success', 'Jenis sampah berhasil diperbarui!');
+        return redirect()->route('jenis-sampah.index')->with('success', 'Jenis sampah berhasil diperbarui!');
     }
 
     /**
@@ -87,12 +92,12 @@ class JenisSampahController extends Controller
     {
         // Cek jika stok masih ada
         if ($jenisSampah->stok > 0) {
-            return redirect()->route('jenis-sampah.index')->with('toastr-error', 'Tidak dapat menghapus jenis sampah yang masih memiliki stok.');
+            return redirect()->route('jenis-sampah.index')->with('error', 'Tidak dapat menghapus jenis sampah yang masih memiliki stok.');
         }
 
         // Jika stok 0, ubah status menjadi 'tidak aktif'
         $jenisSampah->update(['status' => 'tidak aktif']);
 
-        return redirect()->route('jenis-sampah.index')->with('toastr-success', 'Jenis sampah berhasil dihapus!');
+        return redirect()->route('jenis-sampah.index')->with('success', 'Jenis sampah berhasil dihapus!');
     }
 }

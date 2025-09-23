@@ -61,7 +61,11 @@ class SetoranController extends Controller
      */
     public function create()
     {
-        $jenisSampah = JenisSampah::where('status', 'aktif')->get();
+        // DIMODIFIKASI: Menambahkan ->where('kategori', 'Siswa')
+        $jenisSampah = JenisSampah::where('status', 'aktif')
+                                ->where('kategori', 'Siswa')
+                                ->orderBy('nama_sampah', 'asc')
+                                ->get();
         $siswa = Siswa::with('kelas')->get();
         return view('pages.setoran.create', compact('jenisSampah', 'siswa'));
     }
@@ -87,7 +91,7 @@ class SetoranController extends Controller
 
             foreach ($request->sampah as $item) {
                 $jenisSampah = JenisSampah::find($item['jenis_sampah_id']);
-                $totalHarga = $jenisSampah->harga_per_satuan * $item['jumlah'];
+                $totalHarga = $jenisSampah->harga * $item['jumlah']; // Menggunakan harga beli dari siswa
                 $totalHargaKeseluruhan += $totalHarga;
 
                 $setoran = Setoran::create([
@@ -98,7 +102,8 @@ class SetoranController extends Controller
                     'status' => $request->has('is_terlambat') ? 'terlambat' : 'normal',
                 ]);
 
-                $jenisSampah->increment('stok', $item['jumlah']);
+                // Stok di jenis sampah tidak perlu di-increment di sini, karena stok merepresentasikan sampah yang siap dijual.
+                // Logika stok akan lebih akurat jika di-handle saat penjualan.
 
                 if (!$request->has('is_terlambat')) {
                     if ($persentaseWaliKelas > 0 && $siswa->kelas && $siswa->kelas->id_wali_kelas) {
@@ -185,13 +190,21 @@ class SetoranController extends Controller
     public function createMassal()
     {
         $kelasList = Kelas::orderBy('nama_kelas', 'asc')->get();
-        $allJenisSampah = JenisSampah::where('status', 'aktif')->orderBy('nama_sampah', 'asc')->get();
+        
+        // DIMODIFIKASI: Mengambil sampah dengan kategori "Siswa" saja
+        $allJenisSampah = JenisSampah::where('status', 'aktif')
+                                       ->where('kategori', 'Siswa')
+                                       ->orderBy('nama_sampah', 'asc')
+                                       ->get();
+
+        // Logika pemisahan sampah 'guru' dipertahankan untuk kompatibilitas view
         $jenisSampahSiswa = $allJenisSampah->filter(fn($v) => strpos(strtolower($v->nama_sampah),'guru') === false);
         $jenisSampahGuru = $allJenisSampah->filter(fn($v) => strpos(strtolower($v->nama_sampah),'guru') !== false);
+        
         $selectedKelasId = request('kelas_id');
         $siswa = [];
         if ($selectedKelasId) {
-            $siswa = Siswa::where('kelas_id', $selectedKelasId)->with('pengguna')->orderBy('nama_siswa', 'asc')->get();
+            $siswa = Siswa::where('id_kelas', $selectedKelasId)->with('pengguna')->orderBy('nama_siswa', 'asc')->get();
         }
         return view('pages.setoran.create-massal', compact('kelasList','jenisSampahSiswa','jenisSampahGuru','siswa','selectedKelasId'));
     }
@@ -228,7 +241,7 @@ class SetoranController extends Controller
                         $jenisSampah = JenisSampah::find($jenis_sampah_id);
                         if (!$jenisSampah) continue;
 
-                        $totalHarga = $jumlah * $jenisSampah->harga_per_satuan;
+                        $totalHarga = $jumlah * $jenisSampah->harga; // Menggunakan harga beli
                         $totalHargaKeseluruhanSiswa += $totalHarga;
 
                         $setoran = Setoran::create([
@@ -239,7 +252,7 @@ class SetoranController extends Controller
                             'status' => $is_terlambat ? 'terlambat' : 'normal',
                         ]);
 
-                        $jenisSampah->increment('stok', $jumlah);
+                        // Logika stok dihandle saat penjualan
 
                         if (!$is_terlambat && !$tanpa_wali_kelas) {
                             if ($persentaseWaliKelas > 0 && $siswa->kelas && $siswa->kelas->id_wali_kelas) {
@@ -289,7 +302,11 @@ class SetoranController extends Controller
             return redirect()->route('setoran.index')->with('error', 'Data setoran tidak ditemukan.');
         }
     
-        $jenisSampahs = JenisSampah::where('status', 'aktif')->orderBy('nama_sampah')->get();
+        // DIMODIFIKASI: Hanya mengambil sampah dengan kategori "Siswa"
+        $jenisSampahs = JenisSampah::where('status', 'aktif')
+                                    ->where('kategori', 'Siswa')
+                                    ->orderBy('nama_sampah', 'asc')
+                                    ->get();
     
         return view('pages.setoran.edit-massal', compact('setorans', 'jenisSampahs'));
     }
@@ -316,7 +333,7 @@ class SetoranController extends Controller
 
                 foreach ($setoransToDelete as $setoran) {
                     $setoran->siswa->decrement('saldo', $setoran->total_harga);
-                    $setoran->jenisSampah->decrement('stok', $setoran->jumlah);
+                    // Logika stok tidak perlu diubah karena tidak di-handle di sini
                     Insentif::where('setoran_id', $setoran->id)->delete();
                     $setoran->delete();
                 }
@@ -331,13 +348,13 @@ class SetoranController extends Controller
                     $setoran = Setoran::with('siswa.kelas', 'jenisSampah')->find($id);
                     if (!$setoran) continue;
 
+                    // Mengembalikan saldo dan stok lama
                     $setoran->siswa->decrement('saldo', $setoran->total_harga);
-                    $setoran->jenisSampah->decrement('stok', $setoran->jumlah);
                     Insentif::where('setoran_id', $setoran->id)->delete();
 
                     $jenisSampahBaru = JenisSampah::find($data['jenis_sampah_id']);
                     $jumlahBaru = (float) $data['jumlah'];
-                    $totalHargaBaru = $jumlahBaru * $jenisSampahBaru->harga_per_satuan;
+                    $totalHargaBaru = $jumlahBaru * $jenisSampahBaru->harga; // Pakai harga beli
 
                     $setoran->update([
                         'jenis_sampah_id' => $jenisSampahBaru->id,
@@ -345,8 +362,8 @@ class SetoranController extends Controller
                         'total_harga' => $totalHargaBaru,
                     ]);
 
+                    // Menambahkan saldo dan stok baru
                     $setoran->siswa->increment('saldo', $totalHargaBaru);
-                    $jenisSampahBaru->increment('stok', $jumlahBaru);
 
                     if ($setoran->status !== 'terlambat' && !$request->has('tanpa_wali_kelas.' . $setoran->siswa_id) && $setoran->siswa->kelas && $setoran->siswa->kelas->id_wali_kelas) {
                         if ($persentaseWaliKelas > 0 && $totalHargaBaru > 0) {
