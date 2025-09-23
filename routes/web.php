@@ -21,6 +21,9 @@ use App\Http\Controllers\ChartController;
 use App\Http\Controllers\NotaController;
 use App\Http\Controllers\PenggunaController;
 use App\Http\Controllers\RekapanController;
+use App\Http\Controllers\TutupBukuController; 
+use App\Http\Controllers\StokMasukController;
+
 
 // Halaman utama, arahkan ke login atau dashboard
 Route::get('/', function () {
@@ -89,6 +92,10 @@ Route::get('/api/bukukas-chart-data', [\App\Http\Controllers\BukuKasController::
     Route::get('buku-kas/export/excel', [BukuKasController::class, 'exportExcel'])->name('buku-kas.export.excel');
     Route::get('buku-kas/export/pdf', [BukuKasController::class, 'exportPdf'])->name('buku-kas.export.pdf');
     
+// Rute untuk Fitur Tutup Buku
+    Route::get('/tutup-buku', [TutupBukuController::class, 'index'])->name('tutup-buku.index');
+    Route::post('/tutup-buku', [TutupBukuController::class, 'store'])->name('tutup-buku.store');
+
     // Laporan Umum
     Route::prefix('laporan')->name('laporan.')->group(function () {
         Route::get('/', [ReportController::class, 'index'])->name('index');

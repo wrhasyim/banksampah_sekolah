@@ -32,6 +32,9 @@
                              <x-dropdown-link :href="route('kategori-transaksi.index')" :active="request()->routeIs('kategori-transaksi.*')">
                 {{ __('Kategori Transaksi') }}
             </x-dropdown-link>
+            <x-dropdown-link :href="route('tutup-buku.index')">
+    {{ __('Tutup Buku Bulanan') }}
+</x-dropdown-link>
                             </x-slot>
                         </x-dropdown>
                     </div>

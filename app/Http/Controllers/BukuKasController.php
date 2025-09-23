@@ -9,6 +9,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Carbon\Carbon;
 use App\Models\KategoriTransaksi;
+use App\Models\SaldoBulanan; // <-- TAMBAHKAN INI
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -20,17 +21,24 @@ class BukuKasController extends Controller
         $startDate = Carbon::createFromFormat('Y-m', $selectedMonth)->startOfMonth();
         $endDate = Carbon::createFromFormat('Y-m', $selectedMonth)->endOfMonth();
 
-        // PERBAIKAN: Menggunakan relasi 'kategori'
-        $bukuKas = BukuKas::with('kategori') 
+        $bukuKas = BukuKas::with('kategori')
             ->whereBetween('tanggal', [$startDate, $endDate])
             ->latest('tanggal')
             ->paginate(10);
 
-        // PERBAIKAN: Menggunakan tipe 'pemasukan' dan 'pengeluaran'
+        // --- PERUBAHAN LOGIKA SALDO ---
+        $saldoTerakhirDitutup = SaldoBulanan::latest('periode')->first();
+        $saldoAwal = $saldoTerakhirDitutup ? $saldoTerakhirDitutup->saldo_akhir : 0;
+        $tanggalMulaiHitung = $saldoTerakhirDitutup ? Carbon::parse($saldoTerakhirDitutup->periode)->addMonth()->startOfMonth() : '1970-01-01';
+
+        // Saldo akhir adalah saldo terakhir ditutup + total transaksi setelahnya
+        $pemasukanSetelahTutup = BukuKas::where('tanggal', '>=', $tanggalMulaiHitung)->where('tipe', 'pemasukan')->sum('jumlah');
+        $pengeluaranSetelahTutup = BukuKas::where('tanggal', '>=', $tanggalMulaiHitung)->where('tipe', 'pengeluaran')->sum('jumlah');
+        $saldoAkhir = $saldoAwal + $pemasukanSetelahTutup - $pengeluaranSetelahTutup;
+        // --- AKHIR PERUBAHAN LOGIKA SALDO ---
+        
         $totalPemasukan = BukuKas::whereBetween('tanggal', [$startDate, $endDate])->where('tipe', 'pemasukan')->sum('jumlah');
         $totalPengeluaran = BukuKas::whereBetween('tanggal', [$startDate, $endDate])->where('tipe', 'pengeluaran')->sum('jumlah');
-        
-        $saldoAkhir = BukuKas::where('tipe', 'pemasukan')->sum('jumlah') - BukuKas::where('tipe', 'pengeluaran')->sum('jumlah');
         
         $kategoriTransaksi = KategoriTransaksi::orderBy('nama_kategori')->get();
 
@@ -39,7 +47,6 @@ class BukuKasController extends Controller
 
     public function store(Request $request)
     {
-        // PERBAIKAN: Menggunakan 'deskripsi' dan 'id_kategori'
         $request->validate([
             'tanggal' => 'required|date',
             'deskripsi' => 'required|string|max:255',
@@ -65,7 +72,8 @@ class BukuKasController extends Controller
 
         return redirect()->route('buku-kas.index')->with('success', 'Transaksi berhasil ditambahkan.');
     }
-
+    
+    // ... (method edit, update, destroy, exportExcel tidak berubah) ...
     public function edit(BukuKas $bukuKa)
     {
         $kategoriTransaksi = KategoriTransaksi::orderBy('nama_kategori')->get();
@@ -111,6 +119,7 @@ class BukuKasController extends Controller
         return Excel::download(new BukuKasExport($bulan), 'buku-kas-' . $bulan . '.xlsx');
     }
 
+
     public function exportPdf(Request $request)
     {
         $selectedMonth = $request->get('bulan', Carbon::now()->format('Y-m'));
@@ -125,7 +134,16 @@ class BukuKasController extends Controller
         $totalPemasukan = $bukuKas->where('tipe', 'pemasukan')->sum('jumlah');
         $totalPengeluaran = $bukuKas->where('tipe', 'pengeluaran')->sum('jumlah');
         
-        $saldoAwalBulan = BukuKas::where('tanggal', '<', $startDate)->where('tipe', 'pemasukan')->sum('jumlah') - BukuKas::where('tanggal', '<', $startDate)->where('tipe', 'pengeluaran')->sum('jumlah');
+        // --- PERUBAHAN LOGIKA SALDO PDF ---
+        $saldoTerakhirDitutup = SaldoBulanan::where('periode', '<', $startDate)->latest('periode')->first();
+        $saldoAwalBulan = $saldoTerakhirDitutup ? $saldoTerakhirDitutup->saldo_akhir : 0;
+        $tanggalMulaiHitung = $saldoTerakhirDitutup ? Carbon::parse($saldoTerakhirDitutup->periode)->addMonth()->startOfMonth() : '1970-01-01';
+        
+        $pemasukanSisa = BukuKas::whereBetween('tanggal', [$tanggalMulaiHitung, $startDate->copy()->subDay()])->where('tipe', 'pemasukan')->sum('jumlah');
+        $pengeluaranSisa = BukuKas::whereBetween('tanggal', [$tanggalMulaiHitung, $startDate->copy()->subDay()])->where('tipe', 'pengeluaran')->sum('jumlah');
+        $saldoAwalBulan += ($pemasukanSisa - $pengeluaranSisa);
+        // --- AKHIR PERUBAHAN LOGIKA SALDO PDF ---
+
         $saldoAkhir = $saldoAwalBulan + $totalPemasukan - $totalPengeluaran;
 
         $pdf = PDF::loadView('pages.buku-kas.buku-kas-pdf', compact('bukuKas', 'selectedMonth', 'totalPemasukan', 'totalPengeluaran', 'saldoAkhir', 'saldoAwalBulan'));
