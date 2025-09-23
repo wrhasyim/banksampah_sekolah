@@ -41,6 +41,10 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::resource('kategori-transaksi', KategoriTransaksiController::class);
     Route::resource('pengguna', PenggunaController::class)->except(['show']);
 
+// Rute BARU untuk Penyesuaian Stok
+    Route::get('/stok/create', [\App\Http\Controllers\StokMasukController::class, 'create'])->name('stok.create');
+    Route::post('/stok', [\App\Http\Controllers\StokMasukController::class, 'store'])->name('stok.store');
+
     // Manajemen Siswa
     Route::prefix('siswa')->name('siswa.')->group(function () {
         Route::get('/export', [SiswaController::class, 'export'])->name('export');
