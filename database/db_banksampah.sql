@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Waktu pembuatan: 23 Sep 2025 pada 15.58
+-- Waktu pembuatan: 23 Sep 2025 pada 16.35
 -- Versi server: 10.4.32-MariaDB
 -- Versi PHP: 8.2.12
 
@@ -75,13 +75,13 @@ CREATE TABLE `buku_kas` (
 --
 
 INSERT INTO `buku_kas` (`id`, `tanggal`, `deskripsi`, `tipe`, `jumlah`, `id_admin`, `created_at`, `updated_at`, `deleted_at`, `id_kategori`) VALUES
-(1, '2025-09-23', 'Hasil Penjualan ke Pengepul: H. Ratam (ID: 1)', 'pemasukan', 1072000.00, 1, '2025-09-23 10:25:39', '2025-09-23 10:25:39', NULL, NULL),
+(1, '2025-09-23', 'Hasil Penjualan ke Pengepul: H. Ratam (ID: 1)', 'pemasukan', 1072000.00, 1, '2025-09-23 10:25:39', '2025-09-23 14:27:04', NULL, 4),
 (2, '2025-09-23', 'Honor Sekolah dari Penjualan #1', 'pengeluaran', 32160.00, 1, '2025-09-23 10:25:39', '2025-09-23 10:25:39', NULL, NULL),
-(3, '2025-09-23', 'Hasil Penjualan ke Pengepul: H. Ratam (ID: 2)', 'pemasukan', 61200.00, 1, '2025-09-23 11:38:57', '2025-09-23 11:38:57', NULL, NULL),
+(3, '2025-09-23', 'Hasil Penjualan ke Pengepul: H. Ratam (ID: 2)', 'pemasukan', 61200.00, 1, '2025-09-23 11:38:57', '2025-09-23 14:27:15', NULL, 4),
 (4, '2025-09-23', 'Honor Sekolah dari Penjualan #2', 'pengeluaran', 1836.00, 1, '2025-09-23 11:38:57', '2025-09-23 11:38:57', NULL, NULL),
-(5, '2025-09-23', 'Hasil Penjualan ke Pengepul: H. Ratam (ID: 3)', 'pemasukan', 34500.00, 1, '2025-09-23 11:43:31', '2025-09-23 11:43:31', NULL, NULL),
+(5, '2025-09-23', 'Hasil Penjualan ke Pengepul: H. Ratam (ID: 3)', 'pemasukan', 34500.00, 1, '2025-09-23 11:43:31', '2025-09-23 14:27:29', NULL, 4),
 (6, '2025-09-23', 'Honor Sekolah dari Penjualan #3', 'pengeluaran', 1035.00, 1, '2025-09-23 11:43:31', '2025-09-23 11:43:31', NULL, NULL),
-(7, '2025-09-23', 'Hasil Penjualan ke Pengepul: H. Ratam (ID: 4)', 'pemasukan', 32200.00, 1, '2025-09-23 12:28:05', '2025-09-23 12:28:05', NULL, NULL),
+(7, '2025-09-23', 'Hasil Penjualan ke Pengepul: H. Ratam (ID: 4)', 'pemasukan', 32200.00, 1, '2025-09-23 12:28:05', '2025-09-23 14:27:44', NULL, 4),
 (8, '2025-09-23', 'Honor Sekolah dari Penjualan #4', 'pengeluaran', 966.00, 1, '2025-09-23 12:28:05', '2025-09-23 12:28:05', NULL, NULL);
 
 -- --------------------------------------------------------
@@ -2164,7 +2164,8 @@ INSERT INTO `kategori_transaksi` (`id`, `nama_kategori`, `tipe`, `created_at`, `
 (2, 'Pembayaran Insentif Guru', 'pengeluaran', '2025-09-23 13:22:23', '2025-09-23 13:22:23'),
 (3, 'Operasional', 'pengeluaran', '2025-09-23 13:23:09', '2025-09-23 13:23:09'),
 (4, 'Hasil Penjualan Sampah', 'pemasukan', '2025-09-23 13:23:21', '2025-09-23 13:57:48'),
-(5, 'Saldo Awal', 'pemasukan', '2025-09-23 13:23:32', '2025-09-23 13:23:32');
+(5, 'Saldo Awal', 'pemasukan', '2025-09-23 13:23:32', '2025-09-23 13:23:32'),
+(6, 'Honor Penjualan', 'pengeluaran', '2025-09-23 14:33:11', '2025-09-23 14:33:11');
 
 -- --------------------------------------------------------
 
@@ -3255,7 +3256,7 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('NV3tZ7LeubSQ3YynJa01WcIs6WMsl5pl07YIfLLy', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoialh3N1N3ZHhhZG01T09MdXB5bFNIaXA0OTRUeTZhRHZoa1dtT0JsNSI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6NDA6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9rYXRlZ29yaS10cmFuc2Frc2kiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX1zOjUwOiJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI7aToxO30=', 1758635869);
+('NV3tZ7LeubSQ3YynJa01WcIs6WMsl5pl07YIfLLy', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoialh3N1N3ZHhhZG01T09MdXB5bFNIaXA0OTRUeTZhRHZoa1dtT0JsNSI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MzE6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9wZW5qdWFsYW4iO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX1zOjUwOiJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI7aToxO30=', 1758638125);
 
 -- --------------------------------------------------------
 
@@ -6362,7 +6363,7 @@ ALTER TABLE `jobs`
 -- AUTO_INCREMENT untuk tabel `kategori_transaksi`
 --
 ALTER TABLE `kategori_transaksi`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT untuk tabel `kelas`

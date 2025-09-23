@@ -8,6 +8,7 @@ use App\Models\DetailPenjualan;
 use App\Models\JenisSampah;
 use App\Models\BukuKas;
 use App\Models\KategoriTransaksi;
+use App\Models\Setting;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
@@ -56,41 +57,59 @@ class PenjualanController extends Controller
 
                 foreach ($request->sampah as $item) {
                     $jenisSampah = JenisSampah::find($item['id']);
-                    
-                    // --- PERBAIKAN UTAMA DI SINI ---
                     DetailPenjualan::create([
-                        // Menggunakan 'id_penjualan' sesuai Model Anda
-                        'id_penjualan' => $penjualan->id, 
-                        // Menggunakan 'id_jenis_sampah' sesuai Model Anda
-                        'id_jenis_sampah' => $item['id'], 
+                        'id_penjualan' => $penjualan->id,
+                        'id_jenis_sampah' => $item['id'],
                         'jumlah' => $item['jumlah'],
-                        // Menggunakan 'subtotal_harga' sesuai Model Anda
-                        'subtotal_harga' => $item['jumlah'] * $jenisSampah->harga_jual, 
+                        'subtotal_harga' => $item['jumlah'] * $jenisSampah->harga_jual,
                     ]);
-
                     $jenisSampah->decrement('stok', $item['jumlah']);
                 }
 
-                $kategori = KategoriTransaksi::firstOrCreate(
+                $kategoriPemasukan = KategoriTransaksi::firstOrCreate(
                     ['nama_kategori' => 'Hasil Penjualan Sampah'],
                     ['tipe' => 'pemasukan']
                 );
-
                 BukuKas::create([
                     'tanggal' => $request->tanggal_penjualan,
-                    'deskripsi' => 'Hasil Penjualan Sampah ke ' . $request->nama_pengepul,
+                    'deskripsi' => 'Hasil Penjualan Sampah ke ' . $request->nama_pengepul . ' (Inv: #' . $penjualan->id . ')',
                     'tipe' => 'pemasukan',
                     'jumlah' => $totalPenjualan,
                     'id_admin' => Auth::id(),
-                    'id_kategori' => $kategori->id,
+                    'id_kategori' => $kategoriPemasukan->id,
                 ]);
+
+                // =================== PERBAIKAN LOGIKA DI SINI ===================
+                // Mengambil nilai persentase honor secara spesifik dari database
+                $settingHonor = Setting::where('key', 'persentase_honor')->first();
+                $persentaseHonor = $settingHonor ? (float)$settingHonor->value : 0;
+                // ================================================================
+
+                if ($persentaseHonor > 0) {
+                    $jumlahHonor = $totalPenjualan * ($persentaseHonor / 100);
+
+                    if ($jumlahHonor > 0) {
+                        $kategoriPengeluaran = KategoriTransaksi::firstOrCreate(
+                            ['nama_kategori' => 'Honor Penjualan'],
+                            ['tipe' => 'pengeluaran']
+                        );
+                        BukuKas::create([
+                            'tanggal' => $request->tanggal_penjualan,
+                            'deskripsi' => 'Honor ' . $persentaseHonor . '% dari Penjualan (Inv: #' . $penjualan->id . ')',
+                            'tipe' => 'pengeluaran',
+                            'jumlah' => $jumlahHonor,
+                            'id_admin' => Auth::id(),
+                            'id_kategori' => $kategoriPengeluaran->id,
+                        ]);
+                    }
+                }
             });
 
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Gagal menyimpan penjualan: ' . $e->getMessage())->withInput();
         }
 
-        return redirect()->route('penjualan.index')->with('success', 'Data penjualan berhasil disimpan.');
+        return redirect()->route('penjualan.index')->with('success', 'Data penjualan berhasil disimpan dan dicatat di Buku Kas.');
     }
 
     public function show(Penjualan $penjualan)
