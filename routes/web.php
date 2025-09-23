@@ -34,8 +34,7 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
 
 // Grup rute yang hanya bisa diakses oleh admin
 Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
-     Route::post('settings/backup', [App\Http\Controllers\SettingController::class, 'backup'])->name('settings.backup');
-    Route::post('settings/restore', [App\Http\Controllers\SettingController::class, 'restore'])->name('settings.restore');
+    
     // Master Data
     Route::resource('kelas', KelasController::class);
     Route::resource('jenis-sampah', JenisSampahController::class);
@@ -48,10 +47,9 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
         Route::get('/sample-export', [SiswaController::class, 'sampleExport'])->name('sample.export');
         Route::get('/import', [SiswaController::class, 'showImportForm'])->name('import.form');
         Route::post('/import', [SiswaController::class, 'import'])->name('import');
+        Route::get('/search', [SiswaController::class, 'search'])->name('search'); // Tambahan untuk Select2
     });
     Route::resource('siswa', SiswaController::class);
-
-Route::get('/dashboard/chart/bubble', [DashboardController::class, 'getBubbleChartData'])->name('dashboard.chart.bubble');
 
     // Transaksi Setoran
     Route::prefix('setoran')->name('setoran.')->group(function () {
@@ -61,8 +59,11 @@ Route::get('/dashboard/chart/bubble', [DashboardController::class, 'getBubbleCha
         Route::post('/import', [SetoranController::class, 'import'])->name('import');
         Route::get('/create-massal', [SetoranController::class, 'createMassal'])->name('create.massal');
         Route::post('/store-massal', [SetoranController::class, 'storeMassal'])->name('store.massal');
-        // --- RUTE BARU UNTUK EDIT MASSAL ---
-        Route::get('/edit-massal', [SetoranController::class, 'editMassal'])->name('edit.massal');
+        
+        // --- RUTE EDIT MASSAL DIPERBAIKI ---
+        // Rute untuk menampilkan halaman edit (menggunakan POST agar bisa membawa banyak ID)
+        Route::post('/edit-massal', [SetoranController::class, 'editMassal'])->name('edit.massal');
+        // Rute untuk memproses update (menggunakan POST)
         Route::post('/update-massal', [SetoranController::class, 'updateMassal'])->name('update.massal');
     });
     Route::resource('setoran', SetoranController::class);
@@ -81,7 +82,6 @@ Route::get('/dashboard/chart/bubble', [DashboardController::class, 'getBubbleCha
     Route::resource('buku-kas', BukuKasController::class)->except(['create', 'show']);
     Route::get('buku-kas/export/excel', [BukuKasController::class, 'exportExcel'])->name('buku-kas.export.excel');
     Route::get('buku-kas/export/pdf', [BukuKasController::class, 'exportPdf'])->name('buku-kas.export.pdf');
-    Route::get('buku-tabungan', [BukuTabunganController::class, 'index'])->name('buku-tabungan.index');
     
     // Laporan Umum
     Route::prefix('laporan')->name('laporan.')->group(function () {
@@ -93,17 +93,13 @@ Route::get('/dashboard/chart/bubble', [DashboardController::class, 'getBubbleCha
         Route::get('/laba-rugi/export/pdf', [ReportController::class, 'exportLabaRugiPdf'])->name('laba-rugi.export.pdf');
     });
 
-    // --- BLOK REKAPAN KHUSUS YANG SUDAH BERSIH DAN BENAR ---
-    // Rekapan Khusus Siswa (DIPISAH)
+    // --- BLOK REKAPAN KHUSUS ---
     Route::get('/rekapan-siswa/terlambat', [RekapanController::class, 'indexSiswaTerlambat'])->name('rekapan.siswa.terlambat');
     Route::get('/rekapan-siswa/terlambat/export-pdf', [RekapanController::class, 'exportSiswaTerlambatPdf'])->name('rekapan.siswa.terlambat.exportPdf');
     Route::get('/rekapan-siswa/tanpa-wali-kelas', [RekapanController::class, 'indexSiswaTanpaWaliKelas'])->name('rekapan.siswa.tanpaWaliKelas');
     Route::get('/rekapan-siswa/tanpa-wali-kelas/export-pdf', [RekapanController::class, 'exportSiswaTanpaWaliKelasPdf'])->name('rekapan.siswa.tanpaWaliKelas.exportPdf');
-
-    // Rekapan Khusus Guru
     Route::get('/rekapan-guru', [RekapanController::class, 'indexGuru'])->name('rekapan.indexGuru');
     Route::get('/rekapan-guru/export-pdf', [RekapanController::class, 'exportGuruPdf'])->name('rekapan.exportGuruPdf');
-    // ----------------------------------------------------
 
     // Insentif
     Route::get('/insentif', [InsentifController::class, 'index'])->name('insentif.index');
@@ -112,7 +108,6 @@ Route::get('/dashboard/chart/bubble', [DashboardController::class, 'getBubbleCha
     Route::post('/insentif/bayar', [PembayaranInsentifController::class, 'store'])->name('insentif.bayar');
     
     // Fitur Lainnya
-    Route::get('/leaderboard', [LeaderboardController::class, 'index'])->name('leaderboard.index');
     Route::get('/nota', [NotaController::class, 'index'])->name('nota.index');
     Route::post('/nota/cetak', [NotaController::class, 'cetak'])->name('nota.cetak');
 
@@ -130,7 +125,15 @@ Route::get('/dashboard/chart/bubble', [DashboardController::class, 'getBubbleCha
     Route::get('/dashboard/chart-data', [DashboardController::class, 'getChartData'])->name('dashboard.chart.data');
     Route::get('/dashboard/chart/transaksi', [ChartController::class, 'getTransaksiData'])->name('dashboard.chart.transaksi');
     Route::get('/dashboard/chart/sampah', [ChartController::class, 'getSampahData'])->name('dashboard.chart.sampah');
+    Route::get('/dashboard/chart/bubble', [DashboardController::class, 'getBubbleChartData'])->name('dashboard.chart.bubble');
 });
+
+// Rute yang bisa diakses semua user yang sudah login
+Route::middleware(['auth', 'verified'])->group(function() {
+    Route::get('buku-tabungan', [BukuTabunganController::class, 'index'])->name('buku-tabungan.index');
+    Route::get('/leaderboard', [LeaderboardController::class, 'index'])->name('leaderboard.index');
+});
+
 
 // API untuk frontend (misal: Ambil siswa berdasarkan kelas)
 Route::get('/api/siswa-by-kelas/{kelasId}', [SiswaController::class, 'getSiswaByKelas'])

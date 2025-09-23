@@ -20,23 +20,45 @@ use Carbon\Carbon;
 
 class SetoranController extends Controller
 {
+    /**
+     * Menampilkan daftar setoran dengan fungsionalitas filter dan pencarian.
+     */
     public function index(Request $request)
     {
         $perPage = $request->input('perPage', 10);
         $search = $request->input('search');
+        $kelasId = $request->input('kelas_id');
+        $tanggalMulai = $request->input('tanggal_mulai');
+        $tanggalSelesai = $request->input('tanggal_selesai');
 
-        $setorans = Setoran::with(['siswa.pengguna', 'jenisSampah'])
+        $setorans = Setoran::with(['siswa.pengguna', 'siswa.kelas', 'jenisSampah'])
             ->when($search, function ($query, $search) {
                 $query->whereHas('siswa.pengguna', function ($q) use ($search) {
                     $q->where('nama_lengkap', 'like', "%{$search}%");
                 });
             })
+            ->when($kelasId, function ($query, $kelasId) {
+                $query->whereHas('siswa', function ($q) use ($kelasId) {
+                    $q->where('id_kelas', $kelasId);
+                });
+            })
+            ->when($tanggalMulai, function ($query, $tanggalMulai) {
+                $query->whereDate('created_at', '>=', $tanggalMulai);
+            })
+            ->when($tanggalSelesai, function ($query, $tanggalSelesai) {
+                $query->whereDate('created_at', '<=', $tanggalSelesai);
+            })
             ->latest()
             ->paginate($perPage);
 
-        return view('pages.setoran.index', compact('setorans', 'perPage'));
+        $kelasList = Kelas::orderBy('nama_kelas', 'asc')->get();
+
+        return view('pages.setoran.index', compact('setorans', 'perPage', 'kelasList'));
     }
 
+    /**
+     * Menampilkan form untuk membuat setoran baru.
+     */
     public function create()
     {
         $jenisSampah = JenisSampah::where('status', 'aktif')->get();
@@ -44,6 +66,9 @@ class SetoranController extends Controller
         return view('pages.setoran.create', compact('jenisSampah', 'siswa'));
     }
 
+    /**
+     * Menyimpan setoran baru ke database.
+     */
     public function store(Request $request)
     {
         $request->validate([
@@ -95,11 +120,17 @@ class SetoranController extends Controller
         return redirect()->route('setoran.index')->with('success', 'Setoran berhasil ditambahkan.');
     }
 
+    /**
+     * Mengekspor data setoran ke Excel.
+     */
     public function export()
     {
         return Excel::download(new SetoranExport, 'setoran.xlsx');
     }
 
+    /**
+     * API untuk pencarian siswa (digunakan oleh Select2).
+     */
     public function getSiswa(Request $request)
     {
         $search = $request->input('q');
@@ -118,11 +149,17 @@ class SetoranController extends Controller
         return response()->json($formattedSiswa);
     }
 
+    /**
+     * Menampilkan form impor data setoran.
+     */
     public function showImportForm()
     {
         return view('pages.setoran.import');
     }
 
+    /**
+     * Mengimpor data setoran dari file Excel.
+     */
     public function import(Request $request)
     {
         $request->validate(['file' => 'required|mimes:xls,xlsx']);
@@ -134,51 +171,34 @@ class SetoranController extends Controller
         return redirect()->route('setoran.index')->with('success', 'Data setoran berhasil diimpor!');
     }
 
+    /**
+     * Mengekspor contoh file Excel untuk impor.
+     */
     public function sampleExport()
     {
         return Excel::download(new SetoranSampleExport, 'sample-setoran.xlsx');
     }
 
+    /**
+     * Menampilkan form untuk setoran massal.
+     */
     public function createMassal()
-{
-    // Mengambil daftar kelas dan diurutkan berdasarkan nama
-    $kelasList = Kelas::orderBy('nama_kelas', 'asc')->get();
-
-    // Mengambil semua jenis sampah yang aktif dan diurutkan
-    $allJenisSampah = JenisSampah::where('status', 'aktif')->orderBy('nama_sampah', 'asc')->get();
-
-    // Memisahkan jenis sampah untuk siswa
-    $jenisSampahSiswa = $allJenisSampah->filter(function ($value) {
-        return strpos(strtolower($value->nama_sampah), 'guru') === false;
-    });
-
-    // Memisahkan jenis sampah untuk guru
-    $jenisSampahGuru = $allJenisSampah->filter(function ($value) {
-        return strpos(strtolower($value->nama_sampah), 'guru') !== false;
-    });
-    
-    // Mengambil ID kelas yang dipilih dari URL
-    $selectedKelasId = request('kelas_id');
-    $siswa = [];
-
-    // Jika ada kelas yang dipilih, ambil data siswanya
-    if ($selectedKelasId) {
-        // Ambil data siswa dan URUTKAN berdasarkan nama (A-Z)
-        $siswa = Siswa::where('kelas_id', $selectedKelasId)
-                      ->orderBy('nama_siswa', 'asc')
-                      ->get();
+    {
+        $kelasList = Kelas::orderBy('nama_kelas', 'asc')->get();
+        $allJenisSampah = JenisSampah::where('status', 'aktif')->orderBy('nama_sampah', 'asc')->get();
+        $jenisSampahSiswa = $allJenisSampah->filter(fn($v) => strpos(strtolower($v->nama_sampah),'guru') === false);
+        $jenisSampahGuru = $allJenisSampah->filter(fn($v) => strpos(strtolower($v->nama_sampah),'guru') !== false);
+        $selectedKelasId = request('kelas_id');
+        $siswa = [];
+        if ($selectedKelasId) {
+            $siswa = Siswa::where('kelas_id', $selectedKelasId)->with('pengguna')->orderBy('nama_siswa', 'asc')->get();
+        }
+        return view('pages.setoran.create-massal', compact('kelasList','jenisSampahSiswa','jenisSampahGuru','siswa','selectedKelasId'));
     }
 
-    // Kirim semua data yang dibutuhkan ke view
-    return view('pages.setoran.create-massal', compact(
-        'kelasList',
-        'jenisSampahSiswa',
-        'jenisSampahGuru',
-        'siswa',
-        'selectedKelasId'
-    ));
-}
-
+    /**
+     * Menyimpan data dari setoran massal.
+     */
     public function storeMassal(Request $request)
     {
         $request->validate([
@@ -250,6 +270,9 @@ class SetoranController extends Controller
         return redirect()->route('setoran.index')->with('success', 'Setoran massal berhasil disimpan.');
     }
     
+    /**
+     * Menampilkan form untuk edit massal.
+     */
     public function editMassal(Request $request)
     {
         $request->validate([
@@ -263,78 +286,73 @@ class SetoranController extends Controller
         $setorans = Setoran::with(['siswa.pengguna', 'jenisSampah'])->whereIn('id', $setoranIds)->get();
     
         if ($setorans->isEmpty()) {
-            return redirect()->route('setoran.index')->with('error', 'Data setoran tidak ditemukan atau tidak ada data yang dipilih.');
+            return redirect()->route('setoran.index')->with('error', 'Data setoran tidak ditemukan.');
         }
     
-        $role = $setorans->first()->siswa->pengguna->role ?? 'siswa';
+        $jenisSampahs = JenisSampah::where('status', 'aktif')->orderBy('nama_sampah')->get();
     
-        $allJenisSampahs = JenisSampah::where('status', 'aktif')->orderBy('nama_sampah')->get();
-    
-        if ($role === 'guru') {
-            $jenisSampahs = $allJenisSampahs->filter(function ($value) {
-                return strpos(strtolower($value->nama_sampah), 'guru') !== false;
-            });
-        } else {
-            $jenisSampahs = $allJenisSampahs->filter(function ($value) {
-                return strpos(strtolower($value->nama_sampah), 'guru') === false;
-            });
-        }
-    
-        return view('pages.setoran.edit-massal', compact('setorans', 'jenisSampahs', 'setoranIds'));
+        return view('pages.setoran.edit-massal', compact('setorans', 'jenisSampahs'));
     }
 
+    /**
+     * Memproses pembaruan massal (edit jumlah, jenis sampah, dan hapus).
+     */
     public function updateMassal(Request $request)
     {
         $request->validate([
-            'setoran_ids' => 'required|array|min:1',
-            'setoran_ids.*' => 'exists:setoran,id',
-            'jenis_sampah_id' => 'required|exists:jenis_sampah,id',
+            'setoran' => 'sometimes|array',
+            'setoran.*.jumlah' => 'required_with:setoran|numeric|min:0',
+            'setoran.*.jenis_sampah_id' => 'required_with:setoran|exists:jenis_sampah,id',
+            'hapus' => 'sometimes|array',
         ]);
 
         DB::transaction(function () use ($request) {
-            $setoranIds = $request->input('setoran_ids');
-            $newJenisSampahId = $request->input('jenis_sampah_id');
-            $jenisSampahBaru = JenisSampah::find($newJenisSampahId);
-
-            $setorans = Setoran::with('jenisSampah', 'siswa.pengguna', 'siswa.kelas')->whereIn('id', $setoranIds)->get();
-            
             $settings = Setting::pluck('value', 'key');
             $persentaseWaliKelas = $settings['persentase_wali_kelas'] ?? 0;
 
-            foreach ($setorans as $setoran) {
-                $siswa = $setoran->siswa;
-                $jenisSampahLama = $setoran->jenisSampah;
-                
-                if ($jenisSampahLama && $jenisSampahLama->id == $jenisSampahBaru->id) {
-                    continue;
+            if ($request->has('hapus')) {
+                $idsToDelete = array_keys($request->hapus);
+                $setoransToDelete = Setoran::with('siswa', 'jenisSampah')->findMany($idsToDelete);
+
+                foreach ($setoransToDelete as $setoran) {
+                    $setoran->siswa->decrement('saldo', $setoran->total_harga);
+                    $setoran->jenisSampah->decrement('stok', $setoran->jumlah);
+                    Insentif::where('setoran_id', $setoran->id)->delete();
+                    $setoran->delete();
                 }
+            }
 
-                $siswa->decrement('saldo', $setoran->total_harga);
+            if ($request->has('setoran')) {
+                foreach ($request->setoran as $id => $data) {
+                    if ($request->has('hapus') && isset($request->hapus[$id])) {
+                        continue;
+                    }
 
-                if ($jenisSampahLama) {
-                    $jenisSampahLama->decrement('stok', $setoran->jumlah);
-                }
-                $jenisSampahBaru->increment('stok', $setoran->jumlah);
-                
-                $totalHargaBaru = $setoran->jumlah * $jenisSampahBaru->harga_per_satuan;
+                    $setoran = Setoran::with('siswa.kelas', 'jenisSampah')->find($id);
+                    if (!$setoran) continue;
 
-                $setoran->update([
-                    'jenis_sampah_id' => $newJenisSampahId,
-                    'total_harga' => $totalHargaBaru,
-                ]);
+                    $setoran->siswa->decrement('saldo', $setoran->total_harga);
+                    $setoran->jenisSampah->decrement('stok', $setoran->jumlah);
+                    Insentif::where('setoran_id', $setoran->id)->delete();
 
-                $siswa->increment('saldo', $totalHargaBaru);
+                    $jenisSampahBaru = JenisSampah::find($data['jenis_sampah_id']);
+                    $jumlahBaru = (float) $data['jumlah'];
+                    $totalHargaBaru = $jumlahBaru * $jenisSampahBaru->harga_per_satuan;
 
-                Insentif::where('setoran_id', $setoran->id)->delete();
-                
-                if ($setoran->status !== 'terlambat') {
-                    if ($persentaseWaliKelas > 0 && $siswa->kelas && $siswa->kelas->id_wali_kelas) {
-                        $insentifWaliKelasBaru = $totalHargaBaru * ($persentaseWaliKelas / 100);
+                    $setoran->update([
+                        'jenis_sampah_id' => $jenisSampahBaru->id,
+                        'jumlah' => $jumlahBaru,
+                        'total_harga' => $totalHargaBaru,
+                    ]);
 
-                        if ($insentifWaliKelasBaru > 0) {
+                    $setoran->siswa->increment('saldo', $totalHargaBaru);
+                    $jenisSampahBaru->increment('stok', $jumlahBaru);
+
+                    if ($setoran->status !== 'terlambat' && !$request->has('tanpa_wali_kelas.' . $setoran->siswa_id) && $setoran->siswa->kelas && $setoran->siswa->kelas->id_wali_kelas) {
+                        if ($persentaseWaliKelas > 0 && $totalHargaBaru > 0) {
+                            $insentifWaliKelasBaru = $totalHargaBaru * ($persentaseWaliKelas / 100);
                             Insentif::create([
-                                'setoran_id' => $setoran->id,
-                                'kelas_id' => $siswa->id_kelas,
+                                'setoran_id' => $setoran->id, 'kelas_id' => $setoran->siswa->id_kelas,
                                 'jumlah_insentif' => $insentifWaliKelasBaru,
                             ]);
                         }
