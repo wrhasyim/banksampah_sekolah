@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Waktu pembuatan: 23 Sep 2025 pada 17.29
+-- Waktu pembuatan: 23 Sep 2025 pada 17.52
 -- Versi server: 10.4.32-MariaDB
 -- Versi PHP: 8.2.12
 
@@ -2263,7 +2263,8 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (30, '2025_09_02_075314_add_jumlah_pembayaran_to_pembayaran_insentifs_table', 1),
 (31, '2025_09_02_081823_cleanup_pembayaran_insentifs_table', 1),
 (32, '2025_09_22_224418_add_harga_jual_to_jenis_sampah_table', 2),
-(33, '2025_09_23_185142_add_kategori_to_jenis_sampah_table', 3);
+(33, '2025_09_23_185142_add_kategori_to_jenis_sampah_table', 3),
+(34, '2025_09_23_224115_create_saldo_bulanan_table', 4);
 
 -- --------------------------------------------------------
 
@@ -3239,6 +3240,25 @@ CREATE TABLE `personal_access_tokens` (
 -- --------------------------------------------------------
 
 --
+-- Struktur dari tabel `saldo_bulanan`
+--
+
+CREATE TABLE `saldo_bulanan` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `periode` date NOT NULL,
+  `saldo_awal` decimal(15,2) NOT NULL DEFAULT 0.00,
+  `total_pemasukan` decimal(15,2) NOT NULL DEFAULT 0.00,
+  `total_pengeluaran` decimal(15,2) NOT NULL DEFAULT 0.00,
+  `saldo_akhir` decimal(15,2) NOT NULL DEFAULT 0.00,
+  `ditutup_pada` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `ditutup_oleh` bigint(20) UNSIGNED NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Struktur dari tabel `sessions`
 --
 
@@ -3256,7 +3276,7 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('NV3tZ7LeubSQ3YynJa01WcIs6WMsl5pl07YIfLLy', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoialh3N1N3ZHhhZG01T09MdXB5bFNIaXA0OTRUeTZhRHZoa1dtT0JsNSI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6Mjk6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9zZXRvcmFuIjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6MTt9', 1758641363);
+('NV3tZ7LeubSQ3YynJa01WcIs6WMsl5pl07YIfLLy', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoialh3N1N3ZHhhZG01T09MdXB5bFNIaXA0OTRUeTZhRHZoa1dtT0JsNSI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MzI6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC90dXR1cC1idWt1Ijt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6MTt9', 1758642611);
 
 -- --------------------------------------------------------
 
@@ -6282,6 +6302,13 @@ ALTER TABLE `personal_access_tokens`
   ADD KEY `personal_access_tokens_expires_at_index` (`expires_at`);
 
 --
+-- Indeks untuk tabel `saldo_bulanan`
+--
+ALTER TABLE `saldo_bulanan`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `saldo_bulanan_ditutup_oleh_foreign` (`ditutup_oleh`);
+
+--
 -- Indeks untuk tabel `sessions`
 --
 ALTER TABLE `sessions`
@@ -6375,7 +6402,7 @@ ALTER TABLE `kelas`
 -- AUTO_INCREMENT untuk tabel `migrations`
 --
 ALTER TABLE `migrations`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=35;
 
 --
 -- AUTO_INCREMENT untuk tabel `pembayaran_insentifs`
@@ -6405,6 +6432,12 @@ ALTER TABLE `penjualan`
 -- AUTO_INCREMENT untuk tabel `personal_access_tokens`
 --
 ALTER TABLE `personal_access_tokens`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT untuk tabel `saldo_bulanan`
+--
+ALTER TABLE `saldo_bulanan`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
@@ -6483,6 +6516,12 @@ ALTER TABLE `penarikan`
 --
 ALTER TABLE `penjualan`
   ADD CONSTRAINT `penjualan_id_admin_foreign` FOREIGN KEY (`id_admin`) REFERENCES `pengguna` (`id`);
+
+--
+-- Ketidakleluasaan untuk tabel `saldo_bulanan`
+--
+ALTER TABLE `saldo_bulanan`
+  ADD CONSTRAINT `saldo_bulanan_ditutup_oleh_foreign` FOREIGN KEY (`ditutup_oleh`) REFERENCES `pengguna` (`id`);
 
 --
 -- Ketidakleluasaan untuk tabel `setoran`
