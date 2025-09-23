@@ -97,7 +97,10 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            Chart.register(ChartDataLabels);
+            // Menonaktifkan plugin datalabels secara global
+            Chart.defaults.set('plugins.datalabels', {
+                display: false,
+            });
 
             const ctx = document.getElementById('myChart').getContext('2d');
             let myChart;
@@ -107,6 +110,7 @@
             const activeButtonClasses = 'px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-md';
             let currentType = 'transaksi';
 
+            // DIKEMBALIKAN: Logika render chart yang lengkap
             const renderChart = async () => {
                 if (myChart) { myChart.destroy(); }
                 
@@ -181,6 +185,7 @@
                 myChart = new Chart(ctx, chartConfig);
             };
 
+            // DIKEMBALIKAN: Logika event listener untuk tombol
             chartTypeButtons.forEach(button => {
                 button.addEventListener('click', function() {
                     chartTypeButtons.forEach(btn => btn.className = defaultButtonClasses);
@@ -198,7 +203,7 @@
             new Chart(ctxPie, {
                 type: 'doughnut',
                 data: {
-                    labels: stokData.map(item => `${item.nama_sampah} (${item.satuan})`),
+                    labels: stokData.map(item => `${item.nama_sampah}`), // Label hanya nama sampah untuk legenda
                     datasets: [{
                         label: 'Stok Sampah',
                         data: stokData.map(item => item.stok),
@@ -209,17 +214,32 @@
                 options: {
                     responsive: true,
                     plugins: { 
-                        legend: { display: false },
-                        datalabels: {
-                            formatter: (value, ctx) => {
-                                let label = ctx.chart.data.labels[ctx.dataIndex];
-                                let name = label.substring(0, label.lastIndexOf(' ('));
-                                let unit = label.substring(label.lastIndexOf('(') + 1, label.lastIndexOf(')'));
-                                let formattedValue = new Intl.NumberFormat('id-ID').format(value);
-                                return `${name}\n${formattedValue} ${unit}`;
-                            },
-                            color: '#fff', textAlign: 'center', font: { weight: 'bold', size: 11 },
-                            backgroundColor: 'rgba(0, 0, 0, 0.6)', borderRadius: 4, padding: 4
+                        legend: { 
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                boxWidth: 12,
+                                font: { size: 10 }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const originalData = stokData[context.dataIndex];
+                                    const unit = originalData.satuan;
+                                    
+                                    let label = context.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed !== null) {
+                                        label += new Intl.NumberFormat('id-ID').format(context.parsed);
+                                    }
+                                    label += ` ${unit}`;
+                                    
+                                    return label;
+                                }
+                            }
                         }
                     }
                 }
