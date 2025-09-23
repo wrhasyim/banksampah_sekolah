@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Sep 23, 2025 at 04:13 AM
+-- Generation Time: Sep 23, 2025 at 04:16 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -1829,9 +1829,9 @@ CREATE TABLE `jenis_sampah` (
 
 INSERT INTO `jenis_sampah` (`id`, `nama_sampah`, `status`, `satuan`, `harga_per_satuan`, `harga_jual`, `stok`, `created_at`, `updated_at`) VALUES
 (1, 'Botol Plastik', 'aktif', 'pcs', 35.00, 67.00, 16636, '2025-09-13 05:16:58', '2025-09-23 02:12:05'),
-(2, 'Gelas Plastik', 'aktif', 'pcs', 4.00, 7.00, 9101, '2025-09-13 05:16:58', '2025-09-23 02:12:05'),
+(2, 'Gelas Plastik', 'aktif', 'pcs', 4.00, 7.00, 9101, '2025-09-13 05:16:58', '2025-09-23 02:16:13'),
 (3, 'Kardus', 'tidak aktif', 'kg', 1500.00, 0.00, 0, '2025-09-13 05:16:58', '2025-09-22 16:21:40'),
-(4, 'Botol Plastik (Warna)', 'aktif', 'pcs', 16.00, 11.00, 453, '2025-09-13 05:40:44', '2025-09-23 02:06:34'),
+(4, 'Botol Plastik (Warna)', 'aktif', 'pcs', 16.00, 20.00, 453, '2025-09-13 05:40:44', '2025-09-23 02:14:51'),
 (5, 'Botol Plastik Guru', 'aktif', 'pcs', 42.00, 67.00, 449, '2025-09-13 05:41:44', '2025-09-23 00:22:53'),
 (6, 'Gelas Plastik Guru', 'aktif', 'pcs', 5.00, 7.00, 91, '2025-09-13 05:41:59', '2025-09-22 23:25:41');
 
@@ -2944,7 +2944,7 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('O3EjQPKXBqT92hY6dreBVqlXZf5CLPM5Vqz9V7ea', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoiMWVsQkZvR2ZQY3NlZUxVcUVVR09sd3B6NmRxcmozNjhkanczSVdzSSI7czozOiJ1cmwiO2E6MDp7fXM6OToiX3ByZXZpb3VzIjthOjE6e3M6MzoidXJsIjtzOjI5OiJodHRwOi8vMTI3LjAuMC4xOjgwMDAvc2V0b3JhbiI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fXM6NTA6ImxvZ2luX3dlYl81OWJhMzZhZGRjMmIyZjk0MDE1ODBmMDE0YzdmNThlYTRlMzA5ODlkIjtpOjE7fQ==', 1758593525);
+('O3EjQPKXBqT92hY6dreBVqlXZf5CLPM5Vqz9V7ea', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoiMWVsQkZvR2ZQY3NlZUxVcUVVR09sd3B6NmRxcmozNjhkanczSVdzSSI7czozOiJ1cmwiO2E6MDp7fXM6OToiX3ByZXZpb3VzIjthOjE6e3M6MzoidXJsIjtzOjQxOiJodHRwOi8vMTI3LjAuMC4xOjgwMDAvamVuaXMtc2FtcGFoLzQvZWRpdCI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fXM6NTA6ImxvZ2luX3dlYl81OWJhMzZhZGRjMmIyZjk0MDE1ODBmMDE0YzdmNThlYTRlMzA5ODlkIjtpOjE7fQ==', 1758593790);
 
 -- --------------------------------------------------------
 
