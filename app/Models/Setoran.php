@@ -11,12 +11,30 @@ class Setoran extends Model
 
     protected $table = 'setoran';
 
-    // PERBAIKAN: Mengganti 'id_siswa' menjadi 'siswa_id'
-    protected $fillable = ['siswa_id', 'jenis_sampah_id', 'jumlah', 'total_harga', 'id_admin', 'status', 'created_at', 'updated_at'];
+    /**
+     * PERBAIKAN FINAL:
+     * - Menambahkan 'is_terlambat' ke fillable.
+     * - Menghapus 'created_at' & 'updated_at' karena dikelola otomatis.
+     * - Memastikan semua nama kolom sesuai standar (snake_case).
+     */
+    protected $fillable = [
+        'siswa_id',
+        'jenis_sampah_id',
+        'jumlah',
+        'total_harga',
+        'status',
+        'is_terlambat', // <-- Ini yang menyebabkan data terlambat tidak masuk
+    ];
+
+    /**
+     * Casting untuk memastikan 'is_terlambat' selalu bertipe boolean.
+     */
+    protected $casts = [
+        'is_terlambat' => 'boolean',
+    ];
 
     public function siswa()
     {
-        // PERBAIKAN: Menggunakan 'siswa_id' sebagai foreign key
         return $this->belongsTo(Siswa::class, 'siswa_id');
     }
 
@@ -29,9 +47,7 @@ class Setoran extends Model
     {
         return $this->belongsTo(Pengguna::class, 'id_admin');
     }
-    /**
-     * Definisikan relasi one-to-one dengan model Insentif.
-     */
+
     public function insentif()
     {
         return $this->hasOne(Insentif::class, 'setoran_id');

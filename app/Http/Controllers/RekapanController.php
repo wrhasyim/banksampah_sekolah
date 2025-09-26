@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Siswa;
 use App\Models\Kelas;
-use App\Models\Setoran; // Ditambahkan untuk query yang lebih eksplisit
+use App\Models\Setoran;
 use App\Models\Pengguna;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -16,12 +16,12 @@ class RekapanController extends Controller
      */
     public function indexSiswaTerlambat(Request $request)
     {
-        // Query diubah untuk mengambil semua detail setoran, bukan lagi summary
+        // PERBAIKAN KUNCI 2: Menggunakan ->where('is_terlambat', true)
         $setoranTerlambat = Setoran::with(['siswa.pengguna', 'siswa.kelas', 'jenisSampah'])
-            ->where('status', 'terlambat')
+            ->where('is_terlambat', true) 
             ->whereHas('siswa.kelas', fn($q) => $q->where('nama_kelas', 'not like', '%guru%'))
-            ->latest() // Urutkan berdasarkan yang terbaru
-            ->paginate(15); // Menggunakan paginasi
+            ->latest()
+            ->paginate(15);
 
         return view('pages.rekapan.siswa-terlambat', compact('setoranTerlambat'));
     }
@@ -46,9 +46,9 @@ class RekapanController extends Controller
      */
     public function exportSiswaTerlambatPdf()
     {
-        // Query diubah untuk mengambil semua detail setoran
+        // PERBAIKAN KUNCI 2: Menggunakan ->where('is_terlambat', true)
         $data = Setoran::with(['siswa.pengguna', 'siswa.kelas', 'jenisSampah'])
-            ->where('status', 'terlambat')
+            ->where('is_terlambat', true)
             ->whereHas('siswa.kelas', fn($q) => $q->where('nama_kelas', 'not like', '%guru%'))
             ->latest()->get();
 

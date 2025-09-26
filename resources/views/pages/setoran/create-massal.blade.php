@@ -23,6 +23,9 @@
                     <form action="{{ route('setoran.store.massal') }}" method="POST">
                         @csrf
 
+                       {{-- TAMBAHKAN BARIS INI untuk mengirim tanggal hari ini secara otomatis --}}
+            <input type="hidden" name="tanggal_setor" value="{{ now()->format('Y-m-d') }}">
+
                         {{-- PERUBAHAN: Container untuk dua master checkbox --}}
                         <div id="master-checkbox-container" class="my-4 space-y-2 hidden">
                             {{-- Master Checkbox untuk Tanpa Wali Kelas --}}

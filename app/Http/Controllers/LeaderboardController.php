@@ -24,10 +24,10 @@ class LeaderboardController extends Controller
             })
             ->with('pengguna', 'kelas')
             ->withSum(['setoran' => function ($query) use ($dateRange) {
-                $query->whereBetween('created_at', $dateRange);
+                $query->whereBetween('created_at', $dateRange)
+                      ->where('is_terlambat', false); // <-- PERBAIKAN DI SINI
             }], 'total_harga')
             ->orderByDesc('setoran_sum_total_harga')
-            // PERUBAHAN: Mengubah dari 10 menjadi 5
             ->take(5)
             ->get();
 
@@ -37,6 +37,7 @@ class LeaderboardController extends Controller
                 ->join('jenis_sampah', 'setoran.jenis_sampah_id', '=', 'jenis_sampah.id')
                 ->where('setoran.siswa_id', $siswa->id)
                 ->whereBetween('setoran.created_at', $dateRange)
+                ->where('setoran.is_terlambat', false) // <-- PERBAIKAN DI SINI
                 ->select('jenis_sampah.nama_sampah as nama_jenis', 'jenis_sampah.satuan', DB::raw('SUM(setoran.jumlah) as total_jumlah'))
                 ->groupBy('jenis_sampah.nama_sampah', 'jenis_sampah.satuan')
                 ->havingRaw('SUM(setoran.jumlah) >= 1')
@@ -48,12 +49,12 @@ class LeaderboardController extends Controller
         $topKelas = Kelas::where('nama_kelas', '!=', 'Guru')
             ->withSum(['setoran' => function ($query) use ($dateRange) {
                 $query->whereBetween('setoran.created_at', $dateRange)
+                      ->where('is_terlambat', false) // <-- PERBAIKAN DI SINI
                       ->whereHas('siswa.pengguna', function($q) {
-                            $q->where('role', 'siswa');
+                          $q->where('role', 'siswa');
                       });
             }], 'total_harga')
             ->orderByDesc('setoran_sum_total_harga')
-            // PERUBAHAN: Mengubah dari 10 menjadi 5
             ->take(5)
             ->get();
             
@@ -64,6 +65,7 @@ class LeaderboardController extends Controller
                 ->join('siswa', 'setoran.siswa_id', '=', 'siswa.id')
                 ->where('siswa.id_kelas', $kelas->id)
                 ->whereBetween('setoran.created_at', $dateRange)
+                ->where('setoran.is_terlambat', false) // <-- PERBAIKAN DI SINI
                 ->select('jenis_sampah.nama_sampah as nama_jenis', 'jenis_sampah.satuan', DB::raw('SUM(setoran.jumlah) as total_jumlah'))
                 ->groupBy('jenis_sampah.nama_sampah', 'jenis_sampah.satuan')
                 ->havingRaw('SUM(setoran.jumlah) >= 1')
