@@ -78,7 +78,9 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach($penjualan->detailPenjualan as $detail)
+                                    {{-- --- PERBAIKAN DI SINI --- --}}
+                                    {{-- Mengubah dari 'detailPenjualan' menjadi 'detailPenjualans' agar konsisten --}}
+                                    @foreach($penjualan->detailPenjualans as $detail)
                                     <tr class="bg-white border-b">
                                         <td class="px-6 py-4 font-medium text-gray-900">{{ $detail->jenisSampah?->nama_sampah ?? '[Sampah Dihapus]' }}</td>
                                         <td class="px-6 py-4 text-center">{{ $detail->jumlah }} {{ $detail->jenisSampah?->satuan }}</td>
