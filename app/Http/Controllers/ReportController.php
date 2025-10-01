@@ -103,44 +103,47 @@ class ReportController extends Controller
         return Excel::download(new LaporanTransaksiExport($request->all()), 'laporan-transaksi.xlsx');
     }
 
-    public function exportTransaksiPdf(Request $request)
-    {
-        $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->toDateString());
-        $endDate = $request->input('end_date', Carbon::now()->endOfMonth()->toDateString());
+public function exportTransaksiPdf(Request $request)
+{
+    $startDate = $request->input('start_date');
+    $endDate = $request->input('end_date');
 
-        $kelasList = Kelas::with(['siswa.pengguna'])->orderBy('nama_kelas')->get();
-        $jenisSampahList = JenisSampah::orderBy('nama_sampah')->get();
-        $dataLaporan = [];
+    // [FIX] Memuat relasi 'siswa.pengguna' untuk mendapatkan nama
+    $setoran = Setoran::with(['siswa.pengguna', 'siswa.kelas', 'jenisSampah'])
+        ->whereDate('created_at', '>=', $startDate)
+        ->whereDate('created_at', '<=', $endDate)
+        ->get();
+
+    // [FIX] Memuat relasi 'siswa.pengguna' untuk penarikan juga
+    $penarikan = Penarikan::with(['siswa.pengguna', 'siswa.kelas'])
+        ->whereBetween('tanggal_penarikan', [$startDate, $endDate])
+        ->get();
+
+    $totalSetoran = $setoran->sum('total_harga');
+    $totalPenarikan = $penarikan->sum('jumlah_penarikan');
     
-        foreach ($kelasList as $kelas) {
-            $dataKelas = ['nama_kelas' => $kelas->nama_kelas, 'siswa' => [], 'total_per_sampah' => array_fill_keys($jenisSampahList->pluck('id')->toArray(), 0)];
-            foreach ($kelas->siswa as $siswa) {
-                // PERUBAHAN: Menambahkan 'having' untuk memfilter jumlah >= 1
-                $setoranSiswa = Setoran::where('siswa_id', $siswa->id)
-                    ->whereBetween(DB::raw('DATE(created_at)'), [$startDate, $endDate])
-                    ->select('jenis_sampah_id', DB::raw('SUM(jumlah) as total_jumlah'))
-                    ->groupBy('jenis_sampah_id')
-                    ->having(DB::raw('SUM(jumlah)'), '>=', 1) // Hanya ambil yang totalnya 1 atau lebih
-                    ->pluck('total_jumlah', 'jenis_sampah_id');
-                
-                if ($setoranSiswa->isNotEmpty()) {
-                    $dataSiswa = ['nama_siswa' => $siswa->pengguna->nama_lengkap, 'setoran' => array_fill_keys($jenisSampahList->pluck('id')->toArray(), 0)];
-                    foreach ($setoranSiswa as $jenis_sampah_id => $total_jumlah) {
-                        if(isset($dataSiswa['setoran'][$jenis_sampah_id])) {
-                            $dataSiswa['setoran'][$jenis_sampah_id] = $total_jumlah;
-                            $dataKelas['total_per_sampah'][$jenis_sampah_id] += $total_jumlah;
-                        }
-                    }
-                    $dataKelas['siswa'][] = $dataSiswa;
-                }
-            }
-            if (!empty($dataKelas['siswa'])) { $dataLaporan[] = $dataKelas; }
-        }
-    
-        $pdf = Pdf::loadView('pages.laporan.pdf.laporan-transaksi-pdf', compact('dataLaporan', 'jenisSampahList', 'startDate', 'endDate'));
-        $pdf->setPaper('a4', 'landscape');
-        return $pdf->stream('laporan-transaksi-'.$startDate.'-'.$endDate.'.pdf');
-    }
+    $rekapJenisSampah = Setoran::with('jenisSampah')
+        ->whereDate('created_at', '>=', $startDate)
+        ->whereDate('created_at', '<=', $endDate)
+        ->select('jenis_sampah_id', \DB::raw('SUM(jumlah) as total_berat'), \DB::raw('SUM(total_harga) as total_harga'))
+        ->groupBy('jenis_sampah_id')
+        ->get();
+
+    $data = [
+        'setoran' => $setoran,
+        'penarikan' => $penarikan,
+        'startDate' => $startDate,
+        'endDate' => $endDate,
+        'totalSetoran' => $totalSetoran,
+        'totalPenarikan' => $totalPenarikan,
+        'rekapJenisSampah' => $rekapJenisSampah,
+    ];
+
+    $pdf = \PDF::loadView('pages.laporan.pdf.laporan-transaksi-pdf', $data);
+    $pdf->setPaper('a4', 'landscape');
+
+    return $pdf->stream('laporan-transaksi-' . $startDate . '-' . $endDate . '.pdf');
+}
 
     public function exportPenjualanExcel(Request $request)
     {
