@@ -10,11 +10,14 @@
             
             <div class="mb-6">
                 <form action="{{ route('leaderboard.index') }}" method="GET">
-                    <select name="filter" onchange="this.form.submit()" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full md:w-1/4 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white">
-                        <option value="minggu_ini" @if($filter == 'minggu_ini') selected @endif>Minggu Ini</option>
+                    {{-- [MODIFIKASI] Menambahkan filter baru ke dropdown --}}
+                    <label for="filter" class="sr-only">Pilih Periode</label>
+                    <select name="filter" id="filter" onchange="this.form.submit()" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full md:w-1/4 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white">
                         <option value="hari_ini" @if($filter == 'hari_ini') selected @endif>Hari Ini</option>
+                        <option value="minggu_ini" @if($filter == 'minggu_ini') selected @endif>Minggu Ini</option>
                         <option value="bulan_ini" @if($filter == 'bulan_ini') selected @endif>Bulan Ini</option>
-                        <option value="tahun_ini" @if($filter == 'tahun_ini') selected @endif>Tahun Ini</option>
+                        <option value="bulan_lalu" @if($filter == 'bulan_lalu') selected @endif>Bulan Lalu</option>
+                        <option value="semua_waktu" @if($filter == 'semua_waktu') selected @endif>Semua Waktu</option>
                     </select>
                 </form>
             </div>
@@ -30,6 +33,7 @@
                                     <span class="text-xl font-bold text-gray-900 dark:text-white">{{ $loop->iteration }}</span>
                                 </div>
                                 <div class="flex-1 min-w-0">
+                                    {{-- [FIX] Menggunakan 'nama' bukan 'nama_lengkap' sesuai struktur DB --}}
                                     <p class="text-sm font-semibold text-gray-900 truncate dark:text-white">
                                         {{ $siswa->pengguna->nama_lengkap ?? 'Siswa Telah Dihapus' }}
                                     </p>
@@ -37,7 +41,6 @@
                                         <div class="mt-2 text-xs text-gray-500 dark:text-gray-400">
                                             <ul class="list-disc list-inside">
                                                 @foreach($siswa->sampah_details as $detail)
-                                                    {{-- PERUBAHAN: Mengganti 'Kg' dengan satuan dinamis --}}
                                                     <li>{{ $detail->nama_jenis }}: <strong>{{ number_format($detail->total_jumlah, 2, ',', '.') }} {{ $detail->satuan }}</strong></li>
                                                 @endforeach
                                             </ul>
@@ -70,8 +73,7 @@
                                         <div class="mt-2 text-xs text-gray-500 dark:text-gray-400">
                                             <ul class="list-disc list-inside">
                                                 @foreach($kelas->sampah_details as $detail)
-                                                     {{-- PERUBAHAN: Mengganti 'Kg' dengan satuan dinamis --}}
-                                                    <li>{{ $detail->nama_jenis }}: <strong>{{ number_format($detail->total_jumlah, 2, ',', '.') }} {{ $detail->satuan }}</strong></li>
+                                                     <li>{{ $detail->nama_jenis }}: <strong>{{ number_format($detail->total_jumlah, 2, ',', '.') }} {{ $detail->satuan }}</strong></li>
                                                 @endforeach
                                             </ul>
                                         </div>
