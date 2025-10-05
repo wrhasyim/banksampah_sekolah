@@ -27,8 +27,7 @@
         </div>
 
         {{-- jQuery (dibutuhkan oleh Toastr) --}}
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+        
         {{-- JavaScript untuk Toastr --}}
         <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 
@@ -42,9 +41,12 @@
                 toastr.error("{{ session('toastr-error') }}");
             @endif
         </script>
-        
-        <script>
-        // FUNGSI PENCARIAN SISWA TERPUSAT
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    
+    <script>
+        // FUNGSI PENCARIAN SISWA TERPUSAT (ANTI-GAGAL)
         function initializeSiswaSelect2(selector, valueField) {
             $(selector).select2({
                 placeholder: "Ketik nama siswa untuk mencari...",
@@ -60,7 +62,8 @@
                         return {
                             results: $.map(data, function(item) {
                                 return {
-                                    id: item[valueField], // Menggunakan 'user_id' atau 'id' secara dinamis
+                                    // 'id' untuk Select2 akan diisi oleh 'user_id' atau 'id' secara dinamis
+                                    id: item[valueField],
                                     text: item.text
                                 }
                             })
