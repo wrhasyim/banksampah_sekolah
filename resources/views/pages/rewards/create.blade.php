@@ -16,11 +16,10 @@
                     <form action="{{ route('rewards.store') }}" method="POST">
                         @csrf
                         
-                        {{-- Kolom Pencarian Siswa (AJAX) --}}
+                        {{-- Kolom Pencarian Siswa --}}
                         <div>
-                            <x-input-label for="user-select" :value="__('Cari Nama Siswa')" />
-                            {{-- Nama input adalah user_id --}}
-                            <select id="user-select" name="user_id" required style="width: 100%;"></select>
+                            <x-input-label for="user_id_select" :value="__('Cari Nama Siswa')" />
+                            <select id="user_id_select" name="user_id" required style="width: 100%;"></select>
                             <x-input-error :messages="$errors->get('user_id')" class="mt-2" />
                         </div>
 
@@ -41,6 +40,7 @@
                             <x-input-error :messages="$errors->get('description')" class="mt-2" />
                         </div>
 
+                        {{-- Tombol Aksi --}}
                         <div class="flex items-center justify-end mt-6">
                             <a href="{{ route('rewards.index') }}">
                                 <x-secondary-button type="button">
@@ -60,8 +60,8 @@
     @push('scripts')
     <script>
         $(document).ready(function() {
-            // Inisialisasi Fitur Pencarian Nama Siswa (AJAX)
-            $('#user-select').select2({
+            // Inisialisasi Select2 khusus untuk halaman Reward
+            $('#user_id_select').select2({
                 placeholder: "Ketik nama siswa untuk mencari...",
                 minimumInputLength: 2,
                 ajax: {
@@ -69,17 +69,19 @@
                     dataType: 'json',
                     delay: 250,
                     data: function (params) {
-                        return { search: params.term };
+                        return { 
+                            search: params.term 
+                        };
                     },
                     processResults: function (data) {
-                        // --- PERBAIKAN PENTING DI SINI ---
-                        // Proses data agar Select2 dapat membacanya dengan benar
+                        // --- PERBAIKAN FINAL DI SINI ---
+                        // Kita memetakan ulang hasil AJAX agar Select2 mengerti.
+                        // 'id' untuk Select2 harus diisi dengan 'user_id' dari data kita.
                         return {
                             results: $.map(data, function(item) {
                                 return {
-                                    // 'id' yang akan dikirim oleh form adalah user_id dari data AJAX
-                                    id: item.user_id, 
-                                    text: item.text
+                                    id: item.user_id, // Nilai yang akan dikirim form
+                                    text: item.text    // Teks yang akan ditampilkan
                                 }
                             })
                         };
@@ -88,7 +90,7 @@
                 }
             });
 
-            // Inisialisasi Kalkulator Biaya Otomatis
+            // Kalkulator biaya otomatis (fungsi ini tetap aman dan tidak terganggu)
             const hargaPerBotol = {{ $hargaPerBotol ?? 0 }};
             const quantityInput = document.getElementById('quantity');
             const estimasiBiayaEl = document.getElementById('estimasi-biaya');

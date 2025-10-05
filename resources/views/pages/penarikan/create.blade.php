@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-            {{ __('Formulir Penarikan Saldo') }}
+            {{ __('Formulir Pemberian Reward') }}
         </h2>
     </x-slot>
 
@@ -10,34 +10,47 @@
             <div class="overflow-hidden bg-white shadow-sm dark:bg-gray-800 sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
                     <h3 class="mb-6 text-lg font-medium text-gray-900 dark:text-gray-100">
-                        Buat Permintaan Penarikan Baru
+                        Berikan Reward Botol
                     </h3>
 
-                    <form action="{{ route('penarikan.store') }}" method="POST">
+                    <form action="{{ route('rewards.store') }}" method="POST">
                         @csrf
                         
-                        {{-- PERBAIKAN UTAMA DI SINI --}}
+                        {{-- PERBAIKAN: Kolom Pencarian Siswa (AJAX) --}}
                         <div>
-                            <x-input-label for="siswa-select" :value="__('Cari Nama Siswa')" />
-                            {{-- Kosongkan @foreach dan biarkan select kosong --}}
-                            <select id="siswa-select" name="siswa_id" required style="width: 100%;"></select>
+                            <x-input-label for="siswa_id_select" :value="__('Cari Nama Siswa')" />
+                            {{-- Nama input diubah menjadi 'siswa_id' --}}
+                            <select id="siswa_id_select" name="siswa_id" required style="width: 100%;"></select>
                             <x-input-error :messages="$errors->get('siswa_id')" class="mt-2" />
                         </div>
 
+                        {{-- Input Jumlah Botol --}}
                         <div class="mt-4">
-                            <x-input-label for="jumlah_penarikan" :value="__('Jumlah Penarikan')" />
-                            <x-text-input id="jumlah_penarikan" class="block w-full mt-1" type="number" name="jumlah_penarikan" :value="old('jumlah_penarikan')" required min="1" />
-                            <x-input-error :messages="$errors->get('jumlah_penarikan')" class="mt-2" />
+                            <x-input-label for="quantity" :value="__('Jumlah Botol')" />
+                            <x-text-input id="quantity" class="block w-full mt-1" type="number" name="quantity" :value="old('quantity')" required min="1" />
+                            <x-input-error :messages="$errors->get('quantity')" class="mt-2" />
                         </div>
 
+                        <div class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                            Estimasi Nilai Reward: <span id="estimasi-biaya" class="font-semibold">Rp 0</span>
+                        </div>
+                        
+                        {{-- Keterangan Opsional --}}
+                        <div class="mt-4">
+                            <x-input-label for="description" :value="__('Keterangan (Opsional)')" />
+                            <textarea id="description" name="description" class="block mt-1 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm" rows="3">{{ old('description') }}</textarea>
+                            <x-input-error :messages="$errors->get('description')" class="mt-2" />
+                        </div>
+
+                        {{-- Tombol Aksi --}}
                         <div class="flex items-center justify-end mt-6">
-                            <a href="{{ route('penarikan.index') }}">
+                            <a href="{{ route('rewards.index') }}">
                                 <x-secondary-button type="button">
                                     {{ __('Batal') }}
                                 </x-secondary-button>
                             </a>
                             <x-primary-button class="ms-4">
-                                {{ __('Ajukan Penarikan') }}
+                                {{ __('Simpan Reward') }}
                             </x-primary-button>
                         </div>
                     </form>
@@ -46,29 +59,22 @@
         </div>
     </div>
 
-    {{-- Script untuk inisialisasi Select2 dengan AJAX --}}
     @push('scripts')
     <script>
         $(document).ready(function() {
-            $('#siswa-select').select2({
-                placeholder: "Ketik nama siswa untuk mencari...",
-                minimumInputLength: 2, // Mulai mencari setelah 2 karakter
-                ajax: {
-                    url: "{{ route('select.siswa') }}",
-                    dataType: 'json',
-                    delay: 250, // Jeda sebelum request dikirim
-                    data: function (params) {
-                        return {
-                            search: params.term, // Kata kunci pencarian
-                        };
-                    },
-                    processResults: function (data) {
-                        return {
-                            results: data
-                        };
-                    },
-                    cache: true
-                }
+            // Panggil fungsi pencarian siswa terpusat
+            // Karena controller Reward menggunakan 'siswa_id', kita gunakan 'id'
+            initializeSiswaSelect2('#siswa_id_select', 'id');
+
+            // Inisialisasi Kalkulator Biaya Otomatis
+            const hargaPerBotol = {{ $hargaPerBotol ?? 0 }};
+            const quantityInput = document.getElementById('quantity');
+            const estimasiBiayaEl = document.getElementById('estimasi-biaya');
+
+            quantityInput.addEventListener('input', function() {
+                const quantity = parseInt(this.value) || 0;
+                const totalBiaya = quantity * hargaPerBotol;
+                estimasiBiayaEl.textContent = 'Rp ' + totalBiaya.toLocaleString('id-ID');
             });
         });
     </script>
