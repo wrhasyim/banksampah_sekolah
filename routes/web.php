@@ -23,6 +23,7 @@ use App\Http\Controllers\PenggunaController;
 use App\Http\Controllers\RekapanController;
 use App\Http\Controllers\TutupBukuController; 
 use App\Http\Controllers\StokMasukController;
+use App\Http\Controllers\RewardController; 
 
 
 // Halaman utama, arahkan ke login atau dashboard
@@ -59,7 +60,9 @@ Route::get('/api/bukukas-chart-data', [\App\Http\Controllers\BukuKasController::
         Route::get('/search', [SiswaController::class, 'search'])->name('search'); // Tambahan untuk Select2
     });
     Route::resource('siswa', SiswaController::class);
-
+// Rute baru untuk mengelola reward
+Route::resource('rewards', RewardController::class);
+    
     // Transaksi Setoran
     Route::prefix('setoran')->name('setoran.')->group(function () {
         Route::get('/export', [SetoranController::class, 'export'])->name('export');

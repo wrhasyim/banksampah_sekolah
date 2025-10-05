@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 01, 2025 at 11:59 AM
+-- Generation Time: Oct 05, 2025 at 07:22 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -3001,7 +3001,8 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (32, '2025_09_22_224418_add_harga_jual_to_jenis_sampah_table', 2),
 (33, '2025_09_23_185142_add_kategori_to_jenis_sampah_table', 3),
 (34, '2025_09_23_224115_create_saldo_bulanan_table', 4),
-(35, '2025_09_26_095833_add_is_terlambat_to_setoran_table', 5);
+(35, '2025_09_26_095833_add_is_terlambat_to_setoran_table', 5),
+(36, '2025_10_05_231911_create_rewards_table', 6);
 
 -- --------------------------------------------------------
 
@@ -3977,6 +3978,24 @@ CREATE TABLE `personal_access_tokens` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `rewards`
+--
+
+CREATE TABLE `rewards` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `user_id` bigint(20) UNSIGNED NOT NULL,
+  `quantity` int(11) NOT NULL,
+  `item_name` varchar(255) NOT NULL DEFAULT 'botol',
+  `description` text DEFAULT NULL,
+  `price_per_item_at_reward` int(10) UNSIGNED NOT NULL,
+  `total_operational_cost` bigint(20) UNSIGNED NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `saldo_bulanan`
 --
 
@@ -4020,6 +4039,7 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
+('7OQBuIdxOPqommtZ45VNYXLaiWO8VYfIRwh67lCY', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiOGdqT1F6ZEI4dGpzb1V5a0ZFMlZRZFg3am04VGcxaEczUnVqR3hlTiI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MzY6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9yZXdhcmRzL2NyZWF0ZSI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fXM6NTA6ImxvZ2luX3dlYl81OWJhMzZhZGRjMmIyZjk0MDE1ODBmMDE0YzdmNThlYTRlMzA5ODlkIjtpOjE7fQ==', 1759684959),
 ('p7CXhYF3NFQKPFUNxLtQLfb6Z05D5wgLxQHLYXIJ', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiN01ndjY5aWNwUHZJZW00MWhVcWxzV1RuMnA0aGpVN01MY3BzRnZ4cyI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6Mjk6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9zZXRvcmFuIjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6MTt9', 1759312748);
 
 -- --------------------------------------------------------
@@ -7844,6 +7864,13 @@ ALTER TABLE `personal_access_tokens`
   ADD KEY `personal_access_tokens_expires_at_index` (`expires_at`);
 
 --
+-- Indexes for table `rewards`
+--
+ALTER TABLE `rewards`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `rewards_user_id_foreign` (`user_id`);
+
+--
 -- Indexes for table `saldo_bulanan`
 --
 ALTER TABLE `saldo_bulanan`
@@ -7944,7 +7971,7 @@ ALTER TABLE `kelas`
 -- AUTO_INCREMENT for table `migrations`
 --
 ALTER TABLE `migrations`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
 
 --
 -- AUTO_INCREMENT for table `pembayaran_insentifs`
@@ -7974,6 +8001,12 @@ ALTER TABLE `penjualan`
 -- AUTO_INCREMENT for table `personal_access_tokens`
 --
 ALTER TABLE `personal_access_tokens`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `rewards`
+--
+ALTER TABLE `rewards`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
@@ -8058,6 +8091,12 @@ ALTER TABLE `penarikan`
 --
 ALTER TABLE `penjualan`
   ADD CONSTRAINT `penjualan_id_admin_foreign` FOREIGN KEY (`id_admin`) REFERENCES `pengguna` (`id`);
+
+--
+-- Constraints for table `rewards`
+--
+ALTER TABLE `rewards`
+  ADD CONSTRAINT `rewards_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `pengguna` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `saldo_bulanan`

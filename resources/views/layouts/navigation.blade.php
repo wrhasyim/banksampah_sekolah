@@ -52,7 +52,8 @@
                                 <x-dropdown-link :href="route('setoran.index')">Setoran Sampah</x-dropdown-link>
                                 <x-dropdown-link :href="route('penarikan.index')">Penarikan Saldo</x-dropdown-link>
                                 <x-dropdown-link :href="route('penjualan.index')">Penjualan Sampah</x-dropdown-link>
-                                <div class="border-t border-gray-200 dark:border-gray-600"></div>
+                                 <div class="border-t border-gray-200 dark:border-gray-600"></div>
+                                <x-dropdown-link :href="route('rewards.index')" >Riwayat Reward</x-dropdown-link>
                                 <x-dropdown-link :href="route('insentif.index')">Riwayat Insentif</x-dropdown-link>
                                 <x-dropdown-link :href="route('insentif.rekap')" :active="request()->routeIs('insentif.rekap')">
                                     {{ __('Rekap Insentif') }}
