@@ -5,13 +5,18 @@ namespace App\Http\Controllers;
 use App\Models\Penarikan;
 use App\Models\Siswa;
 use App\Models\Kelas;
-use App\Models\BukuKas; // <-- TAMBAHKAN INI
-use App\Models\KategoriTransaksi; // <-- TAMBAHKAN INI
+use App\Models\BukuKas;
+use App\Models\KategoriTransaksi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 class PenarikanController extends Controller
 {
+    /**
+     * Menampilkan daftar permintaan penarikan.
+     */
     public function index(Request $request)
     {
         $query = Penarikan::with('siswa.pengguna', 'kelas');
@@ -31,18 +36,27 @@ class PenarikanController extends Controller
         return view('pages.penarikan.index', compact('penarikans'));
     }
 
+    /**
+     * Menampilkan formulir untuk membuat permintaan penarikan individu.
+     */
     public function create()
     {
-        $siswa = Siswa::with('pengguna')->get();
-        return view('pages.penarikan.create', compact('siswa'));
+        $siswas = Siswa::with('pengguna')->get();
+        return view('pages.penarikan.create', compact('siswas'));
     }
 
+    /**
+     * Menampilkan formulir untuk membuat permintaan penarikan per kelas.
+     */
     public function createKelas()
     {
-        $kelasList = Kelas::orderBy('nama_kelas', 'asc')->get();
-        return view('pages.penarikan.create-kelas', compact('kelasList'));
+        $kelas = Kelas::orderBy('nama_kelas', 'asc')->get();
+        return view('pages.penarikan.create-kelas', compact('kelas'));
     }
 
+    /**
+     * Menyimpan permintaan penarikan individu baru.
+     */
     public function store(Request $request)
     {
         $request->validate([
@@ -55,12 +69,23 @@ class PenarikanController extends Controller
             return back()->with('error', 'Saldo siswa tidak mencukupi.');
         }
 
-        Penarikan::create($request->all());
+        Penarikan::create([
+            'siswa_id' => $request->siswa_id,
+            'jumlah_penarikan' => $request->jumlah_penarikan,
+            'tanggal_penarikan' => now(),
+            'status' => 'pending',
+        ]);
+        
         return redirect()->route('penarikan.index')->with('success', 'Permintaan penarikan berhasil dibuat.');
     }
 
+    /**
+     * Menyimpan permintaan penarikan untuk satu kelas penuh.
+     */
     public function storeKelas(Request $request)
     {
+        $request->validate(['kelas_id' => 'required|exists:kelas,id']);
+        
         $kelasId = $request->input('kelas_id');
         $siswaDiKelas = Siswa::where('id_kelas', $kelasId)->where('saldo', '>', 0)->get();
 
@@ -71,43 +96,68 @@ class PenarikanController extends Controller
         foreach ($siswaDiKelas as $siswa) {
             Penarikan::create([
                 'siswa_id' => $siswa->id,
+                'id_kelas' => $kelasId,
                 'jumlah_penarikan' => $siswa->saldo,
                 'status' => 'pending',
-                'id_kelas' => $kelasId,
+                'tanggal_penarikan' => now(),
             ]);
         }
 
-        return redirect()->route('penarikan.index')->with('success', 'Permintaan penarikan untuk kelas berhasil dibuat.');
+        return redirect()->route('penarikan.index')->with('success', 'Permintaan penarikan untuk seluruh siswa di kelas berhasil dibuat.');
     }
-
+    
+    /**
+     * Memperbarui status permintaan penarikan (menyetujui atau menolak).
+     */
     public function update(Request $request, Penarikan $penarikan)
     {
         $request->validate(['status' => 'required|in:disetujui,ditolak']);
+        
+        if ($penarikan->status === 'disetujui') {
+            return back()->with('info', 'Penarikan ini sudah pernah disetujui sebelumnya.');
+        }
 
-        DB::transaction(function () use ($request, $penarikan) {
-            $penarikan->update(['status' => $request->status]);
+        try {
+            DB::transaction(function () use ($request, $penarikan) {
+                if ($request->status == 'disetujui') {
+                    $siswa = Siswa::with('pengguna')->findOrFail($penarikan->siswa_id);
+                    $saldo_awal = (float) $siswa->saldo;
+                    $jumlah_penarikan = (float) $penarikan->jumlah_penarikan;
 
-            if ($request->status == 'disetujui') {
-                $siswa = Siswa::with('pengguna')->find($penarikan->siswa_id);
-                if ($siswa->saldo < $penarikan->jumlah_penarikan) {
-                    throw new \Exception('Saldo siswa tidak mencukupi.');
+                    if ($saldo_awal < $jumlah_penarikan) {
+                        throw new \Exception("Saldo siswa (Rp {$saldo_awal}) tidak mencukupi untuk penarikan (Rp {$jumlah_penarikan}).");
+                    }
+                    
+                    $saldo_baru = $saldo_awal - $jumlah_penarikan;
+                    Siswa::where('id', $siswa->id)->update(['saldo' => $saldo_baru]);
+
+                    $kategori = KategoriTransaksi::where('nama_kategori', 'Penarikan Saldo Siswa')->first();
+                    if (!$kategori) {
+                        throw new \Exception('Kategori transaksi "Penarikan Saldo Siswa" tidak ditemukan.');
+                    }
+                    
+                    $keterangan = 'Penarikan Saldo oleh ' . trim($siswa->pengguna->nama_lengkap);
+
+                    BukuKas::create([
+                        'id_kategori_transaksi' => $kategori->id,
+                        'keterangan' => $keterangan,
+                        'deskripsi' => $keterangan,
+                        'tipe' => 'keluar',
+                        'jumlah' => $jumlah_penarikan,
+                        'tanggal' => now(),
+                        'id_admin' => Auth::id(),
+                    ]);
                 }
-                $siswa->decrement('saldo', $penarikan->jumlah_penarikan);
 
-                // --- INTEGRASI BUKU KAS DIMULAI DI SINI ---
-                $kategori = KategoriTransaksi::where('nama_kategori', 'Penarikan Saldo Siswa')->first();
-                
-                BukuKas::create([
-                    'id_kategori_transaksi' => $kategori ? $kategori->id : null,
-                    'keterangan' => 'Penarikan Saldo oleh ' . $siswa->pengguna->nama_lengkap,
-                    'tipe' => 'keluar',
-                    'jumlah' => $penarikan->jumlah_penarikan,
-                    'created_at' => now(),
-                ]);
-                // --- INTEGRASI BUKU KAS SELESAI ---
-            }
-        });
+                $penarikan->status = $request->status;
+                $penarikan->save();
+            });
 
-        return redirect()->route('penarikan.index')->with('success', 'Status penarikan berhasil diperbarui.');
+            return redirect()->route('penarikan.index')->with('success', 'Status penarikan berhasil diperbarui.');
+
+        } catch (\Throwable $e) {
+            Log::error("GAGAL memproses penarikan ID {$penarikan->id}: " . $e->getMessage());
+            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
     }
 }
