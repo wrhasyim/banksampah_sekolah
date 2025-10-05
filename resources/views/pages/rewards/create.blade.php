@@ -16,12 +16,12 @@
                     <form action="{{ route('rewards.store') }}" method="POST">
                         @csrf
                         
-                        {{-- PERBAIKAN UTAMA: Kolom Pencarian Siswa (AJAX) --}}
+                        {{-- Kolom Pencarian Siswa (AJAX) --}}
                         <div>
-                            <x-input-label for="siswa-select" :value="__('Cari Nama Siswa')" />
-                            {{-- Nama diubah ke 'siswa_id' dan select dikosongkan --}}
-                            <select id="siswa-select" name="siswa_id" required style="width: 100%;"></select>
-                            <x-input-error :messages="$errors->get('siswa_id')" class="mt-2" />
+                            <x-input-label for="user-select" :value="__('Cari Nama Siswa')" />
+                            {{-- Nama input adalah user_id --}}
+                            <select id="user-select" name="user_id" required style="width: 100%;"></select>
+                            <x-input-error :messages="$errors->get('user_id')" class="mt-2" />
                         </div>
 
                         {{-- Input Jumlah Botol --}}
@@ -32,13 +32,15 @@
                         </div>
 
                         <div class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                            Estimasi Biaya: <span id="estimasi-biaya" class="font-semibold">Rp 0</span>
+                            Estimasi Nilai Reward: <span id="estimasi-biaya" class="font-semibold">Rp 0</span>
                         </div>
                         
-                        {{-- Keterangan Opsional (Dihilangkan untuk menyederhanakan, bisa ditambahkan kembali jika perlu) --}}
-                        {{-- <div class="mt-4"> ... </div> --}}
+                        <div class="mt-4">
+                            <x-input-label for="description" :value="__('Keterangan (Opsional)')" />
+                            <textarea id="description" name="description" class="block mt-1 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm" rows="3">{{ old('description') }}</textarea>
+                            <x-input-error :messages="$errors->get('description')" class="mt-2" />
+                        </div>
 
-                        {{-- Tombol Aksi --}}
                         <div class="flex items-center justify-end mt-6">
                             <a href="{{ route('rewards.index') }}">
                                 <x-secondary-button type="button">
@@ -57,27 +59,36 @@
 
     @push('scripts')
     <script>
-        // Gunakan $(document).ready() karena kita memakai jQuery untuk Select2
         $(document).ready(function() {
-            // Inisialisasi Fitur Pencarian Nama Siswa (AJAX) dengan Select2
-            $('#siswa-select').select2({
+            // Inisialisasi Fitur Pencarian Nama Siswa (AJAX)
+            $('#user-select').select2({
                 placeholder: "Ketik nama siswa untuk mencari...",
                 minimumInputLength: 2,
                 ajax: {
-                    url: "{{ route('select.siswa') }}", // Menggunakan kembali route pencarian
+                    url: "{{ route('select.siswa') }}",
                     dataType: 'json',
                     delay: 250,
                     data: function (params) {
                         return { search: params.term };
                     },
                     processResults: function (data) {
-                        return { results: data };
+                        // --- PERBAIKAN PENTING DI SINI ---
+                        // Proses data agar Select2 dapat membacanya dengan benar
+                        return {
+                            results: $.map(data, function(item) {
+                                return {
+                                    // 'id' yang akan dikirim oleh form adalah user_id dari data AJAX
+                                    id: item.user_id, 
+                                    text: item.text
+                                }
+                            })
+                        };
                     },
                     cache: true
                 }
             });
 
-            // Inisialisasi Kalkulator Biaya Otomatis (fungsi lain tetap aman)
+            // Inisialisasi Kalkulator Biaya Otomatis
             const hargaPerBotol = {{ $hargaPerBotol ?? 0 }};
             const quantityInput = document.getElementById('quantity');
             const estimasiBiayaEl = document.getElementById('estimasi-biaya');

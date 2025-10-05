@@ -29,8 +29,6 @@
         {{-- jQuery (dibutuhkan oleh Toastr) --}}
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
-
         {{-- JavaScript untuk Toastr --}}
         <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 
@@ -45,7 +43,36 @@
             @endif
         </script>
         
-        @stack('scripts')
+        <script>
+        // FUNGSI PENCARIAN SISWA TERPUSAT
+        function initializeSiswaSelect2(selector, valueField) {
+            $(selector).select2({
+                placeholder: "Ketik nama siswa untuk mencari...",
+                minimumInputLength: 2,
+                ajax: {
+                    url: "{{ route('select.siswa') }}",
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return { search: params.term };
+                    },
+                    processResults: function (data) {
+                        return {
+                            results: $.map(data, function(item) {
+                                return {
+                                    id: item[valueField], // Menggunakan 'user_id' atau 'id' secara dinamis
+                                    text: item.text
+                                }
+                            })
+                        };
+                    },
+                    cache: true
+                }
+            });
+        }
+    </script>
+
+    @stack('scripts')
         
     </body>
 </html>
