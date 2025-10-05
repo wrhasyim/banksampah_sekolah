@@ -86,7 +86,7 @@ Route::resource('rewards', RewardController::class);
         Route::post('/store/kelas', [PenarikanController::class, 'storeKelas'])->name('store.kelas');
     });
     Route::resource('penarikan', PenarikanController::class);
-
+Route::get('/select/siswa', [SiswaController::class, 'selectSiswa'])->name('select.siswa');
     // Transaksi Penjualan
     Route::resource('penjualan', PenjualanController::class);
     

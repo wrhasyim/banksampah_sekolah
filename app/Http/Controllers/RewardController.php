@@ -9,6 +9,7 @@ use App\Models\BukuKas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Badge; 
 
 class RewardController extends Controller
 {
@@ -26,6 +27,7 @@ class RewardController extends Controller
      */
     public function create()
     {
+       
         $siswas = Pengguna::where('role', 'siswa')->orderBy('nama_lengkap')->get();
 
         // Mengambil harga botol untuk kalkulator otomatis di view

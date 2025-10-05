@@ -32,6 +32,7 @@ class SiswaController extends Controller
     }
 
 
+    
     public function create()
     {
         $kelas = Kelas::all();
@@ -138,6 +139,36 @@ class SiswaController extends Controller
             return redirect()->route('siswa.index')->with('toastr-error', 'Gagal menghapus siswa karena masih ada data yang terkait.');
         }
     }
+
+    /**
+     * ========================================================================
+     * FUNGSI BARU UNTUK PENCARIAN SISWA (SELECT2 AJAX)
+     * ========================================================================
+     */
+    public function selectSiswa(Request $request)
+    {
+        $search = $request->input('search', '');
+        $data = [];
+
+        if (strlen($search) >= 2) { // Cari setelah pengguna mengetik min. 2 karakter
+            $siswas = Siswa::with('pengguna')
+                ->whereHas('pengguna', function ($query) use ($search) {
+                    $query->where('nama_lengkap', 'like', "%{$search}%");
+                })
+                ->limit(20) // Batasi hasil untuk performa
+                ->get();
+
+            foreach ($siswas as $siswa) {
+                $data[] = [
+                    'id' => $siswa->id,
+                    'text' => $siswa->pengguna->nama_lengkap . ' (Saldo: Rp ' . number_format($siswa->saldo, 0, ',', '.') . ')'
+                ];
+            }
+        }
+
+        return response()->json($data);
+    }
+
 
     // ... sisa method tidak berubah ...
     public function export() { return Excel::download(new SiswaExport, 'siswa.xlsx'); }
