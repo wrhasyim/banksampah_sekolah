@@ -32,7 +32,9 @@ class NotaController extends Controller
 
         $kelas = Kelas::with('waliKelas')->findOrFail($id_kelas);
 
-        $rincianSetoran = Setoran::whereHas('siswa', function ($query) use ($id_kelas) {
+        // --- PERBAIKAN DI SINI ---
+        $rincianSetoran = Setoran::where('is_terlambat', false) // Filter untuk tidak menyertakan setoran terlambat
+            ->whereHas('siswa', function ($query) use ($id_kelas) {
                 $query->where('id_kelas', $id_kelas);
             })
             ->whereBetween('created_at', [$startDate, $endDate])
