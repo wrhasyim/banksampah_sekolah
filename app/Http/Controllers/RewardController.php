@@ -88,7 +88,7 @@ class RewardController extends Controller
             BukuKas::create([
                 'id_kategori' => $kategori->id,
                 'deskripsi' => $deskripsiBukuKas,
-                'tipe' => 'keluar',
+                'tipe' => 'pengeluaran',
                 'jumlah' => $totalBiaya,
                 'tanggal' => now(),
                 'id_admin' => Auth::id(),

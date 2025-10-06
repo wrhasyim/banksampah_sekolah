@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 06, 2025 at 03:56 AM
+-- Generation Time: Oct 06, 2025 at 05:09 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -3012,10 +3012,10 @@ CREATE TABLE `kategori_transaksi` (
 INSERT INTO `kategori_transaksi` (`id`, `nama_kategori`, `tipe`, `created_at`, `updated_at`) VALUES
 (1, 'Penarikan Saldo Siswa', 'pengeluaran', '2025-09-23 13:22:10', '2025-09-23 13:22:10'),
 (2, 'Pembayaran Insentif Guru', 'pengeluaran', '2025-09-23 13:22:23', '2025-09-23 13:22:23'),
-(3, 'Operasional', 'pengeluaran', '2025-09-23 13:23:09', '2025-09-23 13:23:09'),
 (4, 'Hasil Penjualan Sampah', 'pemasukan', '2025-09-23 13:23:21', '2025-09-23 13:57:48'),
 (5, 'Saldo Awal', 'pemasukan', '2025-09-23 13:23:32', '2025-09-23 13:23:32'),
-(6, 'Honor Penjualan (Sekolah & Pengelola)', 'pengeluaran', '2025-09-23 14:33:11', '2025-09-23 15:27:24');
+(6, 'Honor Penjualan (Sekolah & Pengelola)', 'pengeluaran', '2025-09-23 14:33:11', '2025-09-23 15:27:24'),
+(7, 'Biaya Operasional', 'pengeluaran', '2025-10-06 03:08:14', '2025-10-06 03:08:14');
 
 -- --------------------------------------------------------
 
@@ -4156,7 +4156,7 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('RZDQWRrzSNBNqvqFW2rpyLdPhGq9F9xAmUBhtjrk', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiQlVPaXJvTjlvMFJuT25iMkhBYTg2TGpuZE5Iekw4RERnQXdnOEFlSyI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MzY6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9yZXdhcmRzL2NyZWF0ZSI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fXM6NTA6ImxvZ2luX3dlYl81OWJhMzZhZGRjMmIyZjk0MDE1ODBmMDE0YzdmNThlYTRlMzA5ODlkIjtpOjE7fQ==', 1759715724);
+('RZDQWRrzSNBNqvqFW2rpyLdPhGq9F9xAmUBhtjrk', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiQlVPaXJvTjlvMFJuT25iMkhBYTg2TGpuZE5Iekw4RERnQXdnOEFlSyI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MzE6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9kYXNoYm9hcmQiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX1zOjUwOiJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI7aToxO30=', 1759720148);
 
 -- --------------------------------------------------------
 
@@ -8191,7 +8191,7 @@ ALTER TABLE `jobs`
 -- AUTO_INCREMENT for table `kategori_transaksi`
 --
 ALTER TABLE `kategori_transaksi`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `kelas`
@@ -8239,7 +8239,7 @@ ALTER TABLE `personal_access_tokens`
 -- AUTO_INCREMENT for table `rewards`
 --
 ALTER TABLE `rewards`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `saldo_bulanan`

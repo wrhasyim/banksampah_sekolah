@@ -142,7 +142,7 @@ class PenarikanController extends Controller
                         'id_kategori_transaksi' => $kategori->id,
                         'keterangan' => $keterangan,
                         'deskripsi' => $keterangan,
-                        'tipe' => 'keluar',
+                        'tipe' => 'pengeluaran',
                         'jumlah' => $jumlah_penarikan,
                         'tanggal' => now(),
                         'id_admin' => Auth::id(),
