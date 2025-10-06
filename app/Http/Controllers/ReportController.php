@@ -83,7 +83,9 @@ class ReportController extends Controller
         }
 
         if (in_array('penarikan', $transactionTypes)) {
+            // --- PERBAIKAN 1 ---
             $penarikan = Penarikan::with('siswa.pengguna')
+                ->where('status', 'disetujui') // Filter hanya yang disetujui
                 ->whereBetween(DB::raw('DATE(created_at)'), [$startDate, $endDate])
                 ->when($request->filled('nama_siswa'), function ($query) use ($request) {
                     $query->whereHas('siswa.pengguna', fn($q) => $q->where('nama_lengkap', 'like', '%' . $request->nama_siswa . '%'));
@@ -103,47 +105,47 @@ class ReportController extends Controller
         return Excel::download(new LaporanTransaksiExport($request->all()), 'laporan-transaksi.xlsx');
     }
 
-public function exportTransaksiPdf(Request $request)
-{
-    $startDate = $request->input('start_date');
-    $endDate = $request->input('end_date');
+    public function exportTransaksiPdf(Request $request)
+    {
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
 
-    // [FIX] Memuat relasi 'siswa.pengguna' untuk mendapatkan nama
-    $setoran = Setoran::with(['siswa.pengguna', 'siswa.kelas', 'jenisSampah'])
-        ->whereDate('created_at', '>=', $startDate)
-        ->whereDate('created_at', '<=', $endDate)
-        ->get();
+        $setoran = Setoran::with(['siswa.pengguna', 'siswa.kelas', 'jenisSampah'])
+            ->whereDate('created_at', '>=', $startDate)
+            ->whereDate('created_at', '<=', $endDate)
+            ->get();
 
-    // [FIX] Memuat relasi 'siswa.pengguna' untuk penarikan juga
-    $penarikan = Penarikan::with(['siswa.pengguna', 'siswa.kelas'])
-        ->whereBetween('tanggal_penarikan', [$startDate, $endDate])
-        ->get();
+        // --- PERBAIKAN 2 ---
+        $penarikan = Penarikan::with(['siswa.pengguna', 'siswa.kelas'])
+            ->where('status', 'disetujui') // Filter hanya yang disetujui
+            ->whereBetween('tanggal_penarikan', [$startDate, $endDate])
+            ->get();
 
-    $totalSetoran = $setoran->sum('total_harga');
-    $totalPenarikan = $penarikan->sum('jumlah_penarikan');
-    
-    $rekapJenisSampah = Setoran::with('jenisSampah')
-        ->whereDate('created_at', '>=', $startDate)
-        ->whereDate('created_at', '<=', $endDate)
-        ->select('jenis_sampah_id', \DB::raw('SUM(jumlah) as total_berat'), \DB::raw('SUM(total_harga) as total_harga'))
-        ->groupBy('jenis_sampah_id')
-        ->get();
+        $totalSetoran = $setoran->sum('total_harga');
+        $totalPenarikan = $penarikan->sum('jumlah_penarikan');
+        
+        $rekapJenisSampah = Setoran::with('jenisSampah')
+            ->whereDate('created_at', '>=', $startDate)
+            ->whereDate('created_at', '<=', $endDate)
+            ->select('jenis_sampah_id', \DB::raw('SUM(jumlah) as total_berat'), \DB::raw('SUM(total_harga) as total_harga'))
+            ->groupBy('jenis_sampah_id')
+            ->get();
 
-    $data = [
-        'setoran' => $setoran,
-        'penarikan' => $penarikan,
-        'startDate' => $startDate,
-        'endDate' => $endDate,
-        'totalSetoran' => $totalSetoran,
-        'totalPenarikan' => $totalPenarikan,
-        'rekapJenisSampah' => $rekapJenisSampah,
-    ];
+        $data = [
+            'setoran' => $setoran,
+            'penarikan' => $penarikan,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+            'totalSetoran' => $totalSetoran,
+            'totalPenarikan' => $totalPenarikan,
+            'rekapJenisSampah' => $rekapJenisSampah,
+        ];
 
-    $pdf = \PDF::loadView('pages.laporan.pdf.laporan-transaksi-pdf', $data);
-    $pdf->setPaper('a4', 'landscape');
+        $pdf = \PDF::loadView('pages.laporan.pdf.laporan-transaksi-pdf', $data);
+        $pdf->setPaper('a4', 'landscape');
 
-    return $pdf->stream('laporan-transaksi-' . $startDate . '-' . $endDate . '.pdf');
-}
+        return $pdf->stream('laporan-transaksi-' . $startDate . '-' . $endDate . '.pdf');
+    }
 
     public function exportPenjualanExcel(Request $request)
     {

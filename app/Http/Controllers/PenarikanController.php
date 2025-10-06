@@ -139,7 +139,7 @@ class PenarikanController extends Controller
                     $keterangan = 'Penarikan Saldo oleh ' . trim($siswa->pengguna->nama_lengkap);
 
                     BukuKas::create([
-                        'id_kategori_transaksi' => $kategori->id,
+                        'id_kategori' => $kategori ? $kategori->id : null,
                         'keterangan' => $keterangan,
                         'deskripsi' => $keterangan,
                         'tipe' => 'pengeluaran',
