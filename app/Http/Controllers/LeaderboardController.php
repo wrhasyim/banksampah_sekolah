@@ -7,36 +7,35 @@ use App\Models\Siswa;
 use App\Models\Badge;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon; // Pastikan Carbon di-import
+use Carbon\Carbon;
 
 class LeaderboardController extends Controller
 {
     public function index(Request $request)
     {
-        // [MODIFIKASI] Mengubah default filter menjadi 'semua_waktu' agar lebih umum
         $filter = $request->input('filter', 'semua_waktu');
+        $rankingBy = $request->input('ranking_by', 'nominal'); // Filter baru
         $dateRange = $this->getDateRange($filter);
 
+        // Tentukan kolom yang akan di-SUM dan di-ORDER BY
+        $sumColumn = ($rankingBy === 'jumlah') ? 'jumlah' : 'total_harga';
+        $orderByColumn = 'setoran_sum_' . $sumColumn;
+
         // --- Peringkat Siswa ---
-        $topSiswa = Siswa::whereHas('pengguna', function ($query) {
-                $query->where('role', 'siswa');
-            })
-            ->whereHas('kelas', function ($query) {
-                $query->where('nama_kelas', '!=', 'Guru');
-            })
+        $topSiswa = Siswa::whereHas('pengguna', fn($q) => $q->where('role', 'siswa'))
+            ->whereHas('kelas', fn($q) => $q->where('nama_kelas', '!=', 'Guru'))
             ->with('pengguna', 'kelas')
-            // [MODIFIKASI] Query withSum dibuat kondisional
             ->withSum(['setoran' => function ($query) use ($dateRange) {
                 if ($dateRange) {
                     $query->whereBetween('created_at', $dateRange);
                 }
                 $query->where('is_terlambat', false);
-            }], 'total_harga')
-            ->orderByDesc('setoran_sum_total_harga')
+            }], $sumColumn) // Menggunakan $sumColumn dinamis
+            ->orderByDesc($orderByColumn) // Menggunakan $orderByColumn dinamis
             ->take(5)
             ->get();
 
-        // -- Ambil detail sampah untuk setiap siswa teratas --
+        // -- Ambil detail sampah untuk setiap siswa teratas (logika tidak berubah)--
         $topSiswa->each(function ($siswa) use ($dateRange) {
             $query = DB::table('setoran')
                 ->join('jenis_sampah', 'setoran.jenis_sampah_id', '=', 'jenis_sampah.id')
@@ -47,7 +46,6 @@ class LeaderboardController extends Controller
                 ->havingRaw('SUM(setoran.jumlah) >= 1')
                 ->orderBy('jenis_sampah.nama_sampah');
             
-            // [MODIFIKASI] Query detail sampah dibuat kondisional
             if ($dateRange) {
                 $query->whereBetween('setoran.created_at', $dateRange);
             }
@@ -57,21 +55,18 @@ class LeaderboardController extends Controller
 
         // --- Peringkat Kelas ---
         $topKelas = Kelas::where('nama_kelas', '!=', 'Guru')
-            // [MODIFIKASI] Query withSum dibuat kondisional
             ->withSum(['setoran' => function ($query) use ($dateRange) {
                 if ($dateRange) {
                     $query->whereBetween('setoran.created_at', $dateRange);
                 }
                 $query->where('is_terlambat', false)
-                    ->whereHas('siswa.pengguna', function($q) {
-                        $q->where('role', 'siswa');
-                    });
-            }], 'total_harga')
-            ->orderByDesc('setoran_sum_total_harga')
+                      ->whereHas('siswa.pengguna', fn($q) => $q->where('role', 'siswa'));
+            }], $sumColumn) // Menggunakan $sumColumn dinamis
+            ->orderByDesc($orderByColumn) // Menggunakan $orderByColumn dinamis
             ->take(5)
             ->get();
             
-        // -- Ambil detail sampah untuk setiap kelas teratas --
+        // -- Ambil detail sampah untuk setiap kelas teratas (logika tidak berubah) --
         $topKelas->each(function ($kelas) use ($dateRange) {
             $query = DB::table('setoran')
                 ->join('jenis_sampah', 'setoran.jenis_sampah_id', '=', 'jenis_sampah.id')
@@ -83,7 +78,6 @@ class LeaderboardController extends Controller
                 ->havingRaw('SUM(setoran.jumlah) >= 1')
                 ->orderBy('jenis_sampah.nama_sampah');
 
-            // [MODIFIKASI] Query detail sampah dibuat kondisional
             if ($dateRange) {
                 $query->whereBetween('setoran.created_at', $dateRange);
             }
@@ -97,13 +91,13 @@ class LeaderboardController extends Controller
             'topSiswa' => $topSiswa,
             'topKelas' => $topKelas,
             'filter' => $filter,
+            'rankingBy' => $rankingBy, // Kirim filter baru ke view
             'badges' => $badges,
         ]);
     }
 
     private function getDateRange($filter)
     {
-        // [MODIFIKASI] Menyesuaikan dengan daftar filter yang baru
         switch ($filter) {
             case 'hari_ini':
                 return [Carbon::now()->startOfDay(), Carbon::now()->endOfDay()];
@@ -114,9 +108,8 @@ class LeaderboardController extends Controller
             case 'bulan_lalu':
                 return [Carbon::now()->subMonth()->startOfMonth(), Carbon::now()->subMonth()->endOfMonth()];
             case 'semua_waktu':
-                return null; // Akan diabaikan oleh query
+                return null;
             default:
-                // Default filter jika tidak ada yang dipilih
                 return null;
         }
     }
