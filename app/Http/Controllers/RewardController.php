@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Reward;
 use App\Models\Siswa;
-use App\Models\Pengguna; // Pastikan model Pengguna di-import
-use App\Models\Setting;
+use App\Models\Pengguna;
+use App\Models\JenisSampah; // DIUBAH: Kembali menggunakan JenisSampah
 use App\Models\BukuKas;
 use App\Models\KategoriTransaksi;
 use Illuminate\Http\Request;
@@ -20,7 +20,6 @@ class RewardController extends Controller
      */
     public function index()
     {
-        // Sesuaikan relasi dari 'siswa' menjadi 'pengguna'
         $rewards = Reward::with('pengguna')->latest()->paginate(10);
         return view('pages.rewards.index', compact('rewards'));
     }
@@ -30,8 +29,14 @@ class RewardController extends Controller
      */
     public function create()
     {
-        $hargaPerBotol = Setting::where('key', 'harga_per_botol')->value('value') ?? 0;
-        return view('pages.rewards.create', compact('hargaPerBotol'));
+        $siswas = Pengguna::where('role', 'siswa')->orderBy('nama_lengkap')->get();
+
+        // PERBAIKAN: Mengambil harga dari tabel jenis_sampah
+        $jenisSampah = JenisSampah::where('nama_sampah', 'Botol Plastik')->first();
+        $hargaPerSatuan = $jenisSampah ? $jenisSampah->harga_per_satuan : 0;
+        
+        // Kirimkan variabel $siswas dan $hargaPerSatuan ke view
+        return view('pages.rewards.create', compact('siswas', 'hargaPerSatuan'));
     }
 
     /**
@@ -39,25 +44,24 @@ class RewardController extends Controller
      */
     public function store(Request $request)
     {
-        // Validasi input dari form
         $request->validate([
-            'user_id' => 'required|exists:pengguna,id', // Validasi ke tabel 'pengguna'
+            'user_id' => 'required|exists:pengguna,id',
             'quantity' => 'required|integer|min:1',
             'description' => 'nullable|string|max:255',
         ]);
 
         DB::beginTransaction();
         try {
-            // Ambil harga per botol dari settings
-            $hargaPerBotol = Setting::where('key', 'harga_per_botol')->value('value') ?? 0;
-            if ($hargaPerBotol <= 0) {
-                throw new \Exception('Harga per botol belum diatur di menu Settings.');
+            // PERBAIKAN: Mengambil harga dari tabel jenis_sampah
+            $jenisSampah = JenisSampah::where('nama_sampah', 'Botol Plastik')->first();
+            if (!$jenisSampah || $jenisSampah->harga_per_satuan <= 0) {
+                throw new \Exception('Harga untuk "Botol Plastik" belum diatur di menu Jenis Sampah.');
             }
+            $hargaPerSatuan = $jenisSampah->harga_per_satuan;
 
             $jumlahBotol = $request->quantity;
-            $totalBiaya = $jumlahBotol * $hargaPerBotol;
+            $totalBiaya = $jumlahBotol * $hargaPerSatuan;
             
-            // Cari data siswa berdasarkan user_id (id_pengguna) yang dipilih
             $siswa = Siswa::where('id_pengguna', $request->user_id)->first();
             if (!$siswa) {
                 throw new \Exception('Data siswa tidak ditemukan untuk pengguna yang dipilih.');
@@ -66,23 +70,19 @@ class RewardController extends Controller
             // 1. Tambahkan total biaya ke saldo siswa
             $siswa->increment('saldo', $totalBiaya);
 
-            // 2. Simpan data reward sesuai struktur tabel yang benar
+            // 2. Simpan data reward
             Reward::create([
                 'user_id' => $request->user_id,
                 'quantity' => $jumlahBotol,
-                'item_name' => 'Botol Plastik', // Item diasumsikan 'Botol Plastik'
+                'item_name' => 'Botol Plastik',
                 'description' => $request->description,
-                'price_per_item_at_reward' => $hargaPerBotol,
+                'price_per_item_at_reward' => $hargaPerSatuan,
                 'total_operational_cost' => $totalBiaya,
             ]);
 
             // 3. Catat sebagai biaya operasional di Buku Kas
             $pengguna = Pengguna::find($request->user_id);
-            $kategori = KategoriTransaksi::where('nama_kategori', 'Biaya Operasional')->first();
-            if (!$kategori) {
-                throw new \Exception('Kategori transaksi "Biaya Operasional" tidak ditemukan.');
-            }
-
+            $kategori = KategoriTransaksi::where('nama_kategori', 'Biaya Operasional')->firstOrFail();
             $deskripsiBukuKas = "Biaya Reward ({$jumlahBotol} botol) untuk " . trim($pengguna->nama_lengkap);
 
             BukuKas::create([
@@ -94,11 +94,11 @@ class RewardController extends Controller
                 'id_admin' => Auth::id(),
             ]);
 
-            DB::commit(); // Konfirmasi semua transaksi jika berhasil
+            DB::commit();
             return redirect()->route('rewards.index')->with('success', 'Reward berhasil diberikan dan saldo siswa telah ditambahkan.');
 
         } catch (\Throwable $e) {
-            DB::rollBack(); // Batalkan semua jika ada error
+            DB::rollBack();
             Log::error("Gagal memberi reward: " . $e->getMessage());
             return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage())->withInput();
         }
