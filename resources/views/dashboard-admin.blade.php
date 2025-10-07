@@ -8,6 +8,7 @@
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
 
+            {{-- Aksi Cepat --}}
             <div class="bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg p-4">
                 <div class="flex items-center space-x-4">
                     <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 flex-shrink-0">Aksi Cepat:</h3>
@@ -17,6 +18,7 @@
                 </div>
             </div>
 
+            {{-- Kartu Statistik Utama --}}
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div class="p-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm"><h5 class="text-sm font-medium text-gray-500 dark:text-gray-400">Kas di Tangan</h5><p class="mt-1 text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Rp. {{ number_format($kas, 0, ',', '.') }}</p></div>
                 <div class="p-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm"><h5 class="text-sm font-medium text-gray-500 dark:text-gray-400">Potensi Laba dari Stok</h5><p class="mt-1 text-3xl font-bold tracking-tight text-green-600 dark:text-green-400">Rp. {{ number_format($nilaiStokJual - $modalStokBeli, 0, ',', '.') }}</p><p class="text-xs text-gray-500 mt-1">Nilai Jual: Rp {{ number_format($nilaiStokJual, 0, ',', '.') }}</p></div>
@@ -25,47 +27,52 @@
             </div>
             
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {{-- Kolom Kiri & Tengah --}}
                 <div class="lg:col-span-2 space-y-6">
+                    {{-- Grafik Utama --}}
                     <div class="w-full p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm sm:p-6">
                          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
-                             <h5 id="chart-title" class="mb-3 sm:mb-0 text-base font-semibold text-gray-900 md:text-xl dark:text-white">Grafik Transaksi</h5>
-                             <div class="flex items-center space-x-2">
-                                 <button data-type="transaksi" class="chart-type-btn px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-md">Analisis Transaksi</button>
-                                 <button data-type="sampah" class="chart-type-btn px-3 py-1 text-sm font-medium text-gray-500 bg-gray-100 rounded-md hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">Analisis Stok Sampah</button>
-                             </div>
+                              <h5 id="chart-title" class="mb-3 sm:mb-0 text-base font-semibold text-gray-900 md:text-xl dark:text-white">Grafik Transaksi</h5>
+                              <div class="flex items-center space-x-2">
+                                   <button data-type="transaksi" class="chart-type-btn px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-md">Analisis Transaksi</button>
+                                   <button data-type="sampah" class="chart-type-btn px-3 py-1 text-sm font-medium text-gray-500 bg-gray-100 rounded-md hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">Analisis Stok</button>
+                              </div>
                          </div>
                          <div class="h-[28rem]">
                               <canvas id="myChart"></canvas>
                          </div>
                     </div>
+                     {{-- Aktivitas Terkini --}}
                      <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6">
-                        <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">🕒 Aktivitas Terkini</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <h4 class="font-semibold text-gray-800 dark:text-gray-200">Setoran Terakhir</h4>
-                                <ul class="text-sm text-gray-600 dark:text-gray-400 mt-2 space-y-2">
-                                     @forelse($aktivitasTerakhir['setoran'] as $setoran)
-                                     <li><strong>{{ Str::limit($setoran->siswa->pengguna->nama_lengkap ?? 'Siswa Dihapus', 25) }}</strong> +Rp{{ number_format($setoran->total_harga, 0, ',', '.') }}</li>
+                         <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">🕒 Aktivitas Terkini</h3>
+                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                             <div>
+                                 <h4 class="font-semibold text-gray-800 dark:text-gray-200">Setoran Terakhir</h4>
+                                 <ul class="text-sm text-gray-600 dark:text-gray-400 mt-2 space-y-2">
+                                      @forelse($aktivitasTerakhir['setoran'] as $setoran)
+                                      <li><strong>{{ Str::limit($setoran->siswa->pengguna->nama_lengkap ?? 'Siswa Dihapus', 25) }}</strong> +Rp{{ number_format($setoran->total_harga, 0, ',', '.') }}</li>
+                                      @empty
+                                      <li>Tidak ada setoran baru.</li>
+                                      @endforelse
+                                 </ul>
+                             </div>
+                             <div>
+                                 <h4 class="font-semibold text-gray-800 dark:text-gray-200">Penarikan Terakhir</h4>
+                                 <ul class="text-sm text-gray-600 dark:text-gray-400 mt-2 space-y-2">
+                                     @forelse($aktivitasTerakhir['penarikan'] as $penarikan)
+                                     <li><strong>{{ Str::limit($penarikan->siswa->pengguna->nama_lengkap ?? 'Siswa Dihapus', 25) }}</strong> -Rp{{ number_format($penarikan->jumlah_penarikan, 0, ',', '.') }}</li>
                                      @empty
-                                     <li>Tidak ada setoran baru.</li>
+                                     <li>Tidak ada penarikan baru.</li>
                                      @endforelse
-                                </ul>
-                            </div>
-                            <div>
-                                <h4 class="font-semibold text-gray-800 dark:text-gray-200">Penarikan Terakhir</h4>
-                                <ul class="text-sm text-gray-600 dark:text-gray-400 mt-2 space-y-2">
-                                    @forelse($aktivitasTerakhir['penarikan'] as $penarikan)
-                                    <li><strong>{{ Str::limit($penarikan->siswa->pengguna->nama_lengkap ?? 'Siswa Dihapus', 25) }}</strong> -Rp{{ number_format($penarikan->jumlah_penarikan, 0, ',', '.') }}</li>
-                                    @empty
-                                    <li>Tidak ada penarikan baru.</li>
-                                    @endforelse
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
+                                 </ul>
+                             </div>
+                         </div>
+                     </div>
                 </div>
 
+                {{-- Kolom Kanan --}}
                 <div class="lg:col-span-1 space-y-6">
+                    {{-- Tugas & Perhatian --}}
                     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6">
                         <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">🔔 Tugas & Perhatian</h3>
                         <ul class="space-y-3">
@@ -77,13 +84,47 @@
                                  <li class="flex items-start"><span class="text-green-500 mr-2 mt-1">💡</span><div><p class="font-semibold text-green-700 dark:text-green-400">Stok Siap Jual</p><p class="text-sm text-gray-600 dark:text-gray-400">Stok {{ $sampahSiapJual->nama_sampah }} sudah banyak. <a href="{{ route('penjualan.create') }}" class="text-blue-600 hover:underline">Lakukan penjualan</a>.</p></div></li>
                             @endif
                             @if($totalInsentifBelumDibayar == 0 && !$sampahSiapJual)
-                                <li class="text-sm text-gray-500 dark:text-gray-400">Tidak ada tugas mendesak.</li>
+                                 <li class="text-sm text-gray-500 dark:text-gray-400">Tidak ada tugas mendesak.</li>
                             @endif
                         </ul>
                     </div>
+
+                    {{-- Kartu Statistik Siswa --}}
                     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6">
-                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">♻️ Komposisi Stok</h3>
-                        <canvas id="stockPieChart" class="max-h-64 mx-auto"></canvas>
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">📊 Statistik Siswa</h3>
+                        <ul class="space-y-4">
+                            <li>
+                                <h5 class="text-sm font-medium text-gray-500 dark:text-gray-400">Siswa Aktif (30 hari)</h5>
+                                <p class="mt-1 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{{ number_format($siswaAktifBulanIni, 0, ',', '.') }} <span class="text-base font-normal text-gray-500">/ {{ number_format($totalSiswa, 0, ',', '.') }} siswa</span></p>
+                            </li>
+                            <li>
+                                <h5 class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Dana Tabungan</h5>
+                                <p class="mt-1 text-2xl font-bold tracking-tight text-green-600 dark:text-green-400">+ Rp. {{ number_format($totalSetoranSiswa, 0, ',', '.') }}</p>
+                            </li>
+                            <li>
+                                <h5 class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Dana Ditarik</h5>
+                                <p class="mt-1 text-2xl font-bold tracking-tight text-red-600 dark:text-red-400">- Rp. {{ number_format($totalPenarikanSiswa, 0, ',', '.') }}</p>
+                            </li>
+                        </ul>
+                    </div>
+
+                    {{-- KARTU STATISTIK GURU DITAMBAHKAN DI SINI --}}
+                    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6">
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">👨‍🏫 Statistik Guru</h3>
+                        <ul class="space-y-4">
+                            <li>
+                                <h5 class="text-sm font-medium text-gray-500 dark:text-gray-400">Guru Aktif (30 hari)</h5>
+                                <p class="mt-1 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{{ number_format($guruAktifBulanIni, 0, ',', '.') }} <span class="text-base font-normal text-gray-500">/ {{ number_format($totalGuru, 0, ',', '.') }} guru</span></p>
+                            </li>
+                            <li>
+                                <h5 class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Dana Tabungan</h5>
+                                <p class="mt-1 text-2xl font-bold tracking-tight text-green-600 dark:text-green-400">+ Rp. {{ number_format($totalSetoranGuru, 0, ',', '.') }}</p>
+                            </li>
+                            <li>
+                                <h5 class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Dana Ditarik</h5>
+                                <p class="mt-1 text-2xl font-bold tracking-tight text-red-600 dark:text-red-400">- Rp. {{ number_format($totalPenarikanGuru, 0, ',', '.') }}</p>
+                            </li>
+                        </ul>
                     </div>
                 </div>
             </div>
@@ -92,16 +133,13 @@
     </div>
 
     @push('scripts')
+    {{-- (Script JavaScript tetap sama seperti sebelumnya, tidak perlu diubah) --}}
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // Menonaktifkan plugin datalabels secara global
-            Chart.defaults.set('plugins.datalabels', {
-                display: false,
-            });
-
+            Chart.defaults.set('plugins.datalabels', { display: false });
             const ctx = document.getElementById('myChart').getContext('2d');
             let myChart;
             const chartTypeButtons = document.querySelectorAll('.chart-type-btn');
@@ -110,10 +148,8 @@
             const activeButtonClasses = 'px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-md';
             let currentType = 'transaksi';
 
-            // DIKEMBALIKAN: Logika render chart yang lengkap
             const renderChart = async () => {
                 if (myChart) { myChart.destroy(); }
-                
                 let chartConfig;
                 if (currentType === 'transaksi') {
                     chartTitle.innerText = 'Grafik Analisis Transaksi';
@@ -140,7 +176,7 @@
                         options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { callback: (value) => 'Rp ' + new Intl.NumberFormat('id-ID').format(value) } } }, plugins: { tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: Rp ${new Intl.NumberFormat('id-ID').format(ctx.parsed.y)}` } } } }
                     };
                 } else if (currentType === 'sampah') {
-                    chartTitle.innerText = 'Grafik Analisis Profitabilitas Stok';
+                    chartTitle.innerText = 'Grafik Analisis Stok';
                     const response = await axios.get(`{{ route('dashboard.chart.bubble') }}`);
                     const data = response.data;
                     const colors = ['#4ade80', '#60a5fa', '#facc15', '#fb923c', '#a78bfa', '#f87171', '#2dd4bf'];
@@ -149,10 +185,7 @@
                         data: {
                             datasets: [{
                                 label: 'Stok Sampah',
-                                data: data.map(item => ({
-                                    x: item.x, y: item.y, r: item.r,
-                                    label: item.label, stok: item.stok, satuan: item.satuan
-                                })),
+                                data: data.map(item => ({ x: item.x, y: item.y, r: item.r, label: item.label, stok: item.stok, satuan: item.satuan })),
                                 backgroundColor: data.map((item, index) => colors[index % colors.length] + 'BF'),
                                 borderColor: data.map((item, index) => colors[index % colors.length]),
                             }]
@@ -165,19 +198,7 @@
                             },
                             plugins: {
                                 legend: { display: false },
-                                tooltip: {
-                                    callbacks: {
-                                        label: (ctx) => {
-                                            const item = ctx.raw;
-                                            return [
-                                                `${item.label}`,
-                                                `Stok: ${new Intl.NumberFormat('id-ID').format(item.stok)} ${item.satuan}`,
-                                                `Harga Beli: Rp ${new Intl.NumberFormat('id-ID').format(item.x)}`,
-                                                `Harga Jual: Rp ${new Intl.NumberFormat('id-ID').format(item.y)}`
-                                            ];
-                                        }
-                                    }
-                                }
+                                tooltip: { callbacks: { label: (ctx) => { const item = ctx.raw; return [ `${item.label}`, `Stok: ${new Intl.NumberFormat('id-ID').format(item.stok)} ${item.satuan}`, `Harga Beli: Rp ${new Intl.NumberFormat('id-ID').format(item.x)}`, `Harga Jual: Rp ${new Intl.NumberFormat('id-ID').format(item.y)}` ]; } } }
                             }
                         }
                     };
@@ -185,7 +206,6 @@
                 myChart = new Chart(ctx, chartConfig);
             };
 
-            // DIKEMBALIKAN: Logika event listener untuk tombol
             chartTypeButtons.forEach(button => {
                 button.addEventListener('click', function() {
                     chartTypeButtons.forEach(btn => btn.className = defaultButtonClasses);
@@ -196,54 +216,6 @@
             });
             
             renderChart();
-
-            // Script untuk Pie Chart Komposisi Stok
-            const ctxPie = document.getElementById('stockPieChart').getContext('2d');
-            const stokData = @json($stokPerJenis->where('stok', '>', 0)->values());
-            new Chart(ctxPie, {
-                type: 'doughnut',
-                data: {
-                    labels: stokData.map(item => `${item.nama_sampah}`), // Label hanya nama sampah untuk legenda
-                    datasets: [{
-                        label: 'Stok Sampah',
-                        data: stokData.map(item => item.stok),
-                        backgroundColor: [ '#4ade80', '#60a5fa', '#facc15', '#fb923c', '#a78bfa', '#f87171', '#2dd4bf' ],
-                        hoverOffset: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: { 
-                        legend: { 
-                            display: true,
-                            position: 'top',
-                            labels: {
-                                boxWidth: 12,
-                                font: { size: 10 }
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const originalData = stokData[context.dataIndex];
-                                    const unit = originalData.satuan;
-                                    
-                                    let label = context.label || '';
-                                    if (label) {
-                                        label += ': ';
-                                    }
-                                    if (context.parsed !== null) {
-                                        label += new Intl.NumberFormat('id-ID').format(context.parsed);
-                                    }
-                                    label += ` ${unit}`;
-                                    
-                                    return label;
-                                }
-                            }
-                        }
-                    }
-                }
-            });
         });
     </script>
     @endpush
