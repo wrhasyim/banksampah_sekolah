@@ -8,6 +8,7 @@ use App\Models\Badge;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 
 class LeaderboardController extends Controller
 {
@@ -15,80 +16,69 @@ class LeaderboardController extends Controller
     {
         $filter = $request->input('filter', 'semua_waktu');
         $rankingBy = $request->input('ranking_by', 'nominal');
-        $dateRange = $this->getDateRange($filter);
+        
+        // Buat kunci cache yang unik berdasarkan filter yang aktif
+        $cacheKey = 'leaderboard:' . $filter . ':' . $rankingBy;
 
-        $sumColumn = ($rankingBy === 'jumlah') ? 'jumlah' : 'total_harga';
-        $orderByColumn = 'setoran_sum_' . $sumColumn;
-
-        $topSiswa = Siswa::whereHas('pengguna', fn($q) => $q->where('role', 'siswa'))
-            ->whereHas('kelas', fn($q) => $q->where('nama_kelas', '!=', 'Guru'))
-            ->with('pengguna', 'kelas')
-            ->withSum(['setoran' => function ($query) use ($dateRange) {
-                if ($dateRange) {
-                    $query->whereBetween('created_at', $dateRange);
-                }
-                $query->where('status', '!=', 'terlambat');
-            }], $sumColumn)
-            ->orderByDesc($orderByColumn)
-            ->take(5)
-            ->get();
-
-        $topSiswa->each(function ($siswa) use ($dateRange) {
-            $query = DB::table('setoran')
-                ->join('jenis_sampah', 'setoran.jenis_sampah_id', '=', 'jenis_sampah.id')
-                ->where('setoran.siswa_id', $siswa->id)
-                ->where('setoran.status', '!=', 'terlambat')
-                ->select('jenis_sampah.nama_sampah as nama_jenis', 'jenis_sampah.satuan', DB::raw('SUM(setoran.jumlah) as total_jumlah'))
-                ->groupBy('jenis_sampah.nama_sampah', 'jenis_sampah.satuan')
-                ->havingRaw('SUM(setoran.jumlah) >= 1')
-                ->orderBy('jenis_sampah.nama_sampah');
+        // Ambil data dari cache. Jika tidak ada, jalankan query lalu simpan di cache selama 10 menit
+        $data = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($filter, $rankingBy) {
             
-            if ($dateRange) {
-                $query->whereBetween('setoran.created_at', $dateRange);
-            }
-            
-            $siswa->sampah_details = $query->get();
-        });
+            $dateRange = $this->getDateRange($filter);
+            $sumColumn = ($rankingBy === 'jumlah') ? 'jumlah' : 'total_harga';
+            $orderByColumn = 'setoran_sum_' . $sumColumn;
 
-        $topKelas = Kelas::where('nama_kelas', '!=', 'Guru')
-            ->withSum(['setoran' => function ($query) use ($dateRange) {
-                if ($dateRange) {
-                    $query->whereBetween('setoran.created_at', $dateRange);
-                }
-                $query->where('status', '!=', 'terlambat')
-                      ->whereHas('siswa.pengguna', fn($q) => $q->where('role', 'siswa'));
-            }], $sumColumn)
-            ->orderByDesc($orderByColumn)
-            ->take(5)
-            ->get();
-            
-        $topKelas->each(function ($kelas) use ($dateRange) {
-            $query = DB::table('setoran')
-                ->join('jenis_sampah', 'setoran.jenis_sampah_id', '=', 'jenis_sampah.id')
-                ->join('siswa', 'setoran.siswa_id', '=', 'siswa.id')
-                ->where('siswa.id_kelas', $kelas->id)
-                ->where('setoran.status', '!=', 'terlambat')
-                ->select('jenis_sampah.nama_sampah as nama_jenis', 'jenis_sampah.satuan', DB::raw('SUM(setoran.jumlah) as total_jumlah'))
-                ->groupBy('jenis_sampah.nama_sampah', 'jenis_sampah.satuan')
-                ->havingRaw('SUM(setoran.jumlah) >= 1')
-                ->orderBy('jenis_sampah.nama_sampah');
+            // --- Peringkat Siswa ---
+            $topSiswaQuery = Siswa::query()
+                ->whereHas('pengguna', fn($q) => $q->where('role', 'siswa'))
+                ->whereHas('kelas', fn($q) => $q->where('nama_kelas', '!=', 'Guru'))
+                ->with(['pengguna', 'kelas', 'sampahDetails'])
+                ->withSum(['setoran' => function ($query) use ($dateRange) {
+                    if ($dateRange) {
+                        $query->whereBetween('created_at', $dateRange);
+                    }
+                    $query->where('status', '!=', 'terlambat');
+                }], $sumColumn)
+                ->orderByDesc($orderByColumn)
+                ->take(5);
 
             if ($dateRange) {
-                $query->whereBetween('setoran.created_at', $dateRange);
+                $topSiswaQuery->with(['sampahDetails' => fn($q) => $q->whereBetween('setoran.created_at', $dateRange)]);
             }
+            $topSiswa = $topSiswaQuery->get();
 
-            $kelas->sampah_details = $query->get();
+            // --- Peringkat Kelas ---
+            $topKelasQuery = Kelas::query()
+                ->where('nama_kelas', '!=', 'Guru')
+                ->with(['waliKelas', 'sampahDetails'])
+                ->withSum(['setoran' => function ($query) use ($dateRange) {
+                    if ($dateRange) {
+                        $query->whereBetween('setoran.created_at', $dateRange);
+                    }
+                    $query->where('status', '!=', 'terlambat')->whereHas('siswa.pengguna', fn($q) => $q->where('role', 'siswa'));
+                }], $sumColumn)
+                ->orderByDesc($orderByColumn)
+                ->take(5);
+
+            if ($dateRange) {
+                $topKelasQuery->with(['sampahDetails' => fn($q) => $q->whereBetween('setoran.created_at', $dateRange)]);
+            }
+            $topKelas = $topKelasQuery->get();
+
+            $badges = Badge::orderBy('min_points', 'asc')->get();
+
+            // Kembalikan semua data yang dibutuhkan oleh view
+            return [
+                'topSiswa' => $topSiswa,
+                'topKelas' => $topKelas,
+                'badges' => $badges,
+            ];
         });
 
-        $badges = Badge::orderBy('min_points', 'asc')->get();
-
-        return view('pages.leaderboard.index', [
-            'topSiswa' => $topSiswa,
-            'topKelas' => $topKelas,
+        // Gabungkan data dari cache dengan data filter untuk dikirim ke view
+        return view('pages.leaderboard.index', array_merge($data, [
             'filter' => $filter,
             'rankingBy' => $rankingBy,
-            'badges' => $badges,
-        ]);
+        ]));
     }
 
     private function getDateRange($filter)

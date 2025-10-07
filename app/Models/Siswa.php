@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
+use App\Models\Setoran;
 
 class Siswa extends Model
 {
@@ -16,7 +18,7 @@ class Siswa extends Model
         'id_kelas',
         'nis',
         'saldo',
-        'points', // tambahkan points jika belum ada
+        'points',
     ];
 
     /**
@@ -57,5 +59,23 @@ class Siswa extends Model
     public function badges()
     {
         return $this->belongsToMany(Badge::class, 'badge_siswa');
+    }
+
+    /**
+     * Relasi untuk mengambil rincian total sampah per jenis (untuk leaderboard efisien).
+     */
+    public function sampahDetails()
+    {
+        return $this->hasMany(Setoran::class)
+            ->join('jenis_sampah', 'setoran.jenis_sampah_id', '=', 'jenis_sampah.id')
+            ->where('setoran.status', '!=', 'terlambat')
+            ->select(
+                'setoran.siswa_id',
+                'jenis_sampah.nama_sampah as nama_jenis',
+                'jenis_sampah.satuan',
+                DB::raw('SUM(setoran.jumlah) as total_jumlah')
+            )
+            ->groupBy('setoran.siswa_id', 'jenis_sampah.nama_sampah', 'jenis_sampah.satuan')
+            ->orderBy('jenis_sampah.nama_sampah');
     }
 }
