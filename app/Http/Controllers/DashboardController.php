@@ -58,38 +58,90 @@ class DashboardController extends Controller
     }
 
     public function getChartData(Request $request)
-    {
-        $period = $request->input('period', 'monthly');
-        
-        // Buat kunci cache yang unik berdasarkan periode (bulanan/harian)
-        $cacheKey = 'dashboard_chart_data:' . $period;
+{
+    $period = $request->input('period', 'monthly');
+    $cacheKey = 'dashboard_chart_data:' . $period;
 
-        $chartData = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($period) {
-            $labels = [];
-            $dataSetoran = [];
-            $dataPenjualan = [];
+    $chartData = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($period) {
+        $labels = [];
+        $dataSetoran = [];
+        $dataPenjualan = [];
 
-            if ($period == 'monthly') {
-                for ($i = 5; $i >= 0; $i--) {
-                    $date = now()->subMonths($i);
-                    $labels[] = $date->format('M Y');
-                    $dataSetoran[] = Setoran::whereYear('created_at', $date->year)->whereMonth('created_at', $date->month)->sum('total_harga');
-                    $dataPenjualan[] = Penjualan::whereYear('created_at', $date->year)->whereMonth('created_at', $date->month)->sum('total_harga');
-                }
-            } else {
-                 $days = 6;
-                 for ($i = $days; $i >= 0; $i--) {
-                     $date = now()->subDays($i);
-                     $labels[] = $date->format('d M');
-                     $dataSetoran[] = Setoran::whereDate('created_at', $date)->sum('total_harga');
-                     $dataPenjualan[] = Penjualan::whereDate('created_at', $date)->sum('total_harga');
-                 }
+        if ($period == 'monthly') {
+            $format = '%Y-%m';
+            $startDate = now()->subMonths(5)->startOfMonth();
+
+            // 1. Ambil semua data dalam satu kali query
+            $setoranData = Setoran::where('created_at', '>=', $startDate)
+                ->selectRaw("DATE_FORMAT(created_at, '$format') as date, SUM(total_harga) as total")
+                ->groupBy('date')
+                ->pluck('total', 'date');
+
+            $penjualanData = Penjualan::where('created_at', '>=', $startDate)
+                ->selectRaw("DATE_FORMAT(created_at, '$format') as date, SUM(total_harga) as total")
+                ->groupBy('date')
+                ->pluck('total', 'date');
+
+            // 2. Siapkan label dan data default
+            for ($i = 5; $i >= 0; $i--) {
+                $date = now()->subMonths($i);
+                $label = $date->format('M Y');
+                $key = $date->format('Y-m');
+                
+                $labels[] = $label;
+                $dataSetoran[$key] = 0;
+                $dataPenjualan[$key] = 0;
             }
-            return compact('labels', 'dataSetoran', 'dataPenjualan');
-        });
 
-        return response()->json($chartData);
-    }
+            // 3. Isi data dari hasil query
+            foreach ($setoranData as $date => $total) {
+                $dataSetoran[$date] = $total;
+            }
+            foreach ($penjualanData as $date => $total) {
+                $dataPenjualan[$date] = $total;
+            }
+
+        } else { // Daily
+            $format = '%Y-%m-%d';
+            $startDate = now()->subDays(6)->startOfDay();
+
+            $setoranData = Setoran::where('created_at', '>=', $startDate)
+                ->selectRaw("DATE_FORMAT(created_at, '$format') as date, SUM(total_harga) as total")
+                ->groupBy('date')
+                ->pluck('total', 'date');
+
+            $penjualanData = Penjualan::where('created_at', '>=', $startDate)
+                ->selectRaw("DATE_FORMAT(created_at, '$format') as date, SUM(total_harga) as total")
+                ->groupBy('date')
+                ->pluck('total', 'date');
+            
+            for ($i = 6; $i >= 0; $i--) {
+                $date = now()->subDays($i);
+                $label = $date->format('d M');
+                $key = $date->format('Y-m-d');
+                
+                $labels[] = $label;
+                $dataSetoran[$key] = 0;
+                $dataPenjualan[$key] = 0;
+            }
+            
+            foreach ($setoranData as $date => $total) {
+                $dataSetoran[$date] = $total;
+            }
+            foreach ($penjualanData as $date => $total) {
+                $dataPenjualan[$date] = $total;
+            }
+        }
+        
+        return [
+            'labels' => $labels,
+            'dataSetoran' => array_values($dataSetoran),
+            'dataPenjualan' => array_values($dataPenjualan)
+        ];
+    });
+
+    return response()->json($chartData);
+}
 
     public function getBubbleChartData()
     {
