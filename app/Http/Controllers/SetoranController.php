@@ -20,9 +20,6 @@ use Carbon\Carbon;
 
 class SetoranController extends Controller
 {
-    /**
-     * Menampilkan daftar setoran dengan fungsionalitas filter dan pencarian.
-     */
     public function index(Request $request)
     {
         $perPage = $request->input('perPage', 10);
@@ -56,9 +53,6 @@ class SetoranController extends Controller
         return view('pages.setoran.index', compact('setorans', 'perPage', 'kelasList'));
     }
 
-    /**
-     * Menampilkan form untuk membuat setoran baru.
-     */
     public function create()
     {
         $jenisSampah = JenisSampah::where('status', 'aktif')
@@ -69,9 +63,6 @@ class SetoranController extends Controller
         return view('pages.setoran.create', compact('jenisSampah', 'siswa'));
     }
 
-    /**
-     * Menyimpan setoran baru ke database.
-     */
     public function store(Request $request)
     {
         $request->validate([
@@ -87,12 +78,11 @@ class SetoranController extends Controller
 
             $settings = Setting::pluck('value', 'key');
             $persentaseWaliKelas = $settings['persentase_wali_kelas'] ?? 0;
+            $isTerlambat = $request->has('is_terlambat');
 
             foreach ($request->sampah as $item) {
                 $jenisSampah = JenisSampah::find($item['jenis_sampah_id']);
                 $totalHarga = $jenisSampah->harga_per_satuan * $item['jumlah'];
-
-                $isTerlambat = $request->has('is_terlambat');
 
                 $setoran = Setoran::create([
                     'siswa_id' => $request->siswa_id,
@@ -100,7 +90,6 @@ class SetoranController extends Controller
                     'jumlah' => $item['jumlah'],
                     'total_harga' => $totalHarga,
                     'status' => $isTerlambat ? 'terlambat' : 'normal',
-                    'is_terlambat' => $isTerlambat,
                 ]);
 
                 if (!$isTerlambat) {
@@ -126,9 +115,6 @@ class SetoranController extends Controller
         return redirect()->route('setoran.index')->with('success', 'Setoran berhasil ditambahkan.');
     }
 
-    /**
-     * Menampilkan form untuk setoran massal.
-     */
     public function createMassal()
     {
         $kelasList = Kelas::orderBy('nama_kelas', 'asc')->get();
@@ -148,9 +134,6 @@ class SetoranController extends Controller
         return view('pages.setoran.create-massal', compact('kelasList','jenisSampahSiswa','jenisSampahGuru','siswa','selectedKelasId'));
     }
     
-    /**
-     * Menyimpan data dari setoran massal.
-     */
     public function storeMassal(Request $request)
     {
         $request->validate([
@@ -190,13 +173,19 @@ class SetoranController extends Controller
 
                     $totalHargaItem = $jumlah * $jenisSampah->harga_per_satuan;
                     
+                    $status = 'normal';
+                    if ($semuaTerlambat) {
+                        $status = 'terlambat';
+                    } elseif ($semuaTanpaWaliKelas) {
+                        $status = 'tanpa_wali_kelas';
+                    }
+
                     $setoran = Setoran::create([
                         'siswa_id' => $siswa_id,
                         'jenis_sampah_id' => $jenis_sampah_id,
                         'jumlah' => $jumlah,
                         'total_harga' => $totalHargaItem,
-                        'is_terlambat' => $semuaTerlambat,
-                        'status' => $semuaTanpaWaliKelas ? 'tanpa_wali_kelas' : 'normal',
+                        'status' => $status,
                         'created_at' => $request->tanggal_setor,
                     ]);
 
@@ -318,7 +307,7 @@ class SetoranController extends Controller
                         $setoran->jenisSampah->decrement('stok', $setoran->jumlah);
                     }
                     
-                    if (!$setoran->is_terlambat) {
+                    if ($setoran->status !== 'terlambat') {
                         $setoran->siswa->decrement('saldo', $setoran->total_harga);
                     }
 
@@ -339,13 +328,11 @@ class SetoranController extends Controller
                     $newJumlah = $data['jumlah'];
                     $newTotalHarga = $newJumlah * $newJenisSampah->harga_per_satuan;
 
-                    // Update Saldo Siswa (hanya jika tidak terlambat)
-                    if (!$setoran->is_terlambat) {
+                    if ($setoran->status !== 'terlambat') {
                         $selisih = $newTotalHarga - $oldTotalHarga;
                         $setoran->siswa->increment('saldo', $selisih);
                     }
 
-                    // Update Stok Sampah
                     if ($oldJenisSampah->id !== $newJenisSampah->id) {
                         $oldJenisSampah->decrement('stok', $setoran->jumlah);
                         $newJenisSampah->increment('stok', $newJumlah);
@@ -354,16 +341,27 @@ class SetoranController extends Controller
                         $newJenisSampah->increment('stok', $selisihJumlah);
                     }
 
-                    // Update Data Setoran
                     $setoran->update([
                         'jenis_sampah_id' => $newJenisSampah->id,
                         'jumlah' => $newJumlah,
                         'total_harga' => $newTotalHarga,
                     ]);
 
-                    // Hapus dan buat ulang insentif jika perlu (logika disederhanakan)
                     Insentif::where('setoran_id', $setoran->id)->delete();
-                    // Anda bisa menambahkan logika pembuatan insentif baru di sini jika diperlukan
+                    if ($setoran->status === 'normal') {
+                        $settings = Setting::pluck('value', 'key');
+                        $persentaseWaliKelas = $settings['persentase_wali_kelas'] ?? 0;
+                        if ($persentaseWaliKelas > 0 && optional($setoran->siswa->kelas)->id_wali_kelas) {
+                            $insentifWaliKelas = $newTotalHarga * ($persentaseWaliKelas / 100);
+                            if ($insentifWaliKelas > 0) {
+                                Insentif::create([
+                                    'setoran_id' => $setoran->id,
+                                    'kelas_id' => $setoran->siswa->id_kelas,
+                                    'jumlah_insentif' => $insentifWaliKelas,
+                                ]);
+                            }
+                        }
+                    }
                 }
             }
         });

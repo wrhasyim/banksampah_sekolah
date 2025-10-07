@@ -14,14 +14,12 @@ class LeaderboardController extends Controller
     public function index(Request $request)
     {
         $filter = $request->input('filter', 'semua_waktu');
-        $rankingBy = $request->input('ranking_by', 'nominal'); // Filter baru
+        $rankingBy = $request->input('ranking_by', 'nominal');
         $dateRange = $this->getDateRange($filter);
 
-        // Tentukan kolom yang akan di-SUM dan di-ORDER BY
         $sumColumn = ($rankingBy === 'jumlah') ? 'jumlah' : 'total_harga';
         $orderByColumn = 'setoran_sum_' . $sumColumn;
 
-        // --- Peringkat Siswa ---
         $topSiswa = Siswa::whereHas('pengguna', fn($q) => $q->where('role', 'siswa'))
             ->whereHas('kelas', fn($q) => $q->where('nama_kelas', '!=', 'Guru'))
             ->with('pengguna', 'kelas')
@@ -29,18 +27,17 @@ class LeaderboardController extends Controller
                 if ($dateRange) {
                     $query->whereBetween('created_at', $dateRange);
                 }
-                $query->where('is_terlambat', false);
-            }], $sumColumn) // Menggunakan $sumColumn dinamis
-            ->orderByDesc($orderByColumn) // Menggunakan $orderByColumn dinamis
+                $query->where('status', '!=', 'terlambat');
+            }], $sumColumn)
+            ->orderByDesc($orderByColumn)
             ->take(5)
             ->get();
 
-        // -- Ambil detail sampah untuk setiap siswa teratas (logika tidak berubah)--
         $topSiswa->each(function ($siswa) use ($dateRange) {
             $query = DB::table('setoran')
                 ->join('jenis_sampah', 'setoran.jenis_sampah_id', '=', 'jenis_sampah.id')
                 ->where('setoran.siswa_id', $siswa->id)
-                ->where('setoran.is_terlambat', false)
+                ->where('setoran.status', '!=', 'terlambat')
                 ->select('jenis_sampah.nama_sampah as nama_jenis', 'jenis_sampah.satuan', DB::raw('SUM(setoran.jumlah) as total_jumlah'))
                 ->groupBy('jenis_sampah.nama_sampah', 'jenis_sampah.satuan')
                 ->havingRaw('SUM(setoran.jumlah) >= 1')
@@ -53,26 +50,24 @@ class LeaderboardController extends Controller
             $siswa->sampah_details = $query->get();
         });
 
-        // --- Peringkat Kelas ---
         $topKelas = Kelas::where('nama_kelas', '!=', 'Guru')
             ->withSum(['setoran' => function ($query) use ($dateRange) {
                 if ($dateRange) {
                     $query->whereBetween('setoran.created_at', $dateRange);
                 }
-                $query->where('is_terlambat', false)
+                $query->where('status', '!=', 'terlambat')
                       ->whereHas('siswa.pengguna', fn($q) => $q->where('role', 'siswa'));
-            }], $sumColumn) // Menggunakan $sumColumn dinamis
-            ->orderByDesc($orderByColumn) // Menggunakan $orderByColumn dinamis
+            }], $sumColumn)
+            ->orderByDesc($orderByColumn)
             ->take(5)
             ->get();
             
-        // -- Ambil detail sampah untuk setiap kelas teratas (logika tidak berubah) --
         $topKelas->each(function ($kelas) use ($dateRange) {
             $query = DB::table('setoran')
                 ->join('jenis_sampah', 'setoran.jenis_sampah_id', '=', 'jenis_sampah.id')
                 ->join('siswa', 'setoran.siswa_id', '=', 'siswa.id')
                 ->where('siswa.id_kelas', $kelas->id)
-                ->where('setoran.is_terlambat', false)
+                ->where('setoran.status', '!=', 'terlambat')
                 ->select('jenis_sampah.nama_sampah as nama_jenis', 'jenis_sampah.satuan', DB::raw('SUM(setoran.jumlah) as total_jumlah'))
                 ->groupBy('jenis_sampah.nama_sampah', 'jenis_sampah.satuan')
                 ->havingRaw('SUM(setoran.jumlah) >= 1')
@@ -91,7 +86,7 @@ class LeaderboardController extends Controller
             'topSiswa' => $topSiswa,
             'topKelas' => $topKelas,
             'filter' => $filter,
-            'rankingBy' => $rankingBy, // Kirim filter baru ke view
+            'rankingBy' => $rankingBy,
             'badges' => $badges,
         ]);
     }

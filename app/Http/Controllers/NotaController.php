@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Kelas;
 use App\Models\Setoran;
-use App\Models\Setting; // Import model Setting
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Carbon\Carbon;
@@ -32,8 +32,7 @@ class NotaController extends Controller
 
         $kelas = Kelas::with('waliKelas')->findOrFail($id_kelas);
 
-        // --- PERBAIKAN DI SINI ---
-        $rincianSetoran = Setoran::where('is_terlambat', false) // Filter untuk tidak menyertakan setoran terlambat
+        $rincianSetoran = Setoran::where('status', '!=', 'terlambat')
             ->whereHas('siswa', function ($query) use ($id_kelas) {
                 $query->where('id_kelas', $id_kelas);
             })
@@ -53,7 +52,6 @@ class NotaController extends Controller
             return back()->with('toastr-error', 'Tidak ada data setoran untuk kelas dan rentang tanggal yang dipilih.');
         }
 
-        // --- TAMBAHAN: Menghitung Insentif Wali Kelas ---
         $settings = Setting::pluck('value', 'key');
         $persentaseWaliKelas = $settings['persentase_wali_kelas'] ?? 0;
         $insentifWaliKelas = $totalKeseluruhan * ($persentaseWaliKelas / 100);
