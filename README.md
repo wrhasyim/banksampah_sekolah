@@ -22,17 +22,30 @@ Aplikasi ini dilengkapi dengan berbagai fitur canggih untuk melayani kebutuhan t
 ### Fitur untuk Admin (Pengelola)
 * **Dashboard Analitik**: Tampilan ringkasan data penting seperti total saldo siswa, total sampah terkumpul, jumlah transaksi, dan grafik tren setoran serta penarikan.
 * **Manajemen Data Master**:
-    * **Pengguna**: Mengelola akun untuk Admin, Siswa, dan Guru/Wali Kelas.
-    * **Siswa**: CRUD data siswa lengkap dengan fitur impor dari file Excel.
-    * **Kelas**: Mengelola daftar kelas dan menetapkan wali kelas.
-    * **Jenis Sampah**: Mengatur jenis sampah yang diterima, lengkap dengan harga dan status aktif/nonaktif.
+
+  * **Pengguna**: Mengelola akun untuk Admin, Siswa, dan Guru/Wali Kelas.
+  
+  * **Siswa**: CRUD data siswa lengkap dengan fitur impor dari file Excel.
+
+  * **Kelas**: Mengelola daftar kelas dan menetapkan wali kelas.
+  
+  * **Jenis Sampah**: Mengatur jenis sampah yang diterima, lengkap dengan harga dan status aktif/nonaktif.
 * **Manajemen Transaksi**:
-    * **Setoran Sampah**: Fitur input setoran per-individu, **Setoran Massal** per-kelas, dan **Edit Massal** untuk koreksi data yang efisien.
-    * **Penarikan Saldo**: Mengelola permintaan penarikan tabungan oleh siswa, baik individu maupun per kelas.
-    * **Penjualan Sampah**: Mencatat hasil penjualan sampah yang terkumpul ke pengepul.
+
+  * **Setoran Sampah**: Fitur input setoran per-individu,
+
+  * **Setoran Massal** per-kelas, dan
+
+  * **Edit Massal** untuk koreksi data yang efisien.
+  
+  * **Penarikan Saldo**: Mengelola permintaan penarikan tabungan oleh siswa, baik individu maupun per kelas.
+  
+  * **Penjualan Sampah**: Mencatat hasil penjualan sampah yang terkumpul ke pengepul.
 * **Manajemen Keuangan**:
-    * **Buku Kas Digital**: Mencatat semua pemasukan dan pengeluaran bank sampah secara terperinci.
-    * **Insentif Wali Kelas**: Sistem otomatis untuk menghitung, membayar, dan merekapitulasi insentif bagi wali kelas.
+
+  * **Buku Kas Digital**: Mencatat semua pemasukan dan pengeluaran bank sampah secara terperinci.
+
+  * **Insentif Wali Kelas**: Sistem otomatis untuk menghitung, membayar, dan merekapitulasi insentif bagi wali kelas.
 * **Laporan Lengkap**:
     * Cetak dan ekspor (PDF/Excel) laporan transaksi, laporan penjualan, dan laporan laba rugi.
 * **Pengaturan Aplikasi**: Mengonfigurasi parameter sistem seperti persentase insentif, nama sekolah, dan lainnya.
