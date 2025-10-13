@@ -4,8 +4,11 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Setoran;
-use Illuminate\Support\Facades\Cache; // <--- Tambahkan ini
+use App\Models\Penarikan; // Pastikan model ini di-import
+use App\Models\Pengguna;  // Pastikan model ini di-import
+use Illuminate\Support\Facades\Cache;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\DB; // Pastikan DB di-import
 
 class RekapanController extends Controller
 {
@@ -107,40 +110,67 @@ class RekapanController extends Controller
 
     public function exportGuruPdf()
     {
-        $cacheKey = 'export_rekapan_guru';
+        $cacheKey = 'export_rekapan_guru_dan_summary'; // Key cache baru agar tidak konflik
 
-        $setoranGuru = Cache::remember($cacheKey, now()->addMinutes(60), function () {
-            return $this->getGuruQuery()->get();
+        $pdfData = Cache::remember($cacheKey, now()->addMinutes(60), function () {
+            $setoranGuru = $this->getGuruQuery()->get();
+
+            // 1. Proses rekap data per guru (logika Anda yang sudah ada)
+            $rekapData = [];
+            foreach ($setoranGuru as $setoran) {
+                $guruId = $setoran->siswa->id;
+                $namaGuru = $setoran->siswa->pengguna->nama_lengkap;
+
+                if (!isset($rekapData[$guruId])) {
+                    $rekapData[$guruId] = [
+                        'nama_guru' => $namaGuru,
+                        'total_harga' => 0,
+                        'sampah' => [],
+                    ];
+                }
+
+                $rekapData[$guruId]['total_harga'] += $setoran->total_harga;
+
+                $jenisSampah = $setoran->jenisSampah->nama_sampah;
+                $satuan = $setoran->jenisSampah->satuan;
+                if (!isset($rekapData[$guruId]['sampah'][$jenisSampah])) {
+                    $rekapData[$guruId]['sampah'][$jenisSampah] = [
+                        'jumlah' => 0,
+                        'satuan' => $satuan,
+                    ];
+                }
+                $rekapData[$guruId]['sampah'][$jenisSampah]['jumlah'] += $setoran->jumlah;
+            }
+
+            // --- BAGIAN BARU: Menghitung Rekapitulasi Keseluruhan ---
+
+            // 2. Rekapitulasi per jenis sampah dari data yang sudah ada
+            $rekapJenisSampahKeseluruhan = $setoranGuru->groupBy('jenisSampah.nama_sampah')
+                ->map(function ($items, $namaSampah) {
+                    return [
+                        'nama_sampah' => $namaSampah,
+                        'total_pcs' => $items->sum('jumlah'),
+                        'total_harga' => $items->sum('total_harga'),
+                    ];
+                })->values();
+
+            // 3. Total keseluruhan setoran (Debit)
+            $totalSetoranKeseluruhan = $setoranGuru->sum('total_harga');
+
+            // 4. Total keseluruhan penarikan (Kredit)
+            $totalPenarikanKeseluruhan = Penarikan::whereHas('siswa.pengguna', function ($query) {
+                $query->whereIn('role', ['guru', 'wali-kelas']);
+            })->where('status', 'disetujui')->sum('jumlah_penarikan');
+
+            return [
+                'rekapData' => $rekapData,
+                'rekapJenisSampahGuru' => $rekapJenisSampahKeseluruhan,
+                'totalSetoranGuru' => $totalSetoranKeseluruhan,
+                'totalPenarikanGuru' => $totalPenarikanKeseluruhan,
+            ];
         });
 
-        // Proses rekap data tetap di sini, namun sumber datanya sudah dari cache
-        $rekapData = [];
-        foreach ($setoranGuru as $setoran) {
-            $guruId = $setoran->siswa->id;
-            $namaGuru = $setoran->siswa->pengguna->nama_lengkap;
-
-            if (!isset($rekapData[$guruId])) {
-                $rekapData[$guruId] = [
-                    'nama_guru' => $namaGuru,
-                    'total_harga' => 0,
-                    'sampah' => [],
-                ];
-            }
-
-            $rekapData[$guruId]['total_harga'] += $setoran->total_harga;
-
-            $jenisSampah = $setoran->jenisSampah->nama_sampah;
-            $satuan = $setoran->jenisSampah->satuan;
-            if (!isset($rekapData[$guruId]['sampah'][$jenisSampah])) {
-                $rekapData[$guruId]['sampah'][$jenisSampah] = [
-                    'jumlah' => 0,
-                    'satuan' => $satuan,
-                ];
-            }
-            $rekapData[$guruId]['sampah'][$jenisSampah]['jumlah'] += $setoran->jumlah;
-        }
-
-        $pdf = Pdf::loadView('pages.rekapan.pdf.rekapan-guru-summary-pdf', ['rekapData' => $rekapData]);
+        $pdf = Pdf::loadView('pages.rekapan.pdf.rekapan-guru-summary-pdf', $pdfData);
         return $pdf->download('rekapitulasi-setoran-guru-'.date('Y-m-d').'.pdf');
     }
 }

@@ -1,167 +1,109 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
     <title>Rekapitulasi Setoran Guru</title>
     <style>
-        /* Pengaturan Font dan Halaman */
-        @page {
-            margin: 0cm; /* Menghilangkan margin bawaan */
-        }
-        body {
-            font-family: 'Helvetica', sans-serif;
-            font-size: 11px;
-            color: #333;
-            margin: 2.5cm 1.5cm 2cm 1.5cm; /* Atas, Kanan, Bawah, Kiri */
-        }
+        body { font-family: 'sans-serif'; margin: 20px; font-size: 11px; }
+        .header h1, .header h4 { text-align: center; margin: 5px 0; }
+        .header h1 { font-size: 18px; }
+        .header h4 { font-size: 14px; font-weight: normal; }
+        
+        .guru-block { page-break-inside: avoid; margin-bottom: 25px; border: 1px solid #eee; padding: 10px; }
+        .guru-name { font-size: 14px; font-weight: bold; margin-bottom: 5px; }
+        .sub-table { width: 100%; border-collapse: collapse; margin-top: 5px; }
+        .sub-table th, .sub-table td { border: 1px solid #ccc; padding: 4px; }
+        .sub-table th { background-color: #fafafa; text-align: center; }
+        .no-data { text-align: center; color: #888; padding: 20px; }
 
-        /* Header dan Footer */
-        header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 2cm;
-            padding: 0 1.5cm;
-            border-bottom: 1px solid #ddd;
-        }
-        footer {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 1.5cm;
-            text-align: center;
-            border-top: 1px solid #ddd;
-            padding-top: 10px;
-        }
-        .school-info {
-            float: left;
-        }
-        .school-logo {
-            float: right;
-            max-height: 50px; /* Sesuaikan ukuran logo */
-        }
-
-        /* Konten Utama */
-        h1, h2, h3 {
-            margin: 0;
-            padding: 0;
-        }
-        h1 {
-            font-size: 18px;
-            color: #222;
-        }
-        h2 {
-            font-size: 16px;
-            color: #333;
-            margin-bottom: 5px;
-        }
-        .report-title {
-            text-align: center;
-            margin-bottom: 25px;
-        }
-        .print-date {
-            text-align: center;
-            font-size: 9px;
-            color: #777;
-            margin-top: 5px;
-        }
-
-        /* Tabel */
-        .table-wrapper {
-            margin-bottom: 30px;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            overflow: hidden; /* Agar border-radius terlihat */
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            padding: 10px;
-            text-align: left;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        thead th {
-            background-color: #f8fafc;
-            color: #4a5568;
-            font-weight: bold;
-            font-size: 10px;
-            text-transform: uppercase;
-        }
-        .total-row td {
-            font-weight: bold;
-            background-color: #f7fafc;
-            color: #1a202c;
-        }
-        .total-amount {
-            color: #2c5282; /* Warna biru untuk total */
-        }
-        .page-break {
-            page-break-after: always;
-        }
+        /* Style untuk rekapitulasi keseluruhan */
+        .summary-container { margin-top: 40px; page-break-before: auto; page-break-inside: avoid; }
+        .summary-table { width: 70%; margin: 20px auto 0 auto; border-collapse: collapse; }
+        .summary-table th, .summary-table td { border: 1px solid #000; padding: 6px; }
+        .summary-table th { background-color: #f2f2f2; text-align: center; }
+        .totals-table { width: 70%; margin: 20px auto 0 auto; }
+        .totals-table td { font-weight: bold; padding: 5px; }
+        .section-title { font-size: 16px; margin-top: 30px; margin-bottom: 10px; text-align: center; }
+        .text-right { text-align: right; }
     </style>
 </head>
 <body>
-    <header>
-        {{-- Ganti dengan path logo sekolah Anda --}}
-        {{-- <img src="{{ public_path('images/logo-sekolah.png') }}" alt="Logo Sekolah" class="school-logo"> --}}
-        <div class="school-info">
-            <h1 style="font-size:16px; font-weight:bold;">SMK TARUNA KARYA MANDIRI</h1>
-            <p style="font-size:11px;">Jalan Alamat Sekolah No. 123, Kota, Provinsi</p>
-        </div>
-    </header>
+    <div class="header">
+        <h1>Rekapitulasi Rinci Setoran Guru</h1>
+        <h4>Dicetak pada: {{ date('d M Y') }}</h4>
+    </div>
 
-    <footer>
-        Rekapitulasi Setoran Guru Bank Sampah Sekolah | Dicetak pada: {{ date('d F Y') }}
-    </footer>
-
-    <main>
-        <div class="report-title">
-            <h1>Rekapitulasi Setoran Guru</h1>
-            <p class="print-date">Periode sampai dengan {{ date('d F Y') }}</p>
-        </div>
-
-        @forelse ($rekapData as $guruId => $data)
-            <div class="table-wrapper">
-                <table>
-                    <thead>
+    @forelse ($rekapData as $guruId => $data)
+        <div class="guru-block">
+            <div class="guru-name">{{ $loop->iteration }}. {{ $data['nama_guru'] }}</div>
+            <strong>Total Setoran: Rp {{ number_format($data['total_harga'], 0, ',', '.') }}</strong>
+            <table class="sub-table">
+                <thead>
+                    <tr>
+                        <th>Jenis Sampah</th>
+                        <th>Jumlah</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse ($data['sampah'] as $namaSampah => $detail)
                         <tr>
-                            <th colspan="2" style="background-color: #e2e8f0;">
-                                NAMA GURU: {{ strtoupper($data['nama_guru']) }}
-                            </th>
+                            <td>{{ $namaSampah }}</td>
+                            <td class="text-right">{{ number_format($detail['jumlah'], 0, ',', '.') }} {{ $detail['satuan'] }}</td>
                         </tr>
+                    @empty
                         <tr>
-                            <th>Jenis Sampah</th>
-                            <th style="text-align: right;">Total Jumlah</th>
+                            <td colspan="2" style="text-align:center;">- Tidak ada rincian sampah -</td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($data['sampah'] as $namaSampah => $detail)
-                            <tr>
-                                <td>{{ $namaSampah }}</td>
-                                <td style="text-align: right;">{{ number_format($detail['jumlah'], 2, ',', '.') }} {{ $detail['satuan'] }}</td>
-                            </tr>
-                        @endforeach
-                        <tr class="total-row">
-                            <td><strong>Total Pendapatan</strong></td>
-                            <td style="text-align: right;" class="total-amount">
-                                <strong>Rp {{ number_format($data['total_harga'], 0, ',', '.') }}</strong>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    @empty
+        <p class="no-data">Tidak ada data setoran guru untuk ditampilkan.</p>
+    @endforelse
 
-            @if (!$loop->last)
-                <div class="page-break"></div>
-            @endif
-        @empty
-            <p style="text-align: center;">Tidak ada data setoran dari guru untuk direkapitulasi.</p>
-        @endforelse
-    </main>
+    {{-- BAGIAN REKAPITULASI KESELURUHAN --}}
+    @if (!empty($rekapData))
+    <div class="summary-container">
+        <h2 class="section-title">Rekapitulasi Keseluruhan (Semua Guru)</h2>
+        <table class="summary-table">
+            <thead>
+                <tr>
+                    <th>Jenis Sampah</th>
+                    <th>Total Sampah (Pcs)</th>
+                    <th>Total Harga (Rp)</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse ($rekapJenisSampahGuru as $rekap)
+                    <tr>
+                        <td>{{ $rekap['nama_sampah'] }}</td>
+                        <td class="text-right">{{ number_format($rekap['total_pcs'], 0, ',', '.') }}</td>
+                        <td class="text-right">{{ number_format($rekap['total_harga'], 0, ',', '.') }}</td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="3" class="no-data">Tidak ada data setoran.</td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
 
+        <table class="totals-table">
+            <tr>
+                <td style="width: 70%;">TOTAL KESELURUHAN SETORAN (DEBIT)</td>
+                <td class="text-right" style="width: 30%;">
+                    Rp {{ number_format($totalSetoranGuru, 0, ',', '.') }}
+                </td>
+            </tr>
+            <tr>
+                <td>TOTAL KESELURUHAN PENARIKAN (KREDIT)</td>
+                <td class="text-right">
+                    Rp {{ number_format($totalPenarikanGuru, 0, ',', '.') }}
+                </td>
+            </tr>
+        </table>
+    </div>
+    @endif
+    
 </body>
 </html>
