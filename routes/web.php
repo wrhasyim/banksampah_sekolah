@@ -122,7 +122,8 @@ Route::get('/select/siswa', [SiswaController::class, 'selectSiswa'])->name('sele
     Route::get('/insentif/rekap', [InsentifController::class, 'rekap'])->name('insentif.rekap');
     Route::get('/insentif/pembayaran', [PembayaranInsentifController::class, 'index'])->name('insentif.pembayaran');
     Route::post('/insentif/bayar', [PembayaranInsentifController::class, 'store'])->name('insentif.bayar');
-    
+    Route::get('/insentif/rekap/export-pdf', [InsentifController::class, 'exportPdf'])->name('insentif.exportPdf');
+
     // Fitur Lainnya
     Route::get('/nota', [NotaController::class, 'index'])->name('nota.index');
     Route::post('/nota/cetak', [NotaController::class, 'cetak'])->name('nota.cetak');
