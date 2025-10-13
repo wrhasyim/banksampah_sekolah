@@ -14,37 +14,59 @@ use Carbon\Carbon;
 class RekapanController extends Controller
 {
     /**
-     * Membuat query dasar untuk laporan siswa terlambat.
+     * Membuat query dasar untuk laporan siswa terlambat dengan filter tanggal.
      */
-    private function getSiswaTerlambatQuery()
+    private function getSiswaTerlambatQuery(Request $request)
     {
-        return Setoran::with(['siswa.pengguna', 'siswa.kelas', 'jenisSampah'])
+        $query = Setoran::with(['siswa.pengguna', 'siswa.kelas', 'jenisSampah'])
             ->where('status', 'terlambat')
-            ->whereHas('siswa.kelas', fn($q) => $q->where('nama_kelas', 'not like', '%guru%'))
-            ->latest();
+            ->whereHas('siswa.kelas', fn($q) => $q->where('nama_kelas', 'not like', '%guru%'));
+
+        // Terapkan filter tanggal jika ada
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $query->whereBetween('created_at', [$request->start_date, $request->end_date]);
+        }
+
+        return $query->latest();
     }
 
     public function indexSiswaTerlambat(Request $request)
     {
-        $currentPage = $request->input('page', 1);
-        $cacheKey = 'rekapan_siswa_terlambat_page_' . $currentPage;
+        // Ambil tanggal dari request atau gunakan default bulan ini
+        $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->toDateString());
+        $endDate = $request->input('end_date', Carbon::now()->endOfMonth()->toDateString());
 
-        $setoranTerlambat = Cache::remember($cacheKey, now()->addMinutes(60), function () {
-            return $this->getSiswaTerlambatQuery()->paginate(15);
+        $currentPage = $request->input('page', 1);
+        // Buat cache key yang unik berdasarkan filter tanggal dan halaman
+        $cacheKey = 'rekapan_siswa_terlambat_page_' . $currentPage . '_' . md5($startDate . $endDate);
+
+        $setoranTerlambat = Cache::remember($cacheKey, now()->addMinutes(60), function () use ($request) {
+            return $this->getSiswaTerlambatQuery($request)->paginate(15);
         });
 
-        return view('pages.rekapan.siswa-terlambat', compact('setoranTerlambat'));
+        // Kirim variabel tanggal ke view
+        return view('pages.rekapan.siswa-terlambat', compact('setoranTerlambat', 'startDate', 'endDate'));
     }
 
-    public function exportSiswaTerlambatPdf()
+    public function exportSiswaTerlambatPdf(Request $request)
     {
-        $cacheKey = 'export_rekapan_siswa_terlambat';
+        // Ambil tanggal dari request atau gunakan default bulan ini
+        $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->toDateString());
+        $endDate = $request->input('end_date', Carbon::now()->endOfMonth()->toDateString());
+
+        // Buat cache key yang unik berdasarkan filter tanggal
+        $cacheKey = 'export_rekapan_siswa_terlambat_' . md5($startDate . $endDate);
         
-        $data = Cache::remember($cacheKey, now()->addMinutes(60), function () {
-            return $this->getSiswaTerlambatQuery()->get();
+        $data = Cache::remember($cacheKey, now()->addMinutes(60), function () use ($request) {
+            return $this->getSiswaTerlambatQuery($request)->get();
         });
 
-        $pdf = Pdf::loadView('pages.rekapan.pdf.rekapan-terlambat-pdf', ['data' => $data]);
+        // Kirim variabel tanggal ke view PDF
+        $pdf = Pdf::loadView('pages.rekapan.pdf.rekapan-terlambat-pdf', [
+            'data' => $data,
+            'startDate' => $startDate,
+            'endDate' => $endDate
+        ]);
         return $pdf->download('laporan-rinci-setoran-terlambat-'.date('Y-m-d').'.pdf');
     }
     
@@ -92,7 +114,6 @@ class RekapanController extends Controller
         $query = Setoran::with(['siswa.pengguna', 'jenisSampah'])
             ->whereHas('siswa.kelas', fn($q) => $q->where('nama_kelas', 'like', '%guru%'));
 
-        // Terapkan filter tanggal jika ada
         if ($request->filled('start_date') && $request->filled('end_date')) {
             $query->whereBetween('created_at', [$request->start_date, $request->end_date]);
         }
@@ -102,12 +123,10 @@ class RekapanController extends Controller
 
     public function indexGuru(Request $request)
     {
-        // Tetapkan tanggal default jika tidak ada input
         $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->toDateString());
         $endDate = $request->input('end_date', Carbon::now()->endOfMonth()->toDateString());
         
         $currentPage = $request->input('page', 1);
-        // Buat cache key unik berdasarkan filter
         $cacheKey = 'rekapan_guru_page_' . $currentPage . '_' . md5($startDate.$endDate);
 
         $setoranGuru = Cache::remember($cacheKey, now()->addMinutes(60), function() use ($request) {
@@ -126,8 +145,6 @@ class RekapanController extends Controller
 
         $pdfData = Cache::remember($cacheKey, now()->addMinutes(60), function () use ($request, $startDate, $endDate) {
             $setoranGuru = $this->getGuruQuery($request)->get();
-
-            // 1. Proses rekap data per guru
             $rekapData = [];
             foreach ($setoranGuru as $setoran) {
                 $guruId = $setoran->siswa->id;
@@ -154,7 +171,6 @@ class RekapanController extends Controller
                 $rekapData[$guruId]['sampah'][$jenisSampah]['jumlah'] += $setoran->jumlah;
             }
 
-            // 2. Rekapitulasi per jenis sampah dari data yang sudah ada
             $rekapJenisSampahKeseluruhan = $setoranGuru->groupBy('jenisSampah.nama_sampah')
                 ->map(function ($items, $namaSampah) {
                     return [
@@ -164,15 +180,13 @@ class RekapanController extends Controller
                     ];
                 })->values();
 
-            // 3. Total keseluruhan setoran (Debit)
             $totalSetoranKeseluruhan = $setoranGuru->sum('total_harga');
 
-            // 4. Total keseluruhan penarikan (Kredit)
             $totalPenarikanKeseluruhan = Penarikan::whereHas('siswa.pengguna', function ($query) {
                 $query->whereIn('role', ['guru', 'wali-kelas']);
             })
             ->where('status', 'disetujui')
-            ->whereBetween('created_at', [$startDate, $endDate]) // Terapkan filter tanggal juga di sini
+            ->whereBetween('created_at', [$startDate, $endDate])
             ->sum('jumlah_penarikan');
 
             return [
