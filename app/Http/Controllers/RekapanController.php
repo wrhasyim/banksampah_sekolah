@@ -4,11 +4,12 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Setoran;
-use App\Models\Penarikan; // Pastikan model ini di-import
-use App\Models\Pengguna;  // Pastikan model ini di-import
+use App\Models\Penarikan;
+use App\Models\Pengguna;
 use Illuminate\Support\Facades\Cache;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Support\Facades\DB; // Pastikan DB di-import
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class RekapanController extends Controller
 {
@@ -17,7 +18,6 @@ class RekapanController extends Controller
      */
     private function getSiswaTerlambatQuery()
     {
-        // Eager loading sudah benar, kita pertahankan
         return Setoran::with(['siswa.pengguna', 'siswa.kelas', 'jenisSampah'])
             ->where('status', 'terlambat')
             ->whereHas('siswa.kelas', fn($q) => $q->where('nama_kelas', 'not like', '%guru%'))
@@ -29,7 +29,6 @@ class RekapanController extends Controller
         $currentPage = $request->input('page', 1);
         $cacheKey = 'rekapan_siswa_terlambat_page_' . $currentPage;
 
-        // Menyimpan hasil paginasi ke cache selama 60 menit
         $setoranTerlambat = Cache::remember($cacheKey, now()->addMinutes(60), function () {
             return $this->getSiswaTerlambatQuery()->paginate(15);
         });
@@ -41,7 +40,6 @@ class RekapanController extends Controller
     {
         $cacheKey = 'export_rekapan_siswa_terlambat';
         
-        // Menyimpan seluruh data (tanpa paginasi) ke cache
         $data = Cache::remember($cacheKey, now()->addMinutes(60), function () {
             return $this->getSiswaTerlambatQuery()->get();
         });
@@ -87,35 +85,49 @@ class RekapanController extends Controller
     }
     
     /**
-     * Membuat query dasar untuk laporan setoran guru.
+     * Membuat query dasar untuk laporan setoran guru dengan filter tanggal.
      */
-    private function getGuruQuery()
+    private function getGuruQuery(Request $request)
     {
-         return Setoran::with(['siswa.pengguna', 'jenisSampah'])
-            ->whereHas('siswa.kelas', fn($q) => $q->where('nama_kelas', 'like', '%guru%'))
-            ->latest();
+        $query = Setoran::with(['siswa.pengguna', 'jenisSampah'])
+            ->whereHas('siswa.kelas', fn($q) => $q->where('nama_kelas', 'like', '%guru%'));
+
+        // Terapkan filter tanggal jika ada
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $query->whereBetween('created_at', [$request->start_date, $request->end_date]);
+        }
+
+        return $query->latest();
     }
 
     public function indexGuru(Request $request)
     {
+        // Tetapkan tanggal default jika tidak ada input
+        $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->toDateString());
+        $endDate = $request->input('end_date', Carbon::now()->endOfMonth()->toDateString());
+        
         $currentPage = $request->input('page', 1);
-        $cacheKey = 'rekapan_guru_page_' . $currentPage;
+        // Buat cache key unik berdasarkan filter
+        $cacheKey = 'rekapan_guru_page_' . $currentPage . '_' . md5($startDate.$endDate);
 
-        $setoranGuru = Cache::remember($cacheKey, now()->addMinutes(60), function() {
-            return $this->getGuruQuery()->paginate(10);
+        $setoranGuru = Cache::remember($cacheKey, now()->addMinutes(60), function() use ($request) {
+            return $this->getGuruQuery($request)->paginate(10);
         });
 
-        return view('pages.rekapan.rekapan-guru', compact('setoranGuru'));
+        return view('pages.rekapan.rekapan-guru', compact('setoranGuru', 'startDate', 'endDate'));
     }
 
-    public function exportGuruPdf()
+    public function exportGuruPdf(Request $request)
     {
-        $cacheKey = 'export_rekapan_guru_dan_summary'; // Key cache baru agar tidak konflik
+        $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->toDateString());
+        $endDate = $request->input('end_date', Carbon::now()->endOfMonth()->toDateString());
+        
+        $cacheKey = 'export_rekapan_guru_pdf_data_' . md5($startDate.$endDate);
 
-        $pdfData = Cache::remember($cacheKey, now()->addMinutes(60), function () {
-            $setoranGuru = $this->getGuruQuery()->get();
+        $pdfData = Cache::remember($cacheKey, now()->addMinutes(60), function () use ($request, $startDate, $endDate) {
+            $setoranGuru = $this->getGuruQuery($request)->get();
 
-            // 1. Proses rekap data per guru (logika Anda yang sudah ada)
+            // 1. Proses rekap data per guru
             $rekapData = [];
             foreach ($setoranGuru as $setoran) {
                 $guruId = $setoran->siswa->id;
@@ -142,8 +154,6 @@ class RekapanController extends Controller
                 $rekapData[$guruId]['sampah'][$jenisSampah]['jumlah'] += $setoran->jumlah;
             }
 
-            // --- BAGIAN BARU: Menghitung Rekapitulasi Keseluruhan ---
-
             // 2. Rekapitulasi per jenis sampah dari data yang sudah ada
             $rekapJenisSampahKeseluruhan = $setoranGuru->groupBy('jenisSampah.nama_sampah')
                 ->map(function ($items, $namaSampah) {
@@ -160,13 +170,18 @@ class RekapanController extends Controller
             // 4. Total keseluruhan penarikan (Kredit)
             $totalPenarikanKeseluruhan = Penarikan::whereHas('siswa.pengguna', function ($query) {
                 $query->whereIn('role', ['guru', 'wali-kelas']);
-            })->where('status', 'disetujui')->sum('jumlah_penarikan');
+            })
+            ->where('status', 'disetujui')
+            ->whereBetween('created_at', [$startDate, $endDate]) // Terapkan filter tanggal juga di sini
+            ->sum('jumlah_penarikan');
 
             return [
                 'rekapData' => $rekapData,
                 'rekapJenisSampahGuru' => $rekapJenisSampahKeseluruhan,
                 'totalSetoranGuru' => $totalSetoranKeseluruhan,
                 'totalPenarikanGuru' => $totalPenarikanKeseluruhan,
+                'startDate' => $startDate,
+                'endDate' => $endDate,
             ];
         });
 

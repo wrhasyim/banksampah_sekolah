@@ -29,7 +29,8 @@
 <body>
     <div class="header">
         <h1>Rekapitulasi Rinci Setoran Guru</h1>
-        <h4>Dicetak pada: {{ date('d M Y') }}</h4>
+        {{-- Menampilkan periode tanggal yang difilter --}}
+        <h4>Periode: {{ \Carbon\Carbon::parse($startDate)->isoFormat('D MMMM Y') }} - {{ \Carbon\Carbon::parse($endDate)->isoFormat('D MMMM Y') }}</h4>
     </div>
 
     @forelse ($rekapData as $guruId => $data)
@@ -58,7 +59,7 @@
             </table>
         </div>
     @empty
-        <p class="no-data">Tidak ada data setoran guru untuk ditampilkan.</p>
+        <p class="no-data">Tidak ada data setoran guru untuk periode ini.</p>
     @endforelse
 
     {{-- BAGIAN REKAPITULASI KESELURUHAN --}}
