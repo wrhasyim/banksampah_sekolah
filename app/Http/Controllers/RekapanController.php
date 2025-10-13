@@ -202,4 +202,6 @@ class RekapanController extends Controller
         $pdf = Pdf::loadView('pages.rekapan.pdf.rekapan-guru-summary-pdf', $pdfData);
         return $pdf->download('rekapitulasi-setoran-guru-'.date('Y-m-d').'.pdf');
     }
+
+    
 }

@@ -123,6 +123,8 @@ Route::get('/select/siswa', [SiswaController::class, 'selectSiswa'])->name('sele
     Route::get('/insentif/pembayaran', [PembayaranInsentifController::class, 'index'])->name('insentif.pembayaran');
     Route::post('/insentif/bayar', [PembayaranInsentifController::class, 'store'])->name('insentif.bayar');
     Route::get('/insentif/rekap/export-pdf', [InsentifController::class, 'exportPdf'])->name('insentif.exportPdf');
+ Route::delete('/insentif/void-per-kelas', [InsentifController::class, 'voidPerKelas'])->name('insentif.voidPerKelas');
+    Route::delete('/insentif/{insentif}', [InsentifController::class, 'destroy'])->name('insentif.destroy');
 
     // Fitur Lainnya
     Route::get('/nota', [NotaController::class, 'index'])->name('nota.index');
