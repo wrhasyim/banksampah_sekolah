@@ -22,7 +22,7 @@
             </tbody>
             <tfoot class="bg-gray-100 font-bold">
                 <tr>
-                    <td class="px-4 py-2 text-right" colspan="2">Total Pemasukan Siswa</td>
+                    <td class="px-4 py-2 text-right" colspan="2">Total Setoran Siswa</td>
                     <td class="px-4 py-2">Rp {{ number_format($totalSetoranSiswa, 0, ',', '.') }}</td>
                 </tr>
             </tfoot>
