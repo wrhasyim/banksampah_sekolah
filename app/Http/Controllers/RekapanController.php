@@ -25,10 +25,14 @@ class RekapanController extends Controller
             ->where('status', 'terlambat')
             ->whereHas('siswa.kelas', fn($q) => $q->where('nama_kelas', 'not like', '%guru%'));
 
-        // Terapkan filter tanggal jika ada
+        // --- PERBAIKAN DIMULAI DARI SINI ---
         if ($request->filled('start_date') && $request->filled('end_date')) {
-            $query->whereBetween('created_at', [$request->start_date, $request->end_date]);
+            // Menggunakan endOfDay() untuk memastikan semua data di tanggal akhir terambil
+            $startDate = Carbon::parse($request->start_date)->startOfDay();
+            $endDate = Carbon::parse($request->end_date)->endOfDay();
+            $query->whereBetween('created_at', [$startDate, $endDate]);
         }
+        // --- PERBAIKAN SELESAI ---
 
         return $query->latest();
     }
@@ -117,9 +121,14 @@ class RekapanController extends Controller
         $query = Setoran::with(['siswa.pengguna', 'jenisSampah'])
             ->whereHas('siswa.kelas', fn($q) => $q->where('nama_kelas', 'like', '%guru%'));
 
+        // --- PERBAIKAN DIMULAI DARI SINI ---
         if ($request->filled('start_date') && $request->filled('end_date')) {
-            $query->whereBetween('created_at', [$request->start_date, $request->end_date]);
+            // Menggunakan endOfDay() untuk memastikan semua data di tanggal akhir terambil
+            $startDate = Carbon::parse($request->start_date)->startOfDay();
+            $endDate = Carbon::parse($request->end_date)->endOfDay();
+            $query->whereBetween('created_at', [$startDate, $endDate]);
         }
+        // --- PERBAIKAN SELESAI ---
 
         return $query->latest();
     }
@@ -184,12 +193,16 @@ class RekapanController extends Controller
                 })->values();
 
             $totalSetoranKeseluruhan = $setoranGuru->sum('total_harga');
+            
+            // --- PERBAIKAN: Memastikan filter tanggal diterapkan juga pada query Penarikan ---
+            $parsedStartDate = Carbon::parse($startDate)->startOfDay();
+            $parsedEndDate = Carbon::parse($endDate)->endOfDay();
 
             $totalPenarikanKeseluruhan = Penarikan::whereHas('siswa.pengguna', function ($query) {
                 $query->whereIn('role', ['guru', 'wali-kelas']);
             })
             ->where('status', 'disetujui')
-            ->whereBetween('created_at', [$startDate, $endDate])
+            ->whereBetween('created_at', [$parsedStartDate, $parsedEndDate]) // Menggunakan variabel tanggal yang sudah di-parse
             ->sum('jumlah_penarikan');
 
             return [
@@ -252,9 +265,12 @@ class RekapanController extends Controller
      */
     private function getRekapMenyeluruhData($startDate, $endDate)
     {
+        // --- PERBAIKAN: Menambahkan endOfDay() pada semua query whereBetween ---
+        $parsedEndDate = Carbon::parse($endDate)->endOfDay();
+
         $setoranSiswa = Setoran::join('jenis_sampah', 'setoran.jenis_sampah_id', '=', 'jenis_sampah.id')
             ->whereHas('siswa.kelas', fn($q) => $q->where('nama_kelas', 'not like', '%guru%'))
-            ->whereBetween('setoran.created_at', [$startDate, $endDate])
+            ->whereBetween('setoran.created_at', [$startDate, $parsedEndDate])
             ->selectRaw('jenis_sampah.nama_sampah as jenis_sampah, SUM(setoran.jumlah) as total_jumlah, SUM(setoran.total_harga) as total_harga')
             ->groupBy('jenis_sampah.nama_sampah')
             ->get();
@@ -262,7 +278,7 @@ class RekapanController extends Controller
 
         $setoranGuru = Setoran::join('jenis_sampah', 'setoran.jenis_sampah_id', '=', 'jenis_sampah.id')
             ->whereHas('siswa.kelas', fn($q) => $q->where('nama_kelas', 'like', '%guru%'))
-            ->whereBetween('setoran.created_at', [$startDate, $endDate])
+            ->whereBetween('setoran.created_at', [$startDate, $parsedEndDate])
             ->selectRaw('jenis_sampah.nama_sampah as jenis_sampah, SUM(setoran.jumlah) as total_jumlah, SUM(setoran.total_harga) as total_harga')
             ->groupBy('jenis_sampah.nama_sampah')
             ->get();
@@ -271,17 +287,17 @@ class RekapanController extends Controller
         $insentifWalasBelumDibayar = Insentif::with('kelas')
             ->where('jenis', 'wali-kelas')
             ->where('status_pembayaran', 'belum dibayar')
-            ->whereBetween('created_at', [$startDate, $endDate])
+            ->whereBetween('created_at', [$startDate, $parsedEndDate])
             ->select('kelas_id', DB::raw('SUM(jumlah_insentif) as total_tunggakan'))
             ->groupBy('kelas_id')
             ->get();
         $totalTunggakanWalas = $insentifWalasBelumDibayar->sum('total_tunggakan');
 
-        $totalInsentifWalasSudahDibayar = Insentif::where('jenis', 'wali-kelas')->where('status_pembayaran', 'sudah dibayar')->whereBetween('updated_at', [$startDate, $endDate])->sum('jumlah_insentif');
-        $totalHonorSekolah = BukuKas::where('tipe', 'pengeluaran')->where('deskripsi', 'like', '%Honor%')->whereBetween('tanggal', [$startDate, $endDate])->sum('jumlah');
-        $totalPengeluaranOperasional = BukuKas::where('tipe', 'pengeluaran')->where('deskripsi', 'not like', '%Honor%')->whereBetween('tanggal', [$startDate, $endDate])->sum('jumlah');
+        $totalInsentifWalasSudahDibayar = Insentif::where('jenis', 'wali-kelas')->where('status_pembayaran', 'sudah dibayar')->whereBetween('updated_at', [$startDate, $parsedEndDate])->sum('jumlah_insentif');
+        $totalHonorSekolah = BukuKas::where('tipe', 'pengeluaran')->where('deskripsi', 'like', '%Honor%')->whereBetween('tanggal', [$startDate, $parsedEndDate])->sum('jumlah');
+        $totalPengeluaranOperasional = BukuKas::where('tipe', 'pengeluaran')->where('deskripsi', 'not like', '%Honor%')->whereBetween('tanggal', [$startDate, $parsedEndDate])->sum('jumlah');
 
-        $totalPenjualan = Penjualan::whereBetween('tanggal_penjualan', [$startDate, $endDate])->sum('total_harga');
+        $totalPenjualan = Penjualan::whereBetween('tanggal_penjualan', [$startDate, $parsedEndDate])->sum('total_harga');
 
         // --- TAMBAHAN ---
         // Mengambil 5 data penarikan terakhir yang disetujui (tidak terikat filter tanggal)

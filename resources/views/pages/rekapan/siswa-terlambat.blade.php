@@ -12,7 +12,7 @@
 
                     <div class="mb-6 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                         <h3 class="font-semibold text-lg text-gray-800 dark:text-gray-200 mb-3">Filter Berdasarkan Tanggal</h3>
-                        <form action="{{ route('rekapan.siswa.terlambat') }}" method="GET">
+                        <form action="{{ route('rekapan.siswa-terlambat') }}" method="GET">
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                                 <div>
                                     <label for="start_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Tanggal Mulai</label>
@@ -26,7 +26,7 @@
                                     <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
                                         <i class="fas fa-filter mr-2"></i> Terapkan
                                     </button>
-                                    <a href="{{ route('rekapan.siswa.terlambat') }}" class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 dark:bg-gray-600 dark:text-gray-300 dark:hover:bg-gray-500">
+                                    <a href="{{ route('rekapan.siswa-terlambat') }}" class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 dark:bg-gray-600 dark:text-gray-300 dark:hover:bg-gray-500">
                                         Reset
                                     </a>
                                 </div>
@@ -35,7 +35,8 @@
                     </div>
 
                     <div class="mb-4 text-right">
-                        <a href="{{ route('rekapan.siswa.terlambat.exportPdf', ['start_date' => $startDate, 'end_date' => $endDate]) }}"
+                        {{-- PERBAIKAN FINAL: Menggunakan nama route yang benar dari file web.php --}}
+                        <a href="{{ route('rekapan.siswa-terlambat.exportPdf', ['start_date' => $startDate, 'end_date' => $endDate]) }}"
                            class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700">
                             <i class="fas fa-file-pdf mr-2"></i> Export ke PDF
                         </a>
