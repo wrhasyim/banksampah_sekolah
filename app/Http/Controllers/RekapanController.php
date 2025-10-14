@@ -217,20 +217,20 @@ class RekapanController extends Controller
      */
     public function rekapMenyeluruh(Request $request)
     {
-        // 1. Setoran Siswa (berdasarkan role 'siswa')
-        $setoranSiswa = Setoran::join('siswa', 'setoran.siswa_id', '=', 'siswa.id')
-            ->join('pengguna', 'siswa.id_pengguna', '=', 'pengguna.id')
-            ->join('jenis_sampah', 'setoran.jenis_sampah_id', '=', 'jenis_sampah.id')
-            ->where('pengguna.role', 'siswa')
+        // 1. Setoran Siswa (semua setoran yang BUKAN dari kelas 'guru')
+        $setoranSiswa = Setoran::join('jenis_sampah', 'setoran.jenis_sampah_id', '=', 'jenis_sampah.id')
+            ->whereHas('siswa.kelas', function ($query) {
+                $query->where('nama_kelas', 'not like', '%guru%');
+            })
             ->selectRaw('jenis_sampah.nama_sampah as jenis_sampah, SUM(setoran.jumlah) as total_jumlah, SUM(setoran.total_harga) as total_harga')
             ->groupBy('jenis_sampah.nama_sampah')
             ->get();
 
-        // 2. Setoran Guru (berdasarkan role 'guru' atau 'wali-kelas')
-        $setoranGuru = Setoran::join('siswa', 'setoran.siswa_id', '=', 'siswa.id')
-            ->join('pengguna', 'siswa.id_pengguna', '=', 'pengguna.id')
-            ->join('jenis_sampah', 'setoran.jenis_sampah_id', '=', 'jenis_sampah.id')
-            ->whereIn('pengguna.role', ['guru', 'wali-kelas'])
+        // 2. Setoran Guru (semua setoran yang HANYA dari kelas 'guru')
+        $setoranGuru = Setoran::join('jenis_sampah', 'setoran.jenis_sampah_id', '=', 'jenis_sampah.id')
+            ->whereHas('siswa.kelas', function ($query) {
+                $query->where('nama_kelas', 'like', '%guru%');
+            })
             ->selectRaw('jenis_sampah.nama_sampah as jenis_sampah, SUM(setoran.jumlah) as total_jumlah, SUM(setoran.total_harga) as total_harga')
             ->groupBy('jenis_sampah.nama_sampah')
             ->get();
@@ -246,7 +246,7 @@ class RekapanController extends Controller
             ->sum('jumlah_insentif');
 
         // 5. Pengeluaran (dari Buku Kas)
-        $totalPengeluaran = BukuKas::where('tipe', 'pengeluaran')->sum('jumlah'); // <-- PERBAIKAN
+        $totalPengeluaran = BukuKas::where('tipe', 'pengeluaran')->sum('jumlah');
 
         // 6. Hasil Penjualan
         $totalPenjualan = Penjualan::sum('total_harga');

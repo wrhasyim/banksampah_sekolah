@@ -39,7 +39,7 @@
                                         <thead class="bg-gray-100">
                                             <tr>
                                                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Jenis Sampah</th>
-                                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Jumlah (Kg)</th>
+                                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Jumlah (Pcs)</th>
                                                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Total Harga</th>
                                             </tr>
                                         </thead>
@@ -65,7 +65,7 @@
                                         <thead class="bg-gray-100">
                                             <tr>
                                                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Jenis Sampah</th>
-                                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Jumlah (Kg)</th>
+                                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Jumlah (Pcs)</th>
                                                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Total Harga</th>
                                             </tr>
                                         </thead>
