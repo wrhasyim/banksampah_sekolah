@@ -130,6 +130,9 @@ Route::get('/select/siswa', [SiswaController::class, 'selectSiswa'])->name('sele
     Route::get('/nota', [NotaController::class, 'index'])->name('nota.index');
     Route::post('/nota/cetak', [NotaController::class, 'cetak'])->name('nota.cetak');
 
+    // Route untuk Rekapitulasi Menyeluruh
+    Route::get('/rekapan/menyeluruh', [RekapanController::class, 'rekapMenyeluruh'])->name('rekapan.menyeluruh');
+    
     // Grup untuk Pengaturan, Backup, dan Restore
     Route::prefix('settings')->name('settings.')->group(function () {
         Route::get('/', [SettingController::class, 'index'])->name('index');
