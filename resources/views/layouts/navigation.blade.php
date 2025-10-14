@@ -6,7 +6,7 @@
                     <a href="{{ route('dashboard') }}">
                         {{-- --- PERUBAHAN: Ganti Logo Laravel ke Logo Sekolah --- --}}
                         {{-- Ganti /img/logo-sekolah.png dengan path logo Anda di folder /public --}}
-                        <img src="{{ asset('/img/logo-sekolah.png') }}" alt="Logo Sekolah" class="block h-9 w-auto">
+                        <img src="{{ asset('/img/logo-sekolah.png') }}" alt="Logo Sekolah" class="block h-12 w-auto">
                     </a>
                 </div>
 
