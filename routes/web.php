@@ -140,6 +140,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
 // =====================================================================
 Route::middleware(['auth', 'verified'])->group(function() {
     Route::get('buku-tabungan', [BukuTabunganController::class, 'index'])->name('buku-tabungan.index');
+     Route::get('buku-tabungan/{siswa}', [BukuTabunganController::class, 'show'])->name('buku-tabungan.show')->middleware('role:admin');
     Route::get('/leaderboard', [LeaderboardController::class, 'index'])->name('leaderboard.index');
 });
 

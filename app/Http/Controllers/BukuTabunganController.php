@@ -6,40 +6,89 @@ use Illuminate\Http\Request;
 use App\Models\Siswa;
 use App\Models\Setoran;
 use App\Models\Penarikan;
+use Illuminate\Support\Facades\Auth;
 
 class BukuTabunganController extends Controller
 {
     /**
-     * Menampilkan halaman utama buku tabungan dengan form pencarian.
+     * Menampilkan halaman buku tabungan berdasarkan role pengguna.
      */
-    public function index()
+    public function index(Request $request)
     {
-        // KIRIMKAN VARIABEL $results SEBAGAI ARRAY KOSONG
-        $results = []; 
-        return view('pages.buku-tabungan.index', compact('results'));
+        $user = Auth::user();
+
+        // --- PERBAIKAN: Mengganti hasRole() dengan pengecekan kolom 'role' ---
+        if ($user->role === 'admin') {
+            $query = $request->input('query');
+            $results = null;
+
+            if ($query) {
+                $results = Siswa::whereHas('pengguna', function($q) use ($query) {
+                    $q->where('nama_lengkap', 'like', "%$query%");
+                })->get();
+            }
+
+            return view('pages.buku-tabungan.index', compact('results', 'query'));
+        }
+
+        // Jika user adalah siswa
+        $siswa = Siswa::where('id_pengguna', $user->id)->firstOrFail();
+
+        $setorans = Setoran::where('siswa_id', $siswa->id)->get();
+        $penarikans = Penarikan::where('siswa_id', $siswa->id)->where('status', 'disetujui')->get();
+
+        $transaksi = $setorans->map(function ($setoran) {
+            return (object) [
+                'tanggal' => $setoran->created_at,
+                'deskripsi' => 'Setoran Sampah (' . ($setoran->jenisSampah->nama_sampah ?? 'N/A') . ')',
+                'kredit' => $setoran->total_harga,
+                'debit' => 0,
+            ];
+        })->concat($penarikans->map(function ($penarikan) {
+            return (object) [
+                'tanggal' => $penarikan->created_at,
+                'deskripsi' => 'Penarikan Saldo',
+                'kredit' => 0,
+                'debit' => $penarikan->jumlah_penarikan,
+            ];
+        }));
+
+        $transaksi = $transaksi->sortByDesc('tanggal');
+
+        return view('pages.buku-tabungan.index', compact('siswa', 'transaksi'));
     }
 
     /**
-     * Mencari siswa berdasarkan nama dan menampilkan hasilnya.
-     */
-    public function search(Request $request)
-    {
-        $request->validate(['query' => 'required|string|max:100']);
-        $query = $request->input('query');
-        $results = Siswa::where('nama_siswa', 'like', "%$query%")->get();
-
-        return view('pages.buku-tabungan.index', compact('results', 'query'));
-    }
-
-    /**
-     * Menampilkan detail tabungan seorang siswa.
+     * Menampilkan detail tabungan seorang siswa (untuk admin).
      */
     public function show(Siswa $siswa)
     {
-        $setorans = Setoran::where('siswa_id', $siswa->id)->latest('tanggal_setor')->paginate(10);
-        $penarikans = Penarikan::where('siswa_id', $siswa->id)->latest('tanggal_penarikan')->paginate(10);
-        $saldo = $siswa->saldo;
+        // --- PERBAIKAN: Mengganti hasRole() dengan pengecekan kolom 'role' ---
+        if (Auth::user()->role !== 'admin') {
+            abort(403, 'ANDA TIDAK MEMILIKI AKSES.');
+        }
 
-        return view('pages.buku-tabungan.show', compact('siswa', 'setorans', 'penarikans', 'saldo'));
+        $setorans = Setoran::where('siswa_id', $siswa->id)->get();
+        $penarikans = Penarikan::where('siswa_id', $siswa->id)->where('status', 'disetujui')->get();
+
+        $transaksi = $setorans->map(function ($setoran) {
+            return (object) [
+                'tanggal' => $setoran->created_at,
+                'deskripsi' => 'Setoran Sampah (' . ($setoran->jenisSampah->nama_sampah ?? 'N/A') . ')',
+                'kredit' => $setoran->total_harga,
+                'debit' => 0,
+            ];
+        })->concat($penarikans->map(function ($penarikan) {
+            return (object) [
+                'tanggal' => $penarikan->created_at,
+                'deskripsi' => 'Penarikan Saldo',
+                'kredit' => 0,
+                'debit' => $penarikan->jumlah_penarikan,
+            ];
+        }));
+        
+        $transaksi = $transaksi->sortByDesc('tanggal');
+        
+        return view('pages.buku-tabungan.index', compact('siswa', 'transaksi'));
     }
 }
