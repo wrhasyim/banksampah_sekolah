@@ -95,7 +95,8 @@ class ReportController extends Controller
     {
         $cacheKey = 'laporan_penjualan_data_' . $selectedMonth;
         return Cache::remember($cacheKey, now()->addMinutes(60), function () use ($selectedMonth) {
-            $penjualan = Penjualan::with('detailPenjualan.jenisSampah')
+            // ===== PERBAIKAN DI BARIS INI =====
+            $penjualan = Penjualan::with('detailPenjualans.jenisSampah')
                 ->whereYear('tanggal_penjualan', '=', Carbon::parse($selectedMonth)->year)
                 ->whereMonth('tanggal_penjualan', '=', Carbon::parse($selectedMonth)->month)
                 ->get();

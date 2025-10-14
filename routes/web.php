@@ -21,14 +21,19 @@ use App\Http\Controllers\ChartController;
 use App\Http\Controllers\NotaController;
 use App\Http\Controllers\PenggunaController;
 use App\Http\Controllers\RekapanController;
-use App\Http\Controllers\TutupBukuController; 
+use App\Http\Controllers\TutupBukuController;
 use App\Http\Controllers\StokMasukController;
-use App\Http\Controllers\RewardController; 
+use App\Http\Controllers\RewardController;
 
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+*/
 
 // Halaman utama, arahkan ke login atau dashboard
 Route::get('/', function () {
-    return auth()->check() ? redirect('/dashboard') : app(AuthenticatedSessionController::class)->create();
+    return auth()->check() ? redirect()->route('dashboard') : app(AuthenticatedSessionController::class)->create();
 })->name('home');
 
 // Dashboard utama
@@ -36,70 +41,65 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
-// Grup rute yang hanya bisa diakses oleh admin
+// =====================================================================
+// GRUP RUTE HANYA UNTUK ADMIN
+// =====================================================================
 Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
-    
-    // Master Data
+
+    // --- MASTER DATA ---
     Route::resource('kelas', KelasController::class);
     Route::resource('jenis-sampah', JenisSampahController::class);
     Route::resource('kategori-transaksi', KategoriTransaksiController::class);
     Route::resource('pengguna', PenggunaController::class)->except(['show']);
-
-Route::get('/api/bukukas-chart-data', [\App\Http\Controllers\BukuKasController::class, 'getChartData'])->name('bukukas.chart.data');
-
-// Rute BARU untuk Penyesuaian Stok
-    Route::get('/stok/create', [\App\Http\Controllers\StokMasukController::class, 'create'])->name('stok.create');
-    Route::post('/stok', [\App\Http\Controllers\StokMasukController::class, 'store'])->name('stok.store');
-
-    // Manajemen Siswa
+    Route::resource('rewards', RewardController::class);
+    Route::resource('siswa', SiswaController::class);
     Route::prefix('siswa')->name('siswa.')->group(function () {
         Route::get('/export', [SiswaController::class, 'export'])->name('export');
         Route::get('/sample-export', [SiswaController::class, 'sampleExport'])->name('sample.export');
         Route::get('/import', [SiswaController::class, 'showImportForm'])->name('import.form');
         Route::post('/import', [SiswaController::class, 'import'])->name('import');
-        Route::get('/search', [SiswaController::class, 'search'])->name('search'); // Tambahan untuk Select2
+        Route::get('/search', [SiswaController::class, 'search'])->name('search');
     });
-    Route::resource('siswa', SiswaController::class);
-// Rute baru untuk mengelola reward
-Route::resource('rewards', RewardController::class);
-    
-    // Transaksi Setoran
+
+    // --- TRANSAKSI ---
+    Route::resource('setoran', SetoranController::class);
     Route::prefix('setoran')->name('setoran.')->group(function () {
         Route::get('/export', [SetoranController::class, 'export'])->name('export');
-        Route::get('/sample-export', [SetoranController::class, 'sampleExport'])->name('sample.export');
         Route::get('/import', [SetoranController::class, 'showImportForm'])->name('import.form');
         Route::post('/import', [SetoranController::class, 'import'])->name('import');
         Route::get('/create-massal', [SetoranController::class, 'createMassal'])->name('create.massal');
         Route::post('/store-massal', [SetoranController::class, 'storeMassal'])->name('store.massal');
-        
-        // --- RUTE EDIT MASSAL DIPERBAIKI ---
-        // Rute untuk menampilkan halaman edit (menggunakan POST agar bisa membawa banyak ID)
         Route::post('/edit-massal', [SetoranController::class, 'editMassal'])->name('edit.massal');
-        // Rute untuk memproses update (menggunakan POST)
         Route::post('/update-massal', [SetoranController::class, 'updateMassal'])->name('update.massal');
     });
-    Route::resource('setoran', SetoranController::class);
 
-    // Transaksi Penarikan
+    Route::resource('penarikan', PenarikanController::class);
     Route::prefix('penarikan')->name('penarikan.')->group(function () {
         Route::get('/create/kelas', [PenarikanController::class, 'createKelas'])->name('create.kelas');
         Route::post('/store/kelas', [PenarikanController::class, 'storeKelas'])->name('store.kelas');
     });
-    Route::resource('penarikan', PenarikanController::class);
-Route::get('/select/siswa', [SiswaController::class, 'selectSiswa'])->name('select.siswa');
-    // Transaksi Penjualan
+    
     Route::resource('penjualan', PenjualanController::class);
     
-    // Keuangan
     Route::resource('buku-kas', BukuKasController::class)->except(['create', 'show']);
     Route::get('buku-kas/export/excel', [BukuKasController::class, 'exportExcel'])->name('buku-kas.export.excel');
     Route::get('buku-kas/export/pdf', [BukuKasController::class, 'exportPdf'])->name('buku-kas.export.pdf');
-    
-// Rute untuk Fitur Tutup Buku
-    Route::get('/tutup-buku', [TutupBukuController::class, 'index'])->name('tutup-buku.index');
-    Route::post('/tutup-buku', [TutupBukuController::class, 'store'])->name('tutup-buku.store');
 
-    // Laporan Umum
+    Route::get('/stok/create', [StokMasukController::class, 'create'])->name('stok.create');
+    Route::post('/stok', [StokMasukController::class, 'store'])->name('stok.store');
+    
+    // --- INSENTIF ---
+    Route::prefix('insentif')->name('insentif.')->group(function () {
+        Route::get('/', [InsentifController::class, 'index'])->name('index');
+        Route::get('/rekap', [InsentifController::class, 'rekap'])->name('rekap');
+        Route::get('/pembayaran', [PembayaranInsentifController::class, 'index'])->name('pembayaran');
+        Route::post('/bayar', [PembayaranInsentifController::class, 'store'])->name('bayar');
+        Route::get('/rekap/export-pdf', [InsentifController::class, 'exportPdf'])->name('exportPdf');
+        Route::delete('/void-per-kelas', [InsentifController::class, 'voidPerKelas'])->name('voidPerKelas');
+        Route::delete('/{insentif}', [InsentifController::class, 'destroy'])->name('destroy');
+    });
+
+    // --- LAPORAN & REKAPAN ---
     Route::prefix('laporan')->name('laporan.')->group(function () {
         Route::get('/', [ReportController::class, 'index'])->name('index');
         Route::get('/penjualan/export/excel', [ReportController::class, 'exportPenjualanExcel'])->name('penjualan.export.excel');
@@ -109,32 +109,22 @@ Route::get('/select/siswa', [SiswaController::class, 'selectSiswa'])->name('sele
         Route::get('/laba-rugi/export/pdf', [ReportController::class, 'exportLabaRugiPdf'])->name('laba-rugi.export.pdf');
     });
 
-    // --- BLOK REKAPAN KHUSUS ---
-    Route::get('/rekapan-siswa/terlambat', [RekapanController::class, 'indexSiswaTerlambat'])->name('rekapan.siswa.terlambat');
-    Route::get('/rekapan-siswa/terlambat/export-pdf', [RekapanController::class, 'exportSiswaTerlambatPdf'])->name('rekapan.siswa.terlambat.exportPdf');
-    Route::get('/rekapan-siswa/tanpa-wali-kelas', [RekapanController::class, 'indexSiswaTanpaWaliKelas'])->name('rekapan.siswa.tanpaWaliKelas');
-    Route::get('/rekapan-siswa/tanpa-wali-kelas/export-pdf', [RekapanController::class, 'exportSiswaTanpaWaliKelasPdf'])->name('rekapan.siswa.tanpaWaliKelas.exportPdf');
-    Route::get('/rekapan-guru', [RekapanController::class, 'indexGuru'])->name('rekapan.indexGuru');
-    Route::get('/rekapan-guru/export-pdf', [RekapanController::class, 'exportGuruPdf'])->name('rekapan.exportGuruPdf');
+    Route::prefix('rekapan')->name('rekapan.')->group(function () {
+        Route::get('/menyeluruh', [RekapanController::class, 'rekapMenyeluruh'])->name('menyeluruh');
+        Route::get('/menyeluruh/pdf', [RekapanController::class, 'exportRekapMenyeluruhPdf'])->name('menyeluruh.pdf');
+        Route::get('/siswa-terlambat', [RekapanController::class, 'indexSiswaTerlambat'])->name('siswa-terlambat');
+        Route::get('/siswa-terlambat/export-pdf', [RekapanController::class, 'exportSiswaTerlambatPdf'])->name('siswa-terlambat.exportPdf');
+        Route::get('/guru', [RekapanController::class, 'indexGuru'])->name('guru');
+        Route::get('/guru/export-pdf', [RekapanController::class, 'exportGuruPdf'])->name('guru.exportPdf');
+        Route::get('/siswa-tanpa-wali-kelas', [RekapanController::class, 'indexSiswaTanpaWaliKelas'])->name('siswa-tanpa-wali-kelas');
+        Route::get('/siswa-tanpa-wali-kelas/export-pdf', [RekapanController::class, 'exportSiswaTanpaWaliKelasPdf'])->name('siswa-tanpa-wali-kelas.exportPdf');
+    });
 
-    // Insentif
-    Route::get('/insentif', [InsentifController::class, 'index'])->name('insentif.index');
-    Route::get('/insentif/rekap', [InsentifController::class, 'rekap'])->name('insentif.rekap');
-    Route::get('/insentif/pembayaran', [PembayaranInsentifController::class, 'index'])->name('insentif.pembayaran');
-    Route::post('/insentif/bayar', [PembayaranInsentifController::class, 'store'])->name('insentif.bayar');
-    Route::get('/insentif/rekap/export-pdf', [InsentifController::class, 'exportPdf'])->name('insentif.exportPdf');
- Route::delete('/insentif/void-per-kelas', [InsentifController::class, 'voidPerKelas'])->name('insentif.voidPerKelas');
-    Route::delete('/insentif/{insentif}', [InsentifController::class, 'destroy'])->name('insentif.destroy');
-
-    // Fitur Lainnya
+    // --- FITUR LAINNYA ---
     Route::get('/nota', [NotaController::class, 'index'])->name('nota.index');
     Route::post('/nota/cetak', [NotaController::class, 'cetak'])->name('nota.cetak');
-
-
-    // Route untuk Rekapitulasi Menyeluruh
-    Route::get('/rekapan/menyeluruh', [RekapanController::class, 'rekapMenyeluruh'])->name('rekapan.menyeluruh');
-    Route::get('/rekapan/menyeluruh/pdf', [RekapanController::class, 'exportRekapMenyeluruhPdf'])->name('rekapan.menyeluruh.pdf');
-    // Grup untuk Pengaturan, Backup, dan Restore
+    Route::get('/tutup-buku', [TutupBukuController::class, 'index'])->name('tutup-buku.index');
+    Route::post('/tutup-buku', [TutupBukuController::class, 'store'])->name('tutup-buku.store');
     Route::prefix('settings')->name('settings.')->group(function () {
         Route::get('/', [SettingController::class, 'index'])->name('index');
         Route::post('/update', [SettingController::class, 'update'])->name('update');
@@ -143,25 +133,25 @@ Route::get('/select/siswa', [SiswaController::class, 'selectSiswa'])->name('sele
         Route::get('/backup/download/{filename}', [SettingController::class, 'downloadBackup'])->name('backup.download');
         Route::delete('/backup/delete/{filename}', [SettingController::class, 'deleteBackup'])->name('backup.delete');
     });
-
-    // Data untuk Chart (API-like)
-    Route::get('/dashboard/chart-data', [DashboardController::class, 'getChartData'])->name('dashboard.chart.data');
-    Route::get('/dashboard/chart/transaksi', [ChartController::class, 'getTransaksiData'])->name('dashboard.chart.transaksi');
-    Route::get('/dashboard/chart/sampah', [ChartController::class, 'getSampahData'])->name('dashboard.chart.sampah');
-    Route::get('/dashboard/chart/bubble', [DashboardController::class, 'getBubbleChartData'])->name('dashboard.chart.bubble');
 });
 
-// Rute yang bisa diakses semua user yang sudah login
+// =====================================================================
+// RUTE UNTUK SEMUA USER (TERMASUK SISWA)
+// =====================================================================
 Route::middleware(['auth', 'verified'])->group(function() {
     Route::get('buku-tabungan', [BukuTabunganController::class, 'index'])->name('buku-tabungan.index');
     Route::get('/leaderboard', [LeaderboardController::class, 'index'])->name('leaderboard.index');
 });
 
+// =====================================================================
+// RUTE API & AUTHENTIKASI
+// =====================================================================
+Route::get('/api/siswa-by-kelas/{kelasId}', [SiswaController::class, 'getSiswaByKelas'])->middleware('auth')->name('api.siswa.by.kelas');
+Route::get('/select/siswa', [SiswaController::class, 'selectSiswa'])->name('select.siswa');
+Route::get('/api/bukukas-chart-data', [BukuKasController::class, 'getChartData'])->name('bukukas.chart.data');
+Route::get('/dashboard/chart-data', [DashboardController::class, 'getChartData'])->name('dashboard.chart.data');
+Route::get('/dashboard/chart/transaksi', [ChartController::class, 'getTransaksiData'])->name('dashboard.chart.transaksi');
+Route::get('/dashboard/chart/sampah', [ChartController::class, 'getSampahData'])->name('dashboard.chart.sampah');
+Route::get('/dashboard/chart/bubble', [DashboardController::class, 'getBubbleChartData'])->name('dashboard.chart.bubble');
 
-// API untuk frontend (misal: Ambil siswa berdasarkan kelas)
-Route::get('/api/siswa-by-kelas/{kelasId}', [SiswaController::class, 'getSiswaByKelas'])
-    ->middleware('auth')
-    ->name('api.siswa.by.kelas');
-
-// Rute untuk otentikasi (login, register, dll.)
 require __DIR__.'/auth.php';
