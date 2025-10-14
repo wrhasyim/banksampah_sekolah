@@ -205,7 +205,7 @@ class RekapanController extends Controller
         $pdf = Pdf::loadView('pages.rekapan.pdf.rekapan-guru-summary-pdf', $pdfData);
         return $pdf->download('rekapitulasi-setoran-guru-'.date('Y-m-d').'.pdf');
     }
-    
+
     /**
      * ===================================================================
      * FITUR BARU: REKAPAN MENYELURUH
@@ -213,55 +213,102 @@ class RekapanController extends Controller
      */
 
     /**
-     * Menampilkan halaman rekapitulasi menyeluruh.
+     * Menampilkan halaman rekapitulasi menyeluruh dengan filter tanggal.
      */
     public function rekapMenyeluruh(Request $request)
     {
-        // 1. Setoran Siswa (semua setoran yang BUKAN dari kelas 'guru')
+        $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->toDateString());
+        $endDate = $request->input('end_date', Carbon::now()->endOfMonth()->toDateString());
+
+        $data = $this->getRekapMenyeluruhData($startDate, $endDate);
+
+        return view('pages.rekapan.menyeluruh', array_merge($data, [
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+        ]));
+    }
+
+    /**
+     * Mengekspor rekapitulasi menyeluruh ke PDF.
+     */
+    public function exportRekapMenyeluruhPdf(Request $request)
+    {
+        $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->toDateString());
+        $endDate = $request->input('end_date', Carbon::now()->endOfMonth()->toDateString());
+
+        $data = $this->getRekapMenyeluruhData($startDate, $endDate);
+        
+        $pdfData = array_merge($data, [
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+        ]);
+
+        $pdf = Pdf::loadView('pages.rekapan.pdf.rekap-menyeluruh-pdf', $pdfData);
+        return $pdf->download("rekap-menyeluruh-{$startDate}-sd-{$endDate}.pdf");
+    }
+
+    /**
+     * Method private untuk mengambil data rekapitulasi.
+     */
+    private function getRekapMenyeluruhData($startDate, $endDate)
+    {
         $setoranSiswa = Setoran::join('jenis_sampah', 'setoran.jenis_sampah_id', '=', 'jenis_sampah.id')
-            ->whereHas('siswa.kelas', function ($query) {
-                $query->where('nama_kelas', 'not like', '%guru%');
-            })
+            ->whereHas('siswa.kelas', fn($q) => $q->where('nama_kelas', 'not like', '%guru%'))
+            ->whereBetween('setoran.created_at', [$startDate, $endDate])
             ->selectRaw('jenis_sampah.nama_sampah as jenis_sampah, SUM(setoran.jumlah) as total_jumlah, SUM(setoran.total_harga) as total_harga')
             ->groupBy('jenis_sampah.nama_sampah')
             ->get();
+        $totalSetoranSiswa = $setoranSiswa->sum('total_harga');
 
-        // 2. Setoran Guru (semua setoran yang HANYA dari kelas 'guru')
         $setoranGuru = Setoran::join('jenis_sampah', 'setoran.jenis_sampah_id', '=', 'jenis_sampah.id')
-            ->whereHas('siswa.kelas', function ($query) {
-                $query->where('nama_kelas', 'like', '%guru%');
-            })
+            ->whereHas('siswa.kelas', fn($q) => $q->where('nama_kelas', 'like', '%guru%'))
+            ->whereBetween('setoran.created_at', [$startDate, $endDate])
             ->selectRaw('jenis_sampah.nama_sampah as jenis_sampah, SUM(setoran.jumlah) as total_jumlah, SUM(setoran.total_harga) as total_harga')
             ->groupBy('jenis_sampah.nama_sampah')
             ->get();
+        $totalSetoranGuru = $setoranGuru->sum('total_harga');
 
-        // 3. Insentif Walas (hanya yang sudah dibayarkan)
-        $totalInsentifWalas = Insentif::where('jenis', 'wali-kelas')
-            ->where('status_pembayaran', 'sudah dibayar')
-            ->sum('jumlah_insentif');
+        $insentifWalasBelumDibayar = Insentif::with('kelas')
+            ->where('jenis', 'wali-kelas')
+            ->where('status_pembayaran', 'belum dibayar')
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->select('kelas_id', DB::raw('SUM(jumlah_insentif) as total_tunggakan'))
+            ->groupBy('kelas_id')
+            ->get();
+        $totalTunggakanWalas = $insentifWalasBelumDibayar->sum('total_tunggakan');
 
-        // 4. Insentif Sekolah (hanya yang sudah didapat/dibayarkan)
-        $totalInsentifSekolah = Insentif::where('jenis', 'sekolah')
-            ->where('status_pembayaran', 'sudah dibayar')
-            ->sum('jumlah_insentif');
+        $totalInsentifWalasSudahDibayar = Insentif::where('jenis', 'wali-kelas')->where('status_pembayaran', 'sudah dibayar')->whereBetween('updated_at', [$startDate, $endDate])->sum('jumlah_insentif');
+        $totalHonorSekolah = BukuKas::where('tipe', 'pengeluaran')->where('deskripsi', 'like', '%Honor%')->whereBetween('tanggal', [$startDate, $endDate])->sum('jumlah');
+        $totalPengeluaranOperasional = BukuKas::where('tipe', 'pengeluaran')->where('deskripsi', 'not like', '%Honor%')->whereBetween('tanggal', [$startDate, $endDate])->sum('jumlah');
 
-        // 5. Pengeluaran (dari Buku Kas)
-        $totalPengeluaran = BukuKas::where('tipe', 'pengeluaran')->sum('jumlah');
+        $totalPenjualan = Penjualan::whereBetween('tanggal_penjualan', [$startDate, $endDate])->sum('total_harga');
 
-        // 6. Hasil Penjualan
-        $totalPenjualan = Penjualan::sum('total_harga');
+        // --- TAMBAHAN ---
+        // Mengambil 5 data penarikan terakhir yang disetujui (tidak terikat filter tanggal)
+        $penarikanTerakhir = Penarikan::with('siswa.pengguna')
+            ->where('status', 'disetujui')
+            ->latest()
+            ->take(5)
+            ->get();
+        // --- AKHIR TAMBAHAN ---
 
-        // 7. Hitung Kas
-        $kas = $totalPenjualan - ($totalPengeluaran + $totalInsentifWalas + $totalInsentifSekolah);
+        $totalPengeluaranRiil = $totalPengeluaranOperasional + $totalHonorSekolah + $totalInsentifWalasSudahDibayar;
+        $kas = $totalPenjualan - $totalPengeluaranRiil;
 
-        return view('pages.rekapan.menyeluruh', compact(
-            'setoranSiswa',
-            'setoranGuru',
-            'totalInsentifWalas',
-            'totalInsentifSekolah',
-            'totalPengeluaran',
-            'totalPenjualan',
-            'kas'
-        ));
+        return [
+            'setoranSiswa' => $setoranSiswa,
+            'totalSetoranSiswa' => $totalSetoranSiswa,
+            'setoranGuru' => $setoranGuru,
+            'totalSetoranGuru' => $totalSetoranGuru,
+            'insentifWalasBelumDibayar' => $insentifWalasBelumDibayar,
+            'totalTunggakanWalas' => $totalTunggakanWalas,
+            'totalHonorSekolah' => $totalHonorSekolah,
+            'totalPengeluaranOperasional' => $totalPengeluaranOperasional,
+            'totalPenjualan' => $totalPenjualan,
+            'kas' => $kas,
+            'totalInsentifWalasSudahDibayar' => $totalInsentifWalasSudahDibayar,
+            'totalPengeluaranRiil' => $totalPengeluaranRiil,
+            'penarikanTerakhir' => $penarikanTerakhir, // Kirim data ke view
+        ];
     }
 }
