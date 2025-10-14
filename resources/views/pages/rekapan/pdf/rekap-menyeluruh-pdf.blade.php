@@ -4,23 +4,20 @@
     <meta charset="UTF-8">
     <title>Rekapitulasi Menyeluruh</title>
     <style>
-        body { font-family: 'Helvetica', 'Arial', sans-serif; font-size: 10px; color: #333; }
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            font-size: 12px; /* Ukuran font dasar diperbesar */
+            color: #333;
+        }
         @page { margin: 40px 25px; }
         .header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #333; padding-bottom: 15px; }
-        .header h1 { margin: 0; font-size: 22px; color: #222; }
-        .header p { margin: 2px 0; font-size: 12px; }
-        .section-title { font-size: 16px; font-weight: bold; color: #333; margin-top: 25px; margin-bottom: 10px; border-bottom: 1px solid #ccc; padding-bottom: 5px; }
+        .header h1 { margin: 0; font-size: 24px; color: #222; }
+        .header p { margin: 2px 0; font-size: 14px; }
+        .section-title { font-size: 18px; font-weight: bold; color: #333; margin-top: 25px; margin-bottom: 10px; border-bottom: 1px solid #ccc; padding-bottom: 5px; }
         
-        /* CSS untuk layout tabel ringkasan */
         .summary-table { width: 100%; border-spacing: 10px; margin-bottom: 25px; }
-        .summary-card {
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            text-align: center;
-            padding: 15px 10px;
-            vertical-align: top;
-        }
-        .summary-card h3 { margin: 0 0 5px 0; font-size: 12px; font-weight: normal; color: #555; }
+        .summary-card { border: 1px solid #e2e8f0; border-radius: 8px; text-align: center; padding: 15px 10px; vertical-align: top; }
+        .summary-card h3 { margin: 0 0 5px 0; font-size: 14px; font-weight: normal; color: #555; }
         .summary-card p { margin: 0; font-size: 20px; font-weight: bold; }
         
         .green { color: #2f855a; }
@@ -40,7 +37,7 @@
         ul li span { display: block; }
         ul li span:last-child { font-weight: bold; }
         
-        .footer { position: fixed; bottom: -20px; left: 0; right: 0; text-align: center; font-size: 9px; color: #777; }
+        .footer { position: fixed; bottom: -20px; left: 0; right: 0; text-align: center; font-size: 10px; color: #777; }
         .page-number:before { content: "Halaman " counter(page); }
     </style>
 </head>
