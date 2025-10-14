@@ -62,7 +62,8 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     });
 
     // --- TRANSAKSI ---
-    Route::resource('setoran', SetoranController::class);
+
+    // --- PERBAIKAN: Pindahkan route spesifik SEBELUM resource controller ---
     Route::prefix('setoran')->name('setoran.')->group(function () {
         Route::get('/export', [SetoranController::class, 'export'])->name('export');
         Route::get('/import', [SetoranController::class, 'showImportForm'])->name('import.form');
@@ -72,6 +73,8 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
         Route::post('/edit-massal', [SetoranController::class, 'editMassal'])->name('edit.massal');
         Route::post('/update-massal', [SetoranController::class, 'updateMassal'])->name('update.massal');
     });
+    // --- PERBAIKAN: Daftarkan resource setelahnya dan kecualikan method 'show' ---
+    Route::resource('setoran', SetoranController::class)->except(['show']);
 
     Route::resource('penarikan', PenarikanController::class);
     Route::prefix('penarikan')->name('penarikan.')->group(function () {
@@ -140,7 +143,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
 // =====================================================================
 Route::middleware(['auth', 'verified'])->group(function() {
     Route::get('buku-tabungan', [BukuTabunganController::class, 'index'])->name('buku-tabungan.index');
-     Route::get('buku-tabungan/{siswa}', [BukuTabunganController::class, 'show'])->name('buku-tabungan.show')->middleware('role:admin');
+    Route::get('buku-tabungan/{siswa}', [BukuTabunganController::class, 'show'])->name('buku-tabungan.show')->middleware('role:admin');
     Route::get('/leaderboard', [LeaderboardController::class, 'index'])->name('leaderboard.index');
 });
 
