@@ -52,14 +52,29 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::resource('kategori-transaksi', KategoriTransaksiController::class);
     Route::resource('pengguna', PenggunaController::class)->except(['show']);
     Route::resource('rewards', RewardController::class);
+
+    // =================================================================
+    // --- BLOK SISWA (URUTAN DIPERBAIKI) ---
+    // =================================================================
+    // 1. SEMUA ROUTE KUSTOM HARUS DIDEFINISIKAN SEBELUM RESOURCE
+    
+    // Fitur Baru: Filter Export
+    Route::get('siswa/export/xlsx', [SiswaController::class, 'exportXlsx'])->name('siswa.exportXlsx');
+    Route::get('siswa/export/pdf', [SiswaController::class, 'exportPdf'])->name('siswa.exportPdf');
+
+    // Fitur Lama: Import/Export (dari prefix group)
+    Route::get('siswa/export', [SiswaController::class, 'export'])->name('siswa.export');
+    Route::get('siswa/sample-export', [SiswaController::class, 'sampleExport'])->name('siswa.sample.export');
+    Route::get('siswa/import', [SiswaController::class, 'showImportForm'])->name('siswa.import.form');
+    Route::post('siswa/import', [SiswaController::class, 'import'])->name('siswa.import');
+    Route::get('siswa/search', [SiswaController::class, 'search'])->name('siswa.search');
+
+    // 2. ROUTE RESOURCE HARUS DITEMPATKAN PALING AKHIR
     Route::resource('siswa', SiswaController::class);
-    Route::prefix('siswa')->name('siswa.')->group(function () {
-        Route::get('/export', [SiswaController::class, 'export'])->name('export');
-        Route::get('/sample-export', [SiswaController::class, 'sampleExport'])->name('sample.export');
-        Route::get('/import', [SiswaController::class, 'showImportForm'])->name('import.form');
-        Route::post('/import', [SiswaController::class, 'import'])->name('import');
-        Route::get('/search', [SiswaController::class, 'search'])->name('search');
-    });
+    // =================================================================
+    // --- AKHIR BLOK SISWA ---
+    // =================================================================
+
 
     // --- TRANSAKSI ---
 

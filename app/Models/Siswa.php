@@ -46,6 +46,30 @@ class Siswa extends Model
     }
 
     /**
+     * ========================================================================
+     * FUNGSI RELASI BARU DITAMBAHKAN DI SINI
+     * ========================================================================
+     */
+
+    /**
+     * Mendapatkan SATU setoran terakhir untuk siswa ini.
+     * Penting untuk fitur "Laporan Siswa Tidak Aktif".
+     */
+    public function setoranTerakhir()
+    {
+        // Relasi ini mengambil SATU record setoran terbaru.
+        // Kita gunakan 'siswa_id' agar konsisten dengan relasi 'setoran' di atas.
+        return $this->hasOne(Setoran::class, 'siswa_id')->latestOfMany('created_at');
+    }
+    
+    /**
+     * ========================================================================
+     * AKHIR FUNGSI BARU
+     * ========================================================================
+     */
+
+
+    /**
      * Get the penarikan for the siswa.
      */
     public function penarikan()
