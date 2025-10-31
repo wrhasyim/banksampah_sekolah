@@ -25,7 +25,6 @@ class SiswaController extends Controller
     /**
      * ========================================================================
      * FUNGSI INDEX (DIMODIFIKASI)
-     * Menggunakan helper buildSiswaQuery() baru
      * ========================================================================
      */
     public function index(Request $request)
@@ -41,9 +40,6 @@ class SiswaController extends Controller
             $query->latest('created_at');
         }]);
 
-        // === PERBAIKAN ERROR DI SINI ===
-        // Ganti 'nama' menjadi 'pengguna.nama_lengkap'
-        // Ini adalah baris ke-45 yang menyebabkan error di stack trace Anda
         $siswas = $query->orderBy('pengguna.nama_lengkap', 'asc')->paginate(10)->withQueryString();
 
         return view('pages.siswa.index', compact('siswas', 'kelas'));
@@ -52,18 +48,15 @@ class SiswaController extends Controller
     /**
      * ========================================================================
      * FUNGSI HELPER BARU UNTUK MEMBANGUN QUERY SISWA
-     * Dipakai oleh index(), exportXlsx(), dan exportPdf()
      * ========================================================================
      */
     private function buildSiswaQuery(Request $request)
     {
-        // === PERBAIKAN ERROR DI SINI ===
-        // Kita harus JOIN tabel 'pengguna' agar bisa 'orderBy'
-        // Kita juga 'select('siswa.*')' untuk menghindari konflik kolom 'id'
+        // === PERBAIKAN BUG EXPORT: ->with('pengguna') DIHAPUS DARI SINI ===
+        // Panggilan 'with()' akan dilakukan di 'index' dan 'export'
         $query = Siswa::query()
                     ->join('pengguna', 'siswa.id_pengguna', '=', 'pengguna.id')
-                    ->select('siswa.*')
-                    ->with('pengguna'); // with('pengguna') tetap dipakai untuk eager load data
+                    ->select('siswa.*');
         
         // --- Menggabungkan filter 'id_kelas' yang sudah ada ---
         if ($request->filled('id_kelas')) {
@@ -74,19 +67,21 @@ class SiswaController extends Controller
         $filterTidakAktif = $request->input('filter_tidak_aktif');
         if ($filterTidakAktif) {
             $cutoffDate = null;
+
+            // Logika "Lebih dari" (> 1 Minggu), kita gunakan startOfDay() untuk konsistensi
             if ($filterTidakAktif == '1w') {
-                $cutoffDate = Carbon::now()->subWeek();
+                // "Tidak setor > 1 minggu" = setoran terakhir < 7 hari yang lalu
+                $cutoffDate = Carbon::now()->subWeek()->startOfDay();
             } elseif ($filterTidakAktif == '1m') {
-                $cutoffDate = Carbon::now()->subMonth();
+                $cutoffDate = Carbon::now()->subMonth()->startOfDay();
             } elseif ($filterTidakAktif == '2m') {
-                $cutoffDate = Carbon::now()->subMonths(2);
+                $cutoffDate = Carbon::now()->subMonths(2)->startOfDay();
             }
 
             if ($cutoffDate) {
                 // Logika utama:
                 // Cari siswa yang TIDAK PUNYA (whereDoesntHave) setoran
                 // yang tanggal dibuatnya LEBIH BARU (>=) dari tanggal cutoff.
-                // Ini akan otomatis mencakup siswa yang belum pernah setor sama sekali.
                 $query->whereDoesntHave('setoran', function ($subQuery) use ($cutoffDate) {
                     $subQuery->where('created_at', '>=', $cutoffDate);
                 });
@@ -269,16 +264,20 @@ class SiswaController extends Controller
         // Panggil query builder yang sama
         $query = $this->buildSiswaQuery($request);
         
-        // Kita butuh data relasi untuk export
-        $siswa = $query->with(['kelas', 'setoranTerakhir' => function ($query) {
+        // Panggil 'with()' di sini. Ini akan memuat SEMUA relasi yang dibutuhkan.
+        $siswa = $query->with(['pengguna', 'kelas', 'setoranTerakhir' => function ($query) {
             $query->latest('created_at');
         }])
-        // === PERBAIKAN ERROR DI SINI ===
         ->orderBy('pengguna.nama_lengkap', 'asc')->get();
 
         // Ganti nama 'nama_lengkap' di relasi pengguna menjadi 'nama'
         $siswa->each(function($item) {
-            $item->nama = $item->pengguna->nama_lengkap;
+            // Cek null safety jika pengguna terhapus
+            if ($item->pengguna) {
+                $item->nama = $item->pengguna->nama_lengkap;
+            } else {
+                $item->nama = '[Pengguna Hilang]';
+            }
         });
 
         return Excel::download(new SiswaTidakAktifExport($siswa), 'laporan_siswa_tidak_aktif.xlsx');
@@ -291,16 +290,20 @@ class SiswaController extends Controller
         // Panggil query builder yang sama
         $query = $this->buildSiswaQuery($request);
         
-        // Kita butuh data relasi untuk export
-        $siswa = $query->with(['kelas', 'setoranTerakhir' => function ($query) {
+        // Panggil 'with()' di sini. Ini akan memuat SEMUA relasi yang dibutuhkan.
+        $siswa = $query->with(['pengguna', 'kelas', 'setoranTerakhir' => function ($query) {
             $query->latest('created_at');
         }])
-        // === PERBAIKAN ERROR DI SINI ===
         ->orderBy('pengguna.nama_lengkap', 'asc')->get();
 
         // Ganti nama 'nama_lengkap' di relasi pengguna menjadi 'nama'
         $siswa->each(function($item) {
-            $item->nama = $item->pengguna->nama_lengkap;
+            // Cek null safety jika pengguna terhapus
+            if ($item->pengguna) {
+                $item->nama = $item->pengguna->nama_lengkap;
+            } else {
+                $item->nama = '[Pengguna Hilang]';
+            }
         });
 
         $filterText = $this->getFilterText($filterTidakAktif);

@@ -19,9 +19,12 @@
                 <td>{{ $item->kelas->nama_kelas ?? 'N/A' }}</td>
                 <td>{{ $item->saldo }}</td>
                 <td>
-                    {{-- Asumsi Anda punya relasi 'setoranTerakhir'
-                         Jika tidak, kita akan tambahkan di Controller --}}
-                    {{ $item->setoran_terakhir ? $item->setoran_terakhir->created_at->format('d/m/Y') : 'Belum Pernah' }}
+                    {{-- 
+                      PERBAIKAN DI SINI:
+                      Mengubah 'setoran_terakhir' menjadi 'setoranTerakhir' (camelCase)
+                      agar sesuai dengan nama relasi di Model.
+                    --}}
+                    **{{ $item->setoranTerakhir ? $item->setoranTerakhir->created_at->format('d/m/Y') : 'Belum Pernah' }}**
                 </td>
             </tr>
         @endforeach
