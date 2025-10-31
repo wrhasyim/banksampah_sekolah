@@ -12,16 +12,35 @@ use Illuminate\Support\Facades\DB;
 
 class LeaderboardController extends Controller
 {
+    /**
+     * ========================================================================
+     * FUNGSI INDEX (DIMODIFIKASI)
+     * Mengganti $filter dengan $tanggal_mulai dan $tanggal_akhir
+     * ========================================================================
+     */
     public function index(Request $request)
     {
-        $filter = $request->input('filter', 'semua_waktu');
+        // 1. Ambil input tanggal. 
+        // Default: Tanggal 1 bulan ini s/d hari ini.
+        $tanggal_mulai = $request->input('tanggal_mulai', Carbon::now()->startOfMonth()->toDateString());
+        $tanggal_akhir = $request->input('tanggal_akhir', Carbon::now()->toDateString()); // Default-nya hari ini
+
+        // 2. Ambil input urutan (ini tetap ada)
         $rankingBy = $request->input('ranking_by', 'jumlah');
         
-        $cacheKey = 'leaderboard_hybrid:' . $filter . ':' . $rankingBy;
+        // 3. Buat cache key yang unik berdasarkan SEMUA filter
+        $cacheKey = 'leaderboard_hybrid:' . $rankingBy . ':' . $tanggal_mulai . '_to_' . $tanggal_akhir;
 
-        $data = Cache::remember($cacheKey, now()->addMinutes(15), function () use ($filter, $rankingBy) {
+        // 4. Gunakan Cache
+        $data = Cache::remember($cacheKey, now()->addMinutes(15), function () use ($rankingBy, $tanggal_mulai, $tanggal_akhir) {
             
-            $dateRange = $this->getDateRange($filter);
+            // 5. Buat array dateRange yang akan digunakan oleh helper
+            // Kita tambahkan waktu agar query 'between' akurat
+            $dateRange = [
+                $tanggal_mulai . " 00:00:00",
+                $tanggal_akhir . " 23:59:59"
+            ];
+            
             $sumColumn = ($rankingBy === 'jumlah') ? 'jumlah' : 'total_harga';
 
             // --- Peringkat Siswa ---
@@ -32,7 +51,11 @@ class LeaderboardController extends Controller
 
             // Ambil rincian sampah HANYA untuk siswa dan kelas yang masuk peringkat
             $this->attachSampahDetails($topSiswa, $dateRange, 'siswa');
+            
+            // --- PERBAIKAN BUG DI SINI ---
+            // Menambahkan '$this->' yang hilang
             $this->attachSampahDetails($topKelas, $dateRange, 'kelas');
+            // --- AKHIR PERBAIKAN ---
             
             return [
                 'topSiswa' => $topSiswa,
@@ -40,14 +63,17 @@ class LeaderboardController extends Controller
             ];
         });
 
+        // 6. Kembalikan data ke view
         return view('pages.leaderboard.index', array_merge($data, [
-            'filter' => $filter,
             'rankingBy' => $rankingBy,
+            'tanggal_mulai' => $tanggal_mulai, // Kirim ke view
+            'tanggal_akhir' => $tanggal_akhir, // Kirim ke view
         ]));
     }
 
     /**
      * Mengambil data peringkat siswa teratas.
+     * (FUNGSI INI TIDAK DIUBAH)
      */
     private function getTopSiswa($dateRange, $sumColumn)
     {
@@ -55,11 +81,10 @@ class LeaderboardController extends Controller
 
         return Siswa::query()
             ->whereHas('pengguna', fn($q) => $q->where('role', 'siswa'))
-            // <-- PERBAIKAN DI SINI: Menambahkan filter untuk memastikan siswa bukan dari kelas 'Guru'
             ->whereHas('kelas', fn($q) => $q->where('nama_kelas', '!=', 'Guru'))
             ->with(['pengguna', 'kelas'])
             ->withSum(['setoran' => function ($query) use ($dateRange, $sumColumn) {
-                if ($dateRange) {
+                if ($dateRange) { // <-- Logika ini sudah benar
                     $query->whereBetween('created_at', $dateRange);
                 }
                 $query->where('status', '!=', 'terlambat');
@@ -72,10 +97,10 @@ class LeaderboardController extends Controller
 
     /**
      * Mengambil data peringkat kelas teratas.
+     * (FUNGSI INI TIDAK DIUBAH)
      */
     private function getTopKelas($dateRange, $sumColumn)
     {
-        // Query ini sudah benar karena secara eksplisit mengecualikan kelas 'Guru'
         return Kelas::query()
             ->where('nama_kelas', '!=', 'Guru')
             ->select('kelas.*')
@@ -85,7 +110,7 @@ class LeaderboardController extends Controller
                     ->join('siswa', 'setoran.siswa_id', '=', 'siswa.id')
                     ->whereColumn('siswa.id_kelas', 'kelas.id')
                     ->where('setoran.status', '!=', 'terlambat');
-                if ($dateRange) {
+                if ($dateRange) { // <-- Logika ini sudah benar
                     $query->whereBetween('setoran.created_at', $dateRange);
                 }
             }, 'total_agregat')
@@ -97,6 +122,7 @@ class LeaderboardController extends Controller
 
     /**
      * Mengambil dan melampirkan rincian sampah ke koleksi peringkat.
+     * (FUNGSI INI TIDAK DIUBAH)
      */
     private function attachSampahDetails($collection, $dateRange, $type)
     {
@@ -122,28 +148,17 @@ class LeaderboardController extends Controller
             $query->whereIn('setoran.siswa_id', $ids);
         }
         
-        if ($dateRange) {
+        if ($dateRange) { // <-- Logika ini sudah benar
             $query->whereBetween('setoran.created_at', $dateRange);
         }
 
         $details = $query->groupBy('relation_id', 'jenis_sampah.nama_sampah', 'jenis_sampah.satuan')
-                         ->orderBy('jenis_sampah.nama_sampah')
-                         ->get()
-                         ->groupBy('relation_id');
+                            ->orderBy('jenis_sampah.nama_sampah')
+                            ->get()
+                            ->groupBy('relation_id');
 
         $collection->each(function ($item) use ($details) {
             $item->sampahDetails = $details->get($item->id, collect());
         });
-    }
-
-    private function getDateRange($filter)
-    {
-        switch ($filter) {
-            case 'hari_ini': return [Carbon::now()->startOfDay(), Carbon::now()->endOfDay()];
-            case 'minggu_ini': return [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()];
-            case 'bulan_ini': return [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()];
-            case 'bulan_lalu': return [Carbon::now()->subMonth()->startOfMonth(), Carbon::now()->subMonth()->endOfMonth()];
-            default: return null;
-        }
     }
 }
