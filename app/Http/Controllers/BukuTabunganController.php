@@ -71,8 +71,13 @@ class BukuTabunganController extends Controller
 
         if ($user->role === 'wali') {
             $kelasWali = $user->kelasYangDiampu;
+            
+            // ===================================
+            // --- PERBAIKAN ADA DI BARIS INI ---
+            // ===================================
             // Cek jika wali punya kelas DAN id kelas siswa = id kelas wali
-            if ($kelasWali && $kelasWali->id === $siswa->id_kelas) {
+            // Gunakan '==' (loose comparison) untuk menghindari masalah tipe data (int vs string)
+            if ($kelasWali && $kelasWali->id == $siswa->id_kelas) { // <-- PERBAIKAN
                 $isWaliKelas = true;
             }
         }
@@ -141,10 +146,47 @@ class BukuTabunganController extends Controller
         $isWaliKelas = false;
         if ($user->role === 'wali') {
             $kelasWali = $user->kelasYangDiampu;
-            if ($kelasWali && $kelasWali->id === $siswa->id_kelas) {
+            
+            // ===================================
+            // --- PERBAIKAN ADA DI BARIS INI JUGA ---
+            // ===================================
+            if ($kelasWali && $kelasWali->id == $siswa->id_kelas) { // <-- PERBAIKAN
                 $isWaliKelas = true;
             }
         }
+        // ===================================
+        // --- TAMBAHAN KODE DEBUGGING ---
+        // ===================================
+        // Kita akan mengumpulkan semua data yang relevan untuk diinspeksi
+        $debugInfo = [
+            'PESAN' => 'Inspeksi variabel sebelum Abort 403',
+            'user_role' => $user->role,
+            'isAdmin' => $isAdmin,
+            'isOwner' => $isOwner,
+            'isWaliKelas' => $isWaliKelas,
+            'kelas_wali_yg_login' => $kelasWali, // Ini akan null jika relasi gagal
+            'id_kelas_wali' => $kelasWali ? $kelasWali->id : 'N/A',
+            'siswa_yg_dilihat' => $siswa->pengguna->nama_lengkap ?? $siswa->id,
+            'id_kelas_siswa' => $siswa->id_kelas,
+            'perbandingan_ID' => ($kelasWali ? $kelasWali->id : 'N/A') . ' == ' . $siswa->id_kelas,
+        ];
+
+        // Jika BUKAN Admin, BUKAN Pemilik, dan BUKAN Wali Kelasnya, tolak akses
+        if (!$isAdmin && !$isOwner && !$isWaliKelas) {
+            
+            // HENTIKAN DAN TAMPILKAN SEMUA INFO DEBUG
+            dd($debugInfo); 
+            
+            // abort(403, 'AKSES DITOLAK'); // Baris ini sementara tidak akan tereksekusi
+        }
+        // ==================================================
+        // --- LOGIKA OTORISASI SELESAI ---
+        // ==================================================
+
+        // ... (Sisa kode Anda untuk mengambil setoran, penarikan, dll, biarkan saja) ...
+        $setorans = $siswa->setoran()->with('jenisSampah')->latest()->get();
+        // ... (dst) ...
+    
         if (!$isAdmin && !$isOwner && !$isWaliKelas) {
             abort(403, 'AKSES DITOLAK');
         }
