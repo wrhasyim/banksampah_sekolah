@@ -16,15 +16,17 @@
                 </div>
             </div>
 
-            {{-- Statistik Utama Siswa (Diperbarui) --}}
+            {{-- ================================================== --}}
+            {{-- STATISTIK UTAMA SISWA (IKON DIPERBARUI) --}}
+            {{-- ================================================== --}}
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                 
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6 flex items-center space-x-4">
-                        <div class="flex-shrink-0 bg-green-500 p-3 rounded-full text-white">
-                            {{-- Ikon Uang (SVG Sederhana) --}}
-                            <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01M12 12v.01M12 12c-1.657 0-3-.895-3-2s1.343-2 3-2m0 8c1.11 0 2.08-.402 2.599-1M12 16v1m0-1v-.01m0-4.01V12m0 4c-1.657 0-3-.895-3-2s1.343-2 3-2m0 8a9 9 0 110-18 9 9 0 010 18z" />
+                        <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 bg-green-100 p-3 rounded-full text-green-600">
+                            {{-- IKON BARU: Dompet (Lebih Simetris) --}}
+                            <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12m18 0v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6m18 0V9M3 12V9m18 3a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 12m15 0a2.25 2.25 0 012.25 2.25v3.75a2.25 2.25 0 01-2.25 2.25H5.25a2.25 2.25 0 01-2.25-2.25V14.25a2.25 2.25 0 012.25-2.25h.097" />
                             </svg>
                         </div>
                         <div>
@@ -38,10 +40,10 @@
 
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6 flex items-center space-x-4">
-                        <div class="flex-shrink-0 bg-blue-500 p-3 rounded-full text-white">
-                             {{-- Ikon Timbangan (SVG Sederhana) --}}
-                            <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 00-1.001 3.771 5 5 0 009.58-1.77c.362-1.428.093-2.926-.7-4.2l-3.879-6M3 6l3-1m0 0l3.879 6c.793 1.274 1.062 2.772.7 4.2-.362 1.428-1.46 2.529-2.89 2.891a5 5 0 00-6.68 4.229 1 1 0 101.98.2 3 3 0 015.01-2.53 3 3 0 01-1.2-5.495L3 6z" />
+                        <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 bg-blue-100 p-3 rounded-full text-blue-600">
+                             {{-- IKON BARU: Timbangan (Simetris) --}}
+                            <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v17.25m0 0c-1.472 0-2.882.265-4.185.75M12 20.25c1.472 0 2.882.265 4.185.75M18.75 4.97A48.416 48.416 0 0012 4.5c-2.291 0-4.545.16-6.75.47m13.5 0c-3.079 0-6.09 1.09-8.625 3.016m8.625-3.016c.336.026.66.06.974.098M5.25 4.97c-.336.026-.66.06-.974.098m14.452 0c-3.079 0-6.09 1.09-8.625 3.016M4.276 8.064c-1.934 2.14-3.11 4.752-3.11 7.69m19.668-7.69c-1.934 2.14-3.11 4.752-3.11 7.69" />
                             </svg>
                         </div>
                         <div>
@@ -55,10 +57,10 @@
 
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6 flex items-center space-x-4">
-                        <div class="flex-shrink-0 bg-purple-500 p-3 rounded-full text-white">
-                            {{-- Ikon Transaksi (SVG Sederhana) --}}
-                            <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 bg-purple-100 p-3 rounded-full text-purple-600">
+                            {{-- IKON BARU: Kuitansi/Daftar (Simetris) --}}
+                            <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
                         </div>
                         <div>
@@ -70,6 +72,9 @@
                     </div>
                 </div>
             </div>
+            {{-- ================================================== --}}
+            {{-- AKHIR PERUBAHAN IKON --}}
+            {{-- ================================================== --}}
 
 
             {{-- Riwayat Setoran Terakhir --}}
@@ -87,7 +92,6 @@
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
-                                {{-- Loop akan tetap menampilkan 5 data, tapi dari koleksi paginasi --}}
                                 @forelse ($setoranTerakhir as $setoran)
                                     <tr>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $setoran->created_at->format('d M Y, H:i') }}</td>
@@ -104,15 +108,10 @@
                         </table>
                     </div>
 
-                    {{-- ================================================== --}}
-                    {{-- TAMBAHAN: LINK PAGINASI --}}
-                    {{-- ================================================== --}}
+                    {{-- Link Paginasi --}}
                     <div class="mt-4">
                         {{ $setoranTerakhir->links() }}
                     </div>
-                    {{-- ================================================== --}}
-                    {{-- AKHIR TAMBAHAN --}}
-                    {{-- ================================================== --}}
 
                 </div>
             </div>

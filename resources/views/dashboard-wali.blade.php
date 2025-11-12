@@ -60,7 +60,7 @@
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Siswa</th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jenis Sampah</th>
-                                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah (Kg)</th>
+                                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah (Pcs)</th>
                                     <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total (Rp)</th>
                                 </tr>
                             </thead>
@@ -69,9 +69,9 @@
                                     <tr>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $setoran->created_at->format('d M Y, H:i') }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $setoran->siswa->pengguna->nama_lengkap ?? 'Siswa Dihapus' }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $setoran->jenisSampah->nama ?? 'Sampah Dihapus' }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $setoran->jenisSampah->nama_sampah ?? 'Sampah Dihapus' }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">{{ $setoran->jumlah }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-medium text-right">Rp {{ number_format($setoran->total, 0, ',', '.') }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-medium text-right">Rp {{ number_format($setoran->total_harga, 0, ',', '.') }}</td>
                                     </tr>
                                 @empty
                                     <tr>
