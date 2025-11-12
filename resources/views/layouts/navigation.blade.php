@@ -102,10 +102,12 @@
                                 </x-slot>
                             </x-dropdown>
                         </div>
-                    @endif
-
-                    {{-- Tampilkan menu ini jika pengguna BUKAN admin --}}
-                    @if(Auth::user()->role !== 'admin')
+                    
+                    {{-- ================================================== --}}
+                    {{-- PERUBAHAN DIMULAI DI SINI (Desktop) --}}
+                    {{-- Tampilkan menu ini hanya jika pengguna adalah 'wali' --}}
+                    {{-- (Siswa tidak akan melihat ini) --}}
+                    @elseif(Auth::user()->role === 'wali')
                         <x-nav-link :href="route('buku-tabungan.index')" :active="request()->routeIs('buku-tabungan.index')">
                             <i class="fas fa-book fa-fw mr-2"></i>{{ __('Buku Tabungan') }}
                         </x-nav-link>
@@ -113,6 +115,10 @@
                             <i class="fas fa-trophy fa-fw mr-2"></i>{{ __('Leaderboard') }}
                         </x-nav-link>
                     @endif
+                    {{-- ================================================== --}}
+                    {{-- PERUBAHAN SELESAI --}}
+                    {{-- ================================================== --}}
+
                 </div>
             </div>
 
@@ -150,41 +156,58 @@
         <div class="pt-4 pb-1 border-t border-gray-200">
             <div class="px-4"><div class="font-medium text-base text-gray-800">{{ Auth::user()->nama_lengkap }}</div><div class="font-medium text-sm text-gray-500">{{ Auth::user()->email }}</div></div>
             <div class="mt-3 space-y-1">
-                @if(Auth::user()->role === 'admin')
-                    <div class="px-4 font-medium text-sm text-gray-500">Transaksi</div>
-                    <x-responsive-nav-link :href="route('setoran.index')"><i class="fas fa-upload fa-fw mr-2"></i>{{ __('Setoran Sampah') }}</x-responsive-nav-link>
-                    <x-responsive-nav-link :href="route('penarikan.index')"><i class="fas fa-download fa-fw mr-2"></i>{{ __('Penarikan Saldo') }}</x-responsive-nav-link>
-                    <x-responsive-nav-link :href="route('penjualan.index')"><i class="fas fa-shopping-cart fa-fw mr-2"></i>{{ __('Penjualan') }}</x-responsive-nav-link>
-                    <x-responsive-nav-link :href="route('buku-kas.index')"><i class="fas fa-book-open fa-fw mr-2"></i>{{ __('Buku Kas') }}</x-responsive-nav-link>
-                    <x-responsive-nav-link :href="route('stok.create')"><i class="fas fa-box fa-fw mr-2"></i>{{ __('Penyesuaian Stok') }}</x-responsive-nav-link>
-                    <x-responsive-nav-link :href="route('nota.index')"><i class="fas fa-print fa-fw mr-2"></i>{{ __('Cetak Nota') }}</x-responsive-nav-link>
+                
+                {{-- ================================================== --}}
+                {{-- PERUBAHAN DIMULAI DI SINI (Mobile) --}}
+                {{-- Hanya tampilkan menu ini jika BUKAN siswa --}}
+                @if(Auth::user()->role !== 'siswa')
                     
-                    <div class="mt-2 px-4 font-medium text-sm text-gray-500">Insentif & Reward</div>
-                    <x-responsive-nav-link :href="route('insentif.rekap')"><i class="fas fa-file-invoice-dollar fa-fw mr-2"></i>{{ __('Rekapitulasi Insentif') }}</x-responsive-nav-link>
-                    <x-responsive-nav-link :href="route('insentif.pembayaran')"><i class="fas fa-money-bill-wave fa-fw mr-2"></i>{{ __('Pembayaran Insentif') }}</x-responsive-nav-link>
-                    <x-responsive-nav-link :href="route('rewards.index')"><i class="fas fa-star fa-fw mr-2"></i>{{ __('Master Reward') }}</x-responsive-nav-link>
+                    {{-- Menu Admin --}}
+                    @if(Auth::user()->role === 'admin')
+                        <div class="px-4 font-medium text-sm text-gray-500">Transaksi</div>
+                        <x-responsive-nav-link :href="route('setoran.index')"><i class="fas fa-upload fa-fw mr-2"></i>{{ __('Setoran Sampah') }}</x-responsive-nav-link>
+                        <x-responsive-nav-link :href="route('penarikan.index')"><i class="fas fa-download fa-fw mr-2"></i>{{ __('Penarikan Saldo') }}</x-responsive-nav-link>
+                        <x-responsive-nav-link :href="route('penjualan.index')"><i class="fas fa-shopping-cart fa-fw mr-2"></i>{{ __('Penjualan') }}</x-responsive-nav-link>
+                        <x-responsive-nav-link :href="route('buku-kas.index')"><i class="fas fa-book-open fa-fw mr-2"></i>{{ __('Buku Kas') }}</x-responsive-nav-link>
+                        <x-responsive-nav-link :href="route('stok.create')"><i class="fas fa-box fa-fw mr-2"></i>{{ __('Penyesuaian Stok') }}</x-responsive-nav-link>
+                        <x-responsive-nav-link :href="route('nota.index')"><i class="fas fa-print fa-fw mr-2"></i>{{ __('Cetak Nota') }}</x-responsive-nav-link>
+                        
+                        <div class="mt-2 px-4 font-medium text-sm text-gray-500">Insentif & Reward</div>
+                        <x-responsive-nav-link :href="route('insentif.rekap')"><i class="fas fa-file-invoice-dollar fa-fw mr-2"></i>{{ __('Rekapitulasi Insentif') }}</x-responsive-nav-link>
+                        <x-responsive-nav-link :href="route('insentif.pembayaran')"><i class="fas fa-money-bill-wave fa-fw mr-2"></i>{{ __('Pembayaran Insentif') }}</x-responsive-nav-link>
+                        <x-responsive-nav-link :href="route('rewards.index')"><i class="fas fa-star fa-fw mr-2"></i>{{ __('Master Reward') }}</x-responsive-nav-link>
 
-                    <div class="mt-2 px-4 font-medium text-sm text-gray-500">Master Data</div>
-                    <x-responsive-nav-link :href="route('jenis-sampah.index')"><i class="fas fa-dumpster fa-fw mr-2"></i>{{ __('Jenis Sampah') }}</x-responsive-nav-link>
-                    <x-responsive-nav-link :href="route('kategori-transaksi.index')"><i class="fas fa-tags fa-fw mr-2"></i>{{ __('Kategori Transaksi') }}</x-responsive-nav-link>
-                    <x-responsive-nav-link :href="route('siswa.index')"><i class="fas fa-user-graduate fa-fw mr-2"></i>{{ __('Data Siswa') }}</x-responsive-nav-link>
-                    <x-responsive-nav-link :href="route('kelas.index')"><i class="fas fa-school fa-fw mr-2"></i>{{ __('Data Kelas') }}</x-responsive-nav-link>
-                    <x-responsive-nav-link :href="route('pengguna.index')"><i class="fas fa-users-cog fa-fw mr-2"></i>{{ __('Manajemen Pengguna') }}</x-responsive-nav-link>
+                        <div class="mt-2 px-4 font-medium text-sm text-gray-500">Master Data</div>
+                        <x-responsive-nav-link :href="route('jenis-sampah.index')"><i class="fas fa-dumpster fa-fw mr-2"></i>{{ __('Jenis Sampah') }}</x-responsive-nav-link>
+                        <x-responsive-nav-link :href="route('kategori-transaksi.index')"><i class="fas fa-tags fa-fw mr-2"></i>{{ __('Kategori Transaksi') }}</x-responsive-nav-link>
+                        <x-responsive-nav-link :href="route('siswa.index')"><i class="fas fa-user-graduate fa-fw mr-2"></i>{{ __('Data Siswa') }}</x-responsive-nav-link>
+                        <x-responsive-nav-link :href="route('kelas.index')"><i class="fas fa-school fa-fw mr-2"></i>{{ __('Data Kelas') }}</x-responsive-nav-link>
+                        <x-responsive-nav-link :href="route('pengguna.index')"><i class="fas fa-users-cog fa-fw mr-2"></i>{{ __('Manajemen Pengguna') }}</x-responsive-nav-link>
 
-                    <div class="mt-2 px-4 font-medium text-sm text-gray-500">Laporan</div>
-                    <x-responsive-nav-link :href="route('rekapan.menyeluruh')"><i class="fas fa-file-alt fa-fw mr-2"></i>{{ __('Rekap Menyeluruh') }}</x-responsive-nav-link>
-                    <x-responsive-nav-link :href="route('laporan.index')"><i class="fas fa-file-invoice fa-fw mr-2"></i>{{ __('Laporan Umum') }}</x-responsive-nav-link>
-                    <x-responsive-nav-link :href="route('rekapan.guru')"><i class="fas fa-chalkboard-teacher fa-fw mr-2"></i>{{ __('Rekap Setoran Guru') }}</x-responsive-nav-link>
-                    <x-responsive-nav-link :href="route('rekapan.siswa-terlambat')"><i class="fas fa-user-clock fa-fw mr-2"></i>{{ __('Rekap Siswa Terlambat') }}</x-responsive-nav-link>
+                        <div class="mt-2 px-4 font-medium text-sm text-gray-500">Laporan</div>
+                        <x-responsive-nav-link :href="route('rekapan.menyeluruh')"><i class="fas fa-file-alt fa-fw mr-2"></i>{{ __('Rekap Menyeluruh') }}</x-responsive-nav-link>
+                        <x-responsive-nav-link :href="route('laporan.index')"><i class="fas fa-file-invoice fa-fw mr-2"></i>{{ __('Laporan Umum') }}</x-responsive-nav-link>
+                        <x-responsive-nav-link :href="route('rekapan.guru')"><i class="fas fa-chalkboard-teacher fa-fw mr-2"></i>{{ __('Rekap Setoran Guru') }}</x-responsive-nav-link>
+                        <x-responsive-nav-link :href="route('rekapan.siswa-terlambat')"><i class="fas fa-user-clock fa-fw mr-2"></i>{{ __('Rekap Siswa Terlambat') }}</x-responsive-nav-link>
 
-                    <div class="mt-2 px-4 font-medium text-sm text-gray-500">Lainnya</div>
+                        <div class="mt-2 px-4 font-medium text-sm text-gray-500">Lainnya</div>
+                    @endif
+
+                    {{-- Menu Admin dan Wali --}}
+                    <x-responsive-nav-link :href="route('buku-tabungan.index')"><i class="fas fa-book fa-fw mr-2"></i>{{ __('Buku Tabungan') }}</x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('leaderboard.index')"><i class="fas fa-trophy fa-fw mr-2"></i>{{ __('Leaderboard') }}</x-responsive-nav-link>
+                    
+                    {{-- Menu Admin (Lanjutan) --}}
+                    @if(Auth::user()->role === 'admin')
+                        <x-responsive-nav-link :href="route('tutup-buku.index')"><i class="fas fa-calendar-check fa-fw mr-2"></i>{{ __('Tutup Buku') }}</x-responsive-nav-link>
+                        <x-responsive-nav-link :href="route('settings.index')"><i class="fas fa-cogs fa-fw mr-2"></i>{{ __('Pengaturan Aplikasi') }}</x-responsive-nav-link>
+                    @endif
+                
                 @endif
-                <x-responsive-nav-link :href="route('buku-tabungan.index')"><i class="fas fa-book fa-fw mr-2"></i>{{ __('Buku Tabungan') }}</x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('leaderboard.index')"><i class="fas fa-trophy fa-fw mr-2"></i>{{ __('Leaderboard') }}</x-responsive-nav-link>
-                @if(Auth::user()->role === 'admin')
-                    <x-responsive-nav-link :href="route('tutup-buku.index')"><i class="fas fa-calendar-check fa-fw mr-2"></i>{{ __('Tutup Buku') }}</x-responsive-nav-link>
-                    <x-responsive-nav-link :href="route('settings.index')"><i class="fas fa-cogs fa-fw mr-2"></i>{{ __('Pengaturan Aplikasi') }}</x-responsive-nav-link>
-                @endif
+                {{-- ================================================== --}}
+                {{-- PERUBAHAN SELESAI --}}
+                {{-- ================================================== --}}
+
 
                 <div class="border-t border-gray-200 mt-3 pt-3"></div>
                 <x-responsive-nav-link :href="route('profile.edit')"><i class="fas fa-user-edit fa-fw mr-2"></i>{{ __('Profile') }}</x-responsive-nav-link>

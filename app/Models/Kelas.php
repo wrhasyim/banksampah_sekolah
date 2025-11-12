@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use App\Models\Siswa;
 use App\Models\Setoran;
+use App\Models\Pengguna; // <-- TAMBAHAN: Baris ini wajib ada untuk relasi 'waliKelas'
 
 class Kelas extends Model
 {
@@ -22,6 +23,7 @@ class Kelas extends Model
 
     public function waliKelas()
     {
+        // Relasi ini sekarang akan berfungsi dengan benar
         return $this->belongsTo(Pengguna::class, 'id_wali_kelas');
     }
 
