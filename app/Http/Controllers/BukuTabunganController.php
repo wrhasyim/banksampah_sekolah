@@ -2,93 +2,191 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Siswa;
 use App\Models\Setoran;
 use App\Models\Penarikan;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth; // Pastikan Auth di-import
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class BukuTabunganController extends Controller
 {
     /**
-     * Menampilkan halaman buku tabungan berdasarkan role pengguna.
+     * Menampilkan daftar siswa (untuk admin) atau buku tabungan pribadi (untuk siswa).
      */
     public function index(Request $request)
     {
         $user = Auth::user();
 
-        // --- PERBAIKAN: Mengganti hasRole() dengan pengecekan kolom 'role' ---
+        // Tampilan untuk Admin (Daftar Siswa)
         if ($user->role === 'admin') {
-            $query = $request->input('query');
-            $results = null;
+            $query = Siswa::query()->with('pengguna', 'kelas');
 
-            if ($query) {
-                $results = Siswa::whereHas('pengguna', function($q) use ($query) {
-                    $q->where('nama_lengkap', 'like', "%$query%");
-                })->get();
+            if ($request->filled('search')) {
+                $search = $request->input('search');
+                $query->whereHas('pengguna', function ($q) use ($search) {
+                    $q->where('nama_lengkap', 'like', "%{$search}%");
+                })->orWhere('nis', 'like', "%{$search}%");
             }
 
-            return view('pages.buku-tabungan.index', compact('results', 'query'));
+            if ($request->filled('id_kelas')) {
+                $query->where('id_kelas', $request->id_kelas);
+            }
+
+            $siswas = $query->latest()->paginate(10)->withQueryString();
+            // Asumsi view Anda adalah 'pages.buku-tabungan.index'
+            // Jika nama file beda, sesuaikan 'pages.buku-tabungan.index-admin'
+            return view('pages.buku-tabungan.index', compact('siswas'));
         }
 
-        // Jika user adalah siswa
-        $siswa = Siswa::where('id_pengguna', $user->id)->firstOrFail();
+        // Tampilan untuk Siswa (Buku Tabungan Pribadi)
+        if ($user->role === 'siswa') {
+            $siswa = $user->siswa;
+            if (!$siswa) {
+                abort(404, 'Data siswa tidak ditemukan.');
+            }
+            // Panggil logic dari method show()
+            return $this->show($siswa);
+        }
 
-        $setorans = Setoran::where('siswa_id', $siswa->id)->get();
-        $penarikans = Penarikan::where('siswa_id', $siswa->id)->where('status', 'disetujui')->get();
-
-        $transaksi = $setorans->map(function ($setoran) {
-            return (object) [
-                'tanggal' => $setoran->created_at,
-                'deskripsi' => 'Setoran Sampah (' . ($setoran->jenisSampah->nama_sampah ?? 'N/A') . ')',
-                'kredit' => $setoran->total_harga,
-                'debit' => 0,
-            ];
-        })->concat($penarikans->map(function ($penarikan) {
-            return (object) [
-                'tanggal' => $penarikan->created_at,
-                'deskripsi' => 'Penarikan Saldo',
-                'kredit' => 0,
-                'debit' => $penarikan->jumlah_penarikan,
-            ];
-        }));
-
-        $transaksi = $transaksi->sortByDesc('tanggal');
-
-        return view('pages.buku-tabungan.index', compact('siswa', 'transaksi'));
+        // Jika role lain (seperti 'wali') mencoba mengakses index, block
+        // Ini ditangani oleh middleware di web.php, tapi sebagai fallback:
+        abort(404);
     }
 
     /**
-     * Menampilkan detail tabungan seorang siswa (untuk admin).
+     * Menampilkan detail buku tabungan untuk satu siswa.
+     * (DIPERBARUI UNTUK AKSES WALI KELAS)
      */
     public function show(Siswa $siswa)
     {
-        // --- PERBAIKAN: Mengganti hasRole() dengan pengecekan kolom 'role' ---
-        if (Auth::user()->role !== 'admin') {
-            abort(403, 'ANDA TIDAK MEMILIKI AKSES.');
+        $user = Auth::user();
+
+        // ==================================================
+        // --- LOGIKA OTORISASI BARU DIMULAI DI SINI ---
+        // ==================================================
+        $isOwner = ($user->role === 'siswa' && $user->id === $siswa->id_pengguna);
+        $isAdmin = ($user->role === 'admin');
+        $isWaliKelas = false;
+
+        if ($user->role === 'wali') {
+            $kelasWali = $user->kelasYangDiampu;
+            // Cek jika wali punya kelas DAN id kelas siswa = id kelas wali
+            if ($kelasWali && $kelasWali->id === $siswa->id_kelas) {
+                $isWaliKelas = true;
+            }
         }
 
-        $setorans = Setoran::where('siswa_id', $siswa->id)->get();
-        $penarikans = Penarikan::where('siswa_id', $siswa->id)->where('status', 'disetujui')->get();
+        // Jika BUKAN Admin, BUKAN Pemilik, dan BUKAN Wali Kelasnya, tolak akses
+        if (!$isAdmin && !$isOwner && !$isWaliKelas) {
+            abort(403, 'AKSES DITOLAK'); // Ini adalah error 403 yang Anda lihat
+        }
+        // ==================================================
+        // --- LOGIKA OTORISASI SELESAI ---
+        // ==================================================
 
-        $transaksi = $setorans->map(function ($setoran) {
+        // Mengambil semua setoran dan penarikan
+        $setorans = $siswa->setoran()->with('jenisSampah')->latest()->get();
+        $penarikans = $siswa->penarikan()->latest()->get();
+
+        // Menggabungkan dan mengurutkan berdasarkan tanggal
+        $transaksis = $setorans->map(function ($setoran) {
             return (object) [
                 'tanggal' => $setoran->created_at,
-                'deskripsi' => 'Setoran Sampah (' . ($setoran->jenisSampah->nama_sampah ?? 'N/A') . ')',
+                'jenis' => 'setoran',
+                'deskripsi' => 'Setoran (' . ($setoran->jenisSampah->nama_sampah ?? 'N/A') . ')',
+                'kredit' => $setoran->total_harga,
+                'debit' => 0,
+                'relasi' => $setoran
+            ];
+        })->merge($penarikans->map(function ($penarikan) {
+            return (object) [
+                'tanggal' => $penarikan->created_at,
+                'jenis' => 'penarikan',
+                'deskripsi' => 'Penarikan Saldo',
+                'kredit' => 0,
+                'debit' => $penarikan->jumlah_penarikan,
+                'relasi' => $penarikan
+            ];
+        }))->sortByDesc('tanggal'); // Urutkan dari terbaru ke terlama
+
+        // Hitung saldo berjalan
+        $saldo = 0;
+        $riwayatTransaksi = $transaksis->reverse()->map(function ($transaksi) use (&$saldo) {
+            if ($transaksi->jenis === 'setoran') {
+                $saldo += $transaksi->kredit;
+            } else {
+                $saldo -= $transaksi->debit;
+            }
+            $transaksi->saldo = $saldo;
+            return $transaksi;
+        })->reverse(); // Kembalikan urutan ke terbaru
+
+        // Asumsi view Anda adalah 'pages.buku-tabungan.show'
+        return view('pages.buku-tabungan.show', compact('siswa', 'riwayatTransaksi'));
+    }
+
+    /**
+     * Menghasilkan PDF buku tabungan.
+     * (DIPERBARUI UNTUK AKSES WALI KELAS)
+     */
+    public function exportPdf(Siswa $siswa)
+    {
+        // ==================================================
+        // --- TAMBAHKAN OTORISASI YANG SAMA DI SINI ---
+        // ==================================================
+        $user = Auth::user();
+        $isOwner = ($user->role === 'siswa' && $user->id === $siswa->id_pengguna);
+        $isAdmin = ($user->role === 'admin');
+        $isWaliKelas = false;
+        if ($user->role === 'wali') {
+            $kelasWali = $user->kelasYangDiampu;
+            if ($kelasWali && $kelasWali->id === $siswa->id_kelas) {
+                $isWaliKelas = true;
+            }
+        }
+        if (!$isAdmin && !$isOwner && !$isWaliKelas) {
+            abort(403, 'AKSES DITOLAK');
+        }
+        // ==================================================
+        // --- LOGIKA OTORISASI SELESAI ---
+        // ==================================================
+
+        // Logic yang sama dengan show()
+        $setorans = $siswa->setoran()->with('jenisSampah')->latest()->get();
+        $penarikans = $siswa->penarikan()->latest()->get();
+
+        $transaksis = $setorans->map(function ($setoran) {
+            return (object) [
+                'tanggal' => $setoran->created_at,
+                'jenis' => 'setoran',
+                'deskripsi' => 'Setoran (' . ($setoran->jenisSampah->nama_sampah ?? 'N/A') . ')',
                 'kredit' => $setoran->total_harga,
                 'debit' => 0,
             ];
-        })->concat($penarikans->map(function ($penarikan) {
+        })->merge($penarikans->map(function ($penarikan) {
             return (object) [
                 'tanggal' => $penarikan->created_at,
+                'jenis' => 'penarikan',
                 'deskripsi' => 'Penarikan Saldo',
                 'kredit' => 0,
                 'debit' => $penarikan->jumlah_penarikan,
             ];
-        }));
-        
-        $transaksi = $transaksi->sortByDesc('tanggal');
-        
-        return view('pages.buku-tabungan.index', compact('siswa', 'transaksi'));
+        }))->sortByDesc('tanggal');
+
+        $saldo = 0;
+        $riwayatTransaksi = $transaksis->reverse()->map(function ($transaksi) use (&$saldo) {
+            if ($transaksi->jenis === 'setoran') {
+                $saldo += $transaksi->kredit;
+            } else {
+                $saldo -= $transaksi->debit;
+            }
+            $transaksi->saldo = $saldo;
+            return $transaksi;
+        })->reverse();
+
+        // Asumsi view PDF Anda adalah 'pages.buku-tabungan.pdf'
+        $pdf = Pdf::loadView('pages.buku-tabungan.pdf', compact('siswa', 'riwayatTransaksi'));
+        return $pdf->download('buku-tabungan-' . $siswa->nis . '-' . $siswa->pengguna->nama_lengkap . '.pdf');
     }
 }

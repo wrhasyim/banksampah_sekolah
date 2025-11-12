@@ -47,15 +47,12 @@ class DashboardController extends Controller
                 $totalSiswa = Siswa::whereHas('kelas', function ($query) {
                     $query->where('nama_kelas', '!=', 'Guru');
                 })->count();
-
                 $totalSetoranSiswa = Setoran::whereHas('siswa.kelas', function ($query) {
                     $query->where('nama_kelas', '!=', 'Guru');
                 })->sum('total_harga');
-                
                 $totalPenarikanSiswa = Penarikan::whereHas('siswa.kelas', function ($query) {
                     $query->where('nama_kelas', '!=', 'Guru');
                 })->sum('jumlah_penarikan');
-
                 $siswaAktifBulanIni = Setoran::where('created_at', '>=', now()->subMonth())
                                             ->whereHas('siswa.kelas', function ($query) {
                                                 $query->where('nama_kelas', '!=', 'Guru');
@@ -67,15 +64,12 @@ class DashboardController extends Controller
                 $totalGuru = Siswa::whereHas('kelas', function ($query) {
                     $query->where('nama_kelas', 'Guru');
                 })->count();
-
                 $totalSetoranGuru = Setoran::whereHas('siswa.kelas', function ($query) {
                     $query->where('nama_kelas', 'Guru');
                 })->sum('total_harga');
-
                 $totalPenarikanGuru = Penarikan::whereHas('siswa.kelas', function ($query) {
                     $query->where('nama_kelas', 'Guru');
                 })->sum('jumlah_penarikan');
-
                 $guruAktifBulanIni = Setoran::where('created_at', '>=', now()->subMonth())
                                             ->whereHas('siswa.kelas', function ($query) {
                                                 $query->where('nama_kelas', 'Guru');
@@ -107,7 +101,6 @@ class DashboardController extends Controller
                     'totalSetoranSiswa' => $totalSetoranSiswa,
                     'totalPenarikanSiswa' => $totalPenarikanSiswa,
                     'siswaAktifBulanIni' => $siswaAktifBulanIni,
-                    // --- Menambahkan data guru untuk view ---
                     'totalGuru' => $totalGuru,
                     'totalSetoranGuru' => $totalSetoranGuru,
                     'totalPenarikanGuru' => $totalPenarikanGuru,
@@ -118,7 +111,7 @@ class DashboardController extends Controller
             return view('dashboard-admin', $dashboardData);
         
         // =================================================================
-        // 2. LOGIKA UNTUK SISWA (MENGGUNAKAN PAGINATE)
+        // 2. LOGIKA UNTUK SISWA (Tidak Diubah dari langkah sebelumnya)
         // =================================================================
         } elseif ($user->role === 'siswa') {
             $siswa = $user->siswa;
@@ -130,10 +123,8 @@ class DashboardController extends Controller
             
             $setoranSiswa = $siswa->setoran();
 
-            // --- PERUBAHAN DI BARIS INI ---
-            // Mengganti take(5)->get() menjadi paginate(5)
+            // Ambil setoran dengan paginasi
             $setoranTerakhir = $setoranSiswa->with('jenisSampah')->latest()->paginate(5);
-            // --- AKHIR PERUBAHAN ---
             
             $totalBeratSetoran = $siswa->setoran()->sum('jumlah');
             $totalFrekuensiSetoran = $siswa->setoran()->count();
@@ -146,32 +137,46 @@ class DashboardController extends Controller
             ));
 
         // =================================================================
-        // 3. LOGIKA UNTUK WALI KELAS (Tidak Diubah)
+        // 3. LOGIKA UNTUK WALI KELAS (DIPERBARUI)
         // =================================================================
         } elseif ($user->role === 'wali') {
             
             $kelas = $user->kelasYangDiampu; 
 
             if ($kelas) {
-                $kelas->load('siswa');
+                // 1. Ambil ID siswa di kelasnya
                 $siswaIds = $kelas->siswa->pluck('id');
-                $jumlahSiswa = $kelas->siswa->count();
+                $jumlahSiswa = $siswaIds->count();
+
+                // 2. Hitung statistik kelas
                 $totalSetoran = Setoran::whereIn('siswa_id', $siswaIds)->sum('total_harga');
                 $totalPenarikan = Penarikan::whereIn('siswa_id', $siswaIds)->sum('jumlah_penarikan');
                 $saldoKelas = $totalSetoran - $totalPenarikan;
+                
+                // --- TAMBAHAN BARU: Total Berat Setoran Kelas ---
+                $totalBeratSetoranKelas = Setoran::whereIn('siswa_id', $siswaIds)->sum('jumlah');
+
+                // 3. Ambil riwayat setoran terakhir (dengan paginasi)
                 $setoranTerakhir = Setoran::whereIn('siswa_id', $siswaIds)
                                         ->with('siswa.pengguna', 'jenisSampah') 
                                         ->latest()
-                                        ->take(5)
-                                        ->get();
+                                        ->paginate(5) // Ganti take(5) menjadi paginate(5)
+                                        ->withQueryString(); // Agar paginasi tetap berjalan
                 
+                // --- TAMBAHAN BARU: Top 5 Siswa di Kelas ---
+                $topSiswaKelas = Siswa::with('pengguna')
+                                    ->whereIn('id', $siswaIds) // Hanya siswa di kelas ini
+                                    ->orderBy('saldo', 'DESC') // Urutkan berdasarkan saldo
+                                    ->take(5)
+                                    ->get();
+
                 return view('dashboard-wali', compact(
                     'kelas', 
                     'saldoKelas', 
-                    'totalSetoran', 
-                    'totalPenarikan', 
-                    'setoranTerakhir', 
-                    'jumlahSiswa'
+                    'jumlahSiswa',
+                    'totalBeratSetoranKelas', // Data baru
+                    'setoranTerakhir',
+                    'topSiswaKelas'          // Data baru
                 ));
 
             } else {
@@ -193,7 +198,6 @@ class DashboardController extends Controller
      */
     public function getChartData(Request $request)
     {
-        // ... (Fungsi ini tetap sama) ...
         $period = $request->input('period', 'monthly');
         $cacheKey = 'dashboard_chart_data:' . $period;
 
@@ -277,7 +281,6 @@ class DashboardController extends Controller
 
     public function getBubbleChartData()
     {
-        // ... (Fungsi ini tetap sama) ...
         $bubbleData = Cache::remember('dashboard_bubble_chart_data', now()->addMinutes(10), function () {
             return JenisSampah::where('stok', '>', 0)
                 ->get()

@@ -56,20 +56,13 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     // =================================================================
     // --- BLOK SISWA (URUTAN DIPERBAIKI) ---
     // =================================================================
-    // 1. SEMUA ROUTE KUSTOM HARUS DIDEFINISIKAN SEBELUM RESOURCE
-    
-    // Fitur Baru: Filter Export
     Route::get('siswa/export/xlsx', [SiswaController::class, 'exportXlsx'])->name('siswa.exportXlsx');
     Route::get('siswa/export/pdf', [SiswaController::class, 'exportPdf'])->name('siswa.exportPdf');
-
-    // Fitur Lama: Import/Export (dari prefix group)
     Route::get('siswa/export', [SiswaController::class, 'export'])->name('siswa.export');
     Route::get('siswa/sample-export', [SiswaController::class, 'sampleExport'])->name('siswa.sample.export');
     Route::get('siswa/import', [SiswaController::class, 'showImportForm'])->name('siswa.import.form');
     Route::post('siswa/import', [SiswaController::class, 'import'])->name('siswa.import');
     Route::get('siswa/search', [SiswaController::class, 'search'])->name('siswa.search');
-
-    // 2. ROUTE RESOURCE HARUS DITEMPATKAN PALING AKHIR
     Route::resource('siswa', SiswaController::class);
     // =================================================================
     // --- AKHIR BLOK SISWA ---
@@ -77,8 +70,6 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
 
 
     // --- TRANSAKSI ---
-
-    // --- PERBAIKAN: Pindahkan route spesifik SEBELUM resource controller ---
     Route::prefix('setoran')->name('setoran.')->group(function () {
         Route::get('/export', [SetoranController::class, 'export'])->name('export');
         Route::get('/import', [SetoranController::class, 'showImportForm'])->name('import.form');
@@ -88,7 +79,6 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
         Route::post('/edit-massal', [SetoranController::class, 'editMassal'])->name('edit.massal');
         Route::post('/update-massal', [SetoranController::class, 'updateMassal'])->name('update.massal');
     });
-    // --- PERBAIKAN: Daftarkan resource setelahnya dan kecualikan method 'show' ---
     Route::resource('setoran', SetoranController::class)->except(['show']);
 
     Route::resource('penarikan', PenarikanController::class);
@@ -154,11 +144,33 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
 });
 
 // =====================================================================
-// RUTE UNTUK SEMUA USER (TERMASUK SISWA)
+// GRUP RUTE HANYA UNTUK WALI KELAS (TAMBAHAN BARU)
+// =====================================================================
+Route::middleware(['auth', 'verified', 'role:wali'])->group(function () {
+    // Halaman "Siswa Kelas Saya" (Pengganti Buku Tabungan Index)
+    Route::get('/wali/siswa-saya', [SiswaController::class, 'showSiswaForWali'])
+         ->name('wali.siswa.index');
+});
+
+
+// =====================================================================
+// RUTE UNTUK SEMUA USER (TERMASUK SISWA) - (DIPERBARUI)
 // =====================================================================
 Route::middleware(['auth', 'verified'])->group(function() {
-    Route::get('buku-tabungan', [BukuTabunganController::class, 'index'])->name('buku-tabungan.index');
-    Route::get('buku-tabungan/{siswa}', [BukuTabunganController::class, 'show'])->name('buku-tabungan.show')->middleware('role:admin');
+    
+    // PERBAIKAN: Dibatasi hanya untuk 'admin' & 'siswa'.
+    // Ini memperbaiki error 404 untuk 'wali'
+    Route::get('buku-tabungan', [BukuTabunganController::class, 'index'])
+        ->name('buku-tabungan.index')
+        ->middleware('role:admin,siswa');
+    
+    // PERBAIKAN: Wali 'wali' sekarang bisa melihat detail buku tabungan
+    // Ini memperbaiki error 403 untuk 'wali'
+    Route::get('buku-tabungan/{siswa}', [BukuTabunganController::class, 'show'])
+        ->name('buku-tabungan.show')
+        ->middleware('role:admin,wali,siswa'); // <-- PERBAIKAN FINAL: Siswa juga harus bisa lihat
+
+    // Leaderboard tetap untuk semua (admin, wali, siswa)
     Route::get('/leaderboard', [LeaderboardController::class, 'index'])->name('leaderboard.index');
 });
 

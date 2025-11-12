@@ -4,8 +4,6 @@
             <div class="flex">
                 <div class="shrink-0 flex items-center">
                     <a href="{{ route('dashboard') }}">
-                        {{-- --- PERUBAHAN: Ganti Logo Laravel ke Logo Sekolah --- --}}
-                        {{-- Ganti /img/logo-sekolah.png dengan path logo Anda di folder /public --}}
                         <img src="{{ asset('/img/logo-sekolah.png') }}" alt="Logo Sekolah" class="block h-12 w-auto">
                     </a>
                 </div>
@@ -15,8 +13,11 @@
                         <i class="fas fa-tachometer-alt fa-fw mr-2"></i>{{ __('Dashboard') }}
                     </x-nav-link>
 
-                    {{-- Tampilkan menu ini hanya jika pengguna adalah admin --}}
+                    {{-- ================================================== --}}
+                    {{-- MENU UNTUK ADMIN --}}
+                    {{-- ================================================== --}}
                     @if(Auth::user()->role === 'admin')
+                        {{-- (Dropdown Transaksi) --}}
                         <div class="hidden sm:flex sm:items-center">
                             <x-dropdown align="left" width="48">
                                 <x-slot name="trigger">
@@ -34,7 +35,7 @@
                                 </x-slot>
                             </x-dropdown>
                         </div>
-
+                        {{-- (Dropdown Insentif) --}}
                         <div class="hidden sm:flex sm:items-center">
                             <x-dropdown align="left" width="48">
                                 <x-slot name="trigger">
@@ -50,7 +51,7 @@
                                 </x-slot>
                             </x-dropdown>
                         </div>
-
+                        {{-- (Dropdown Master Data) --}}
                         <div class="hidden sm:flex sm:items-center">
                             <x-dropdown align="left" width="48">
                                 <x-slot name="trigger">
@@ -68,7 +69,7 @@
                                 </x-slot>
                             </x-dropdown>
                         </div>
-
+                        {{-- (Dropdown Laporan) --}}
                         <div class="hidden sm:flex sm:items-center">
                             <x-dropdown align="left" width="48">
                                 <x-slot name="trigger">
@@ -85,7 +86,7 @@
                                 </x-slot>
                             </x-dropdown>
                         </div>
-
+                        {{-- (Dropdown Lainnya) --}}
                         <div class="hidden sm:flex sm:items-center">
                             <x-dropdown align="left" width="48">
                                 <x-slot name="trigger">
@@ -104,24 +105,26 @@
                         </div>
                     
                     {{-- ================================================== --}}
-                    {{-- PERUBAHAN DIMULAI DI SINI (Desktop) --}}
-                    {{-- Tampilkan menu ini hanya jika pengguna adalah 'wali' --}}
-                    {{-- (Siswa tidak akan melihat ini) --}}
+                    {{-- MENU UNTUK WALI KELAS (DIPERBARUI) --}}
+                    {{-- ================================================== --}}
                     @elseif(Auth::user()->role === 'wali')
-                        <x-nav-link :href="route('buku-tabungan.index')" :active="request()->routeIs('buku-tabungan.index')">
-                            <i class="fas fa-book fa-fw mr-2"></i>{{ __('Buku Tabungan') }}
+                        {{-- PERUBAHAN DI SINI: Mengganti 'buku-tabungan.index' menjadi 'wali.siswa.index' --}}
+                        <x-nav-link :href="route('wali.siswa.index')" :active="request()->routeIs('wali.siswa.index')">
+                            <i class="fas fa-users fa-fw mr-2"></i>{{ __('Siswa Kelas Saya') }}
                         </x-nav-link>
-                        <x-nav-link :href="route('leaderboard.index')" :active="request()->routeIs('leaderboard.index')">
-                            <i class="fas fa-trophy fa-fw mr-2"></i>{{ __('Leaderboard') }}
-                        </x-nav-link>
+                        
+                        {{-- PERUBAHAN DI SINI: Link Leaderboard dihapus --}}
+                        
+                    {{-- (Role 'siswa' tidak punya menu tambahan selain Dashboard) --}}
                     @endif
                     {{-- ================================================== --}}
-                    {{-- PERUBAHAN SELESAI --}}
+                    {{-- AKHIR PERUBAHAN --}}
                     {{-- ================================================== --}}
 
                 </div>
             </div>
 
+            {{-- (Dropdown Profil Kanan Atas) --}}
             <div class="hidden sm:flex sm:items-center sm:ms-6">
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
@@ -137,6 +140,7 @@
                 </x-dropdown>
             </div>
 
+            {{-- (Tombol Hamburger) --}}
             <div class="-me-2 flex items-center sm:hidden">
                 <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-500 transition duration-150 ease-in-out">
                     <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
@@ -158,8 +162,10 @@
             <div class="mt-3 space-y-1">
                 
                 {{-- ================================================== --}}
-                {{-- PERUBAHAN DIMULAI DI SINI (Mobile) --}}
-                {{-- Hanya tampilkan menu ini jika BUKAN siswa --}}
+                {{-- PERUBAHAN DI SINI (Mobile) --}}
+                {{-- ================================================== --}}
+                
+                {{-- Tampilkan menu ini jika pengguna BUKAN siswa --}}
                 @if(Auth::user()->role !== 'siswa')
                     
                     {{-- Menu Admin --}}
@@ -191,21 +197,22 @@
                         <x-responsive-nav-link :href="route('rekapan.siswa-terlambat')"><i class="fas fa-user-clock fa-fw mr-2"></i>{{ __('Rekap Siswa Terlambat') }}</x-responsive-nav-link>
 
                         <div class="mt-2 px-4 font-medium text-sm text-gray-500">Lainnya</div>
-                    @endif
-
-                    {{-- Menu Admin dan Wali --}}
-                    <x-responsive-nav-link :href="route('buku-tabungan.index')"><i class="fas fa-book fa-fw mr-2"></i>{{ __('Buku Tabungan') }}</x-responsive-nav-link>
-                    <x-responsive-nav-link :href="route('leaderboard.index')"><i class="fas fa-trophy fa-fw mr-2"></i>{{ __('Leaderboard') }}</x-responsive-nav-link>
-                    
-                    {{-- Menu Admin (Lanjutan) --}}
-                    @if(Auth::user()->role === 'admin')
+                        <x-responsive-nav-link :href="route('buku-tabungan.index')"><i class="fas fa-book fa-fw mr-2"></i>{{ __('Buku Tabungan') }}</x-responsive-nav-link>
+                        <x-responsive-nav-link :href="route('leaderboard.index')"><i class="fas fa-trophy fa-fw mr-2"></i>{{ __('Leaderboard') }}</x-responsive-nav-link>
                         <x-responsive-nav-link :href="route('tutup-buku.index')"><i class="fas fa-calendar-check fa-fw mr-2"></i>{{ __('Tutup Buku') }}</x-responsive-nav-link>
                         <x-responsive-nav-link :href="route('settings.index')"><i class="fas fa-cogs fa-fw mr-2"></i>{{ __('Pengaturan Aplikasi') }}</x-responsive-nav-link>
+
+                    {{-- Menu Wali Kelas --}}
+                    @elseif(Auth::user()->role === 'wali')
+                        <x-responsive-nav-link :href="route('wali.siswa.index')"><i class="fas fa-users fa-fw mr-2"></i>{{ __('Siswa Kelas Saya') }}</x-responsive-nav-link>
+                        
+                        {{-- PERUBAHAN DI SINI: Link Leaderboard dihapus --}}
+                    
                     @endif
                 
                 @endif
                 {{-- ================================================== --}}
-                {{-- PERUBAHAN SELESAI --}}
+                {{-- AKHIR PERUBAHAN --}}
                 {{-- ================================================== --}}
 
 

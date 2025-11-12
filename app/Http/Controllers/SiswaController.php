@@ -20,6 +20,10 @@ use Barryvdh\DomPDF\Facade\Pdf;       // Untuk Export PDF
 use Carbon\Carbon;                   // Untuk filter rentang waktu
 // --- AKHIR TAMBAHAN BARU ---
 
+// --- TAMBAHAN BARU UNTUK FUNGSI WALI KELAS ---
+use Illuminate\Support\Facades\Auth;
+// --- AKHIR TAMBAHAN BARU ---
+
 class SiswaController extends Controller
 {
     /**
@@ -88,6 +92,16 @@ class SiswaController extends Controller
             }
         }
         
+        // --- TAMBAHAN BARU: Filter Pencarian (Search) ---
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function($q) use ($search) {
+                $q->where('pengguna.nama_lengkap', 'like', "%{$search}%")
+                  ->orWhere('siswa.nis', 'like', "%{$search}%");
+            });
+        }
+        // --- AKHIR TAMBAHAN BARU ---
+
         return $query;
     }
 
@@ -343,5 +357,44 @@ class SiswaController extends Controller
     { 
         $siswa = Siswa::where('id_kelas', $id_kelas)->with('pengguna')->get(); 
         return response()->json($siswa); 
+    }
+
+    /**
+     * ========================================================================
+     * FUNGSI BARU UNTUK WALI KELAS (DITAMBAHKAN DI SINI)
+     * ========================================================================
+     * Menampilkan daftar siswa yang hanya ada di kelas wali tersebut.
+     */
+    public function showSiswaForWali(Request $request)
+    {
+        $wali = Auth::user();
+        $kelas = $wali->kelasYangDiampu;
+
+        // Jika wali tidak punya kelas, kembalikan ke dashboard
+        if (!$kelas) {
+            return redirect()->route('dashboard')->with('toastr-error', 'Akun Anda tidak terhubung dengan kelas manapun.');
+        }
+
+        // Query dasar untuk siswa di kelas wali tersebut
+        $query = Siswa::where('id_kelas', $kelas->id)
+                      ->join('pengguna', 'siswa.id_pengguna', '=', 'pengguna.id')
+                      ->select('siswa.*'); // Penting agar data 'siswa' yang diambil
+
+        // Tambahkan filter pencarian (opsional tapi bagus)
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function($q) use ($search) {
+                $q->where('pengguna.nama_lengkap', 'like', "%{$search}%")
+                  ->orWhere('siswa.nis', 'like', "%{$search}%");
+            });
+        }
+        
+        // Ambil data siswa dengan relasi pengguna dan paginasi
+        $siswas = $query->with('pengguna')
+                        ->orderBy('pengguna.nama_lengkap', 'asc')
+                        ->paginate(10)
+                        ->withQueryString(); // Agar paginasi tetap membawa query 'search'
+
+        return view('pages.wali.siswa-index', compact('siswas', 'kelas'));
     }
 }
