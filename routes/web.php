@@ -169,7 +169,11 @@ Route::middleware(['auth', 'verified'])->group(function() {
     Route::get('buku-tabungan/{siswa}', [BukuTabunganController::class, 'show'])
         ->name('buku-tabungan.show')
         ->middleware('role:admin,wali,siswa'); // <-- PERBAIKAN FINAL: Siswa juga harus bisa lihat
-
+// --- TAMBAHKAN BARIS INI ---
+    Route::get('buku-tabungan/{siswa}/export-pdf', [BukuTabunganController::class, 'exportPdf'])
+        ->name('buku-tabungan.exportPdf')
+        ->middleware('role:admin,wali,siswa');
+    // --- AKHIR TAMBAHAN ---
     // Leaderboard tetap untuk semua (admin, wali, siswa)
     Route::get('/leaderboard', [LeaderboardController::class, 'index'])->name('leaderboard.index');
 });
